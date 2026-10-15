@@ -1,0 +1,418 @@
+<!doctype html>
+<html dir="ltr" lang="et" xml:lang="et" class="yui3-js-enabled"><head>
+    <title>Logi sisse õpikeskkonda | Moodle</title>
+    <link rel="shortcut icon" href="https://moodle.taltech.ee/theme/image.php/taltech4_boost/theme/1791885836/favicon">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="keywords" content="moodle, Logi sisse õpikeskkonda | Moodle">
+<link rel="stylesheet" type="text/css" href="https://moodle.taltech.ee/theme/yui_combo.php?rollup/3.18.1/yui-moodlesimple-min.css"><script id="firstthemesheet" type="text/css">/** Required in order to fix style inclusion problems in IE with YUI **/</script><link rel="stylesheet" type="text/css" href="https://moodle.taltech.ee/theme/styles.php/taltech4_boost/1791885836_1788332547/all">
+<script>
+//<![CDATA[
+var M = {}; M.yui = {};
+M.pageloadstarttime = new Date();
+M.cfg = {"wwwroot":"https:\/\/moodle.taltech.ee","apibase":"https:\/\/moodle.taltech.ee\/r.php\/api","homeurl":{},"sesskey":"REDACTED","sessiontimeout":"21600","sessiontimeoutwarning":1200,"themerev":"1791885836","slasharguments":1,"theme":"taltech4_boost","iconsystemmodule":"core\/icon_system_fontawesome","jsrev":"1791885836","admin":"admin","svgicons":true,"usertimezone":"Euroopa\/Tallinn","language":"et","courseId":1,"courseContextId":2,"contextid":1,"contextInstanceId":0,"langrev":1791885836,"templaterev":"1791885836","siteId":1,"userId":1};var yui1ConfigFn = function(me) {if(/-skin|reset|fonts|grids|base/.test(me.name)){me.type='css';me.path=me.path.replace(/\.js/,'.css');me.path=me.path.replace(/\/yui2-skin/,'/assets/skins/sam/yui2-skin')}};
+var yui2ConfigFn = function(me) {var parts=me.name.replace(/^moodle-/,'').split('-'),component=parts.shift(),module=parts[0],min='-min';if(/-(skin|core)$/.test(me.name)){parts.pop();me.type='css';min=''}
+if(module){var filename=parts.join('-');me.path=component+'/'+module+'/'+filename+min+'.'+me.type}else{me.path=component+'/'+component+'.'+me.type}};
+YUI_config = {"debug":false,"base":"https:\/\/moodle.taltech.ee\/lib\/yuilib\/3.18.1\/","comboBase":"https:\/\/moodle.taltech.ee\/theme\/yui_combo.php?","combine":true,"filter":null,"insertBefore":"firstthemesheet","groups":{"yui2":{"base":"https:\/\/moodle.taltech.ee\/lib\/yuilib\/2in3\/2.9.0\/build\/","comboBase":"https:\/\/moodle.taltech.ee\/theme\/yui_combo.php?","combine":true,"ext":false,"root":"2in3\/2.9.0\/build\/","patterns":{"yui2-":{"group":"yui2","configFn":yui1ConfigFn}}},"moodle":{"name":"moodle","base":"https:\/\/moodle.taltech.ee\/theme\/yui_combo.php?m\/1791885836\/","combine":true,"comboBase":"https:\/\/moodle.taltech.ee\/theme\/yui_combo.php?","ext":false,"root":"m\/1791885836\/","patterns":{"moodle-":{"group":"moodle","configFn":yui2ConfigFn}},"filter":null,"modules":{"moodle-core-event":{"requires":["event-custom"]},"moodle-core-actionmenu":{"requires":["base","event","node-event-simulate"]},"moodle-core-maintenancemodetimer":{"requires":["base","node"]},"moodle-core-blocks":{"requires":["base","node","io","dom","dd","dd-scroll","moodle-core-dragdrop","moodle-core-notification"]},"moodle-core-dragdrop":{"requires":["base","node","io","dom","dd","event-key","event-focus","moodle-core-notification"]},"moodle-core-chooserdialogue":{"requires":["base","panel","moodle-core-notification"]},"moodle-core-lockscroll":{"requires":["plugin","base-build"]},"moodle-core-handlebars":{"condition":{"trigger":"handlebars","when":"after"}},"moodle-core-notification":{"requires":["moodle-core-notification-dialogue","moodle-core-notification-alert","moodle-core-notification-confirm","moodle-core-notification-exception","moodle-core-notification-ajaxexception"]},"moodle-core-notification-dialogue":{"requires":["base","node","panel","escape","event-key","dd-plugin","moodle-core-widget-focusafterclose","moodle-core-lockscroll"]},"moodle-core-notification-alert":{"requires":["moodle-core-notification-dialogue"]},"moodle-core-notification-confirm":{"requires":["moodle-core-notification-dialogue"]},"moodle-core-notification-exception":{"requires":["moodle-core-notification-dialogue"]},"moodle-core-notification-ajaxexception":{"requires":["moodle-core-notification-dialogue"]},"moodle-core_availability-form":{"requires":["base","node","event","event-delegate","panel","moodle-core-notification-dialogue","json"]},"moodle-course-categoryexpander":{"requires":["node","event-key"]},"moodle-course-util":{"requires":["node"],"use":["moodle-course-util-base"],"submodules":{"moodle-course-util-base":{},"moodle-course-util-section":{"requires":["node","moodle-course-util-base"]},"moodle-course-util-cm":{"requires":["node","moodle-course-util-base"]}}},"moodle-course-dragdrop":{"requires":["base","node","io","dom","dd","dd-scroll","moodle-core-dragdrop","moodle-core-notification","moodle-course-coursebase","moodle-course-util"]},"moodle-course-management":{"requires":["base","node","io-base","moodle-core-notification-exception","json-parse","dd-constrain","dd-proxy","dd-drop","dd-delegate","node-event-delegate"]},"moodle-form-shortforms":{"requires":["node","base","selector-css3","moodle-core-event"]},"moodle-form-dateselector":{"requires":["base","node","overlay","calendar"]},"moodle-question-searchform":{"requires":["base","node"]},"moodle-question-chooser":{"requires":["moodle-core-chooserdialogue"]},"moodle-availability_completion-form":{"requires":["base","node","event","moodle-core_availability-form"]},"moodle-availability_date-form":{"requires":["base","node","event","io","moodle-core_availability-form"]},"moodle-availability_grade-form":{"requires":["base","node","event","moodle-core_availability-form"]},"moodle-availability_group-form":{"requires":["base","node","event","moodle-core_availability-form"]},"moodle-availability_grouping-form":{"requires":["base","node","event","moodle-core_availability-form"]},"moodle-availability_profile-form":{"requires":["base","node","event","moodle-core_availability-form"]},"moodle-mod_assign-history":{"requires":["node","transition"]},"moodle-mod_attendance-groupfilter":{"requires":["base","node"]},"moodle-mod_customcert-rearrange":{"requires":["dd-delegate","dd-drag"]},"moodle-mod_quiz-quizbase":{"requires":["base","node"]},"moodle-mod_quiz-util":{"requires":["node","moodle-core-actionmenu"],"use":["moodle-mod_quiz-util-base"],"submodules":{"moodle-mod_quiz-util-base":{},"moodle-mod_quiz-util-slot":{"requires":["node","moodle-mod_quiz-util-base"]},"moodle-mod_quiz-util-page":{"requires":["node","moodle-mod_quiz-util-base"]}}},"moodle-mod_quiz-dragdrop":{"requires":["base","node","io","dom","dd","dd-scroll","moodle-core-dragdrop","moodle-core-notification","moodle-mod_quiz-quizbase","moodle-mod_quiz-util-base","moodle-mod_quiz-util-page","moodle-mod_quiz-util-slot","moodle-course-util"]},"moodle-mod_quiz-modform":{"requires":["base","node","event"]},"moodle-mod_quiz-toolboxes":{"requires":["base","node","event","event-key","io","moodle-mod_quiz-quizbase","moodle-mod_quiz-util-slot","moodle-core-notification-ajaxexception"]},"moodle-mod_quiz-autosave":{"requires":["base","node","event","event-valuechange","node-event-delegate","io-form","datatype-date-format"]},"moodle-mod_quiz-questionchooser":{"requires":["moodle-core-chooserdialogue","moodle-mod_quiz-util","querystring-parse"]},"moodle-mod_scheduler-delselected":{"requires":["base","node","event"]},"moodle-mod_scheduler-studentlist":{"requires":["base","node","event","io"]},"moodle-mod_scheduler-saveseen":{"requires":["base","node","event"]},"moodle-message_airnotifier-toolboxes":{"requires":["base","node","io"]},"moodle-editor_atto-editor":{"requires":["node","transition","io","overlay","escape","event","event-simulate","event-custom","node-event-html5","node-event-simulate","yui-throttle","moodle-core-notification-dialogue","moodle-editor_atto-rangy","handlebars","timers","querystring-stringify"]},"moodle-editor_atto-plugin":{"requires":["node","base","escape","event","event-outside","handlebars","event-custom","timers","moodle-editor_atto-menu"]},"moodle-editor_atto-menu":{"requires":["moodle-core-notification-dialogue","node","event","event-custom"]},"moodle-editor_atto-rangy":{"requires":[]},"moodle-report_eventlist-eventfilter":{"requires":["base","event","node","node-event-delegate","datatable","autocomplete","autocomplete-filters"]},"moodle-report_loglive-fetchlogs":{"requires":["base","event","node","io","node-event-delegate"]},"moodle-gradereport_history-userselector":{"requires":["escape","event-delegate","event-key","handlebars","io-base","json-parse","moodle-core-notification-dialogue"]},"moodle-qbank_editquestion-chooser":{"requires":["moodle-core-chooserdialogue"]},"moodle-tool_lp-dragdrop-reorder":{"requires":["moodle-core-dragdrop"]},"moodle-assignfeedback_editpdf-editor":{"requires":["base","event","node","io","graphics","json","event-move","event-resize","transition","querystring-stringify-simple","moodle-core-notification-dialog","moodle-core-notification-alert","moodle-core-notification-warning","moodle-core-notification-exception","moodle-core-notification-ajaxexception"]},"moodle-atto_accessibilitychecker-button":{"requires":["color-base","moodle-editor_atto-plugin"]},"moodle-atto_accessibilityhelper-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_align-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_bold-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_c4l-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_charmap-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_clear-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_collapse-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_emojipicker-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_emoticon-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_equation-button":{"requires":["moodle-editor_atto-plugin","moodle-core-event","io","event-valuechange","tabview","array-extras"]},"moodle-atto_fullscreen-button":{"requires":["event-resize","moodle-editor_atto-plugin"]},"moodle-atto_h5p-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_html-beautify":{},"moodle-atto_html-codemirror":{"requires":["moodle-atto_html-codemirror-skin"]},"moodle-atto_html-button":{"requires":["promise","moodle-editor_atto-plugin","moodle-atto_html-beautify","moodle-atto_html-codemirror","event-valuechange"]},"moodle-atto_image-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_indent-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_italic-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_link-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_managefiles-usedfiles":{"requires":["node","escape"]},"moodle-atto_managefiles-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_media-button":{"requires":["moodle-editor_atto-plugin","moodle-form-shortforms"]},"moodle-atto_noautolink-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_orderedlist-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_preview-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_recordrtc-recording":{"requires":["moodle-atto_recordrtc-button"]},"moodle-atto_recordrtc-button":{"requires":["moodle-editor_atto-plugin","moodle-atto_recordrtc-recording"]},"moodle-atto_rtl-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_strike-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_subscript-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_superscript-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_table-button":{"requires":["moodle-editor_atto-plugin","moodle-editor_atto-menu","event","event-valuechange"]},"moodle-atto_teamsmeeting-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_title-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_underline-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_undo-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_unorderedlist-button":{"requires":["moodle-editor_atto-plugin"]},"moodle-atto_wiris-button":{"requires":["moodle-editor_atto-plugin","get"]}}},"gallery":{"name":"gallery","base":"https:\/\/moodle.taltech.ee\/lib\/yuilib\/gallery\/","combine":true,"comboBase":"https:\/\/moodle.taltech.ee\/theme\/yui_combo.php?","ext":false,"root":"gallery\/1791885836\/","patterns":{"gallery-":{"group":"gallery"}}}},"modules":{"core_filepicker":{"name":"core_filepicker","fullpath":"https:\/\/moodle.taltech.ee\/lib\/javascript.php\/1791885836\/repository\/filepicker.js","requires":["base","node","node-event-simulate","json","async-queue","io-base","io-upload-iframe","io-form","yui2-treeview","panel","cookie","datatable","datatable-sort","resize-plugin","dd-plugin","escape","moodle-core_filepicker","moodle-core-notification-dialogue"]},"core_comment":{"name":"core_comment","fullpath":"https:\/\/moodle.taltech.ee\/lib\/javascript.php\/1791885836\/comment\/comment.js","requires":["base","io-base","node","json","yui2-animation","overlay","escape"]}},"logInclude":[],"logExclude":[],"logLevel":null};
+M.yui.loader = {modules: {}};
+
+//]]>
+</script>
+
+<meta name="robots" content="noindex">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="core/first" src="https://moodle.taltech.ee/lib/requirejs.php/1791885836/core/first.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="jqueryprivate" src="https://moodle.taltech.ee/lib/javascript.php/1791885836/lib/requirejs/jquery-private.js"></script><script type="text/javascript" data-name="TokenSigning" data-by="Web-eID extension">(function pageScript() {
+        let hasDeprecationWarningDisplayed = false;
+        const eidPromises = {};
+        window.addEventListener("message", function (event) {
+            if (event.source !== window)
+                return;
+            if (event.data.src && (event.data.src === "background.js")) {
+                console.log("Page received: ");
+                console.log(event.data);
+                if (event.data.nonce) {
+                    const p = eidPromises[event.data.nonce];
+                    if (event.data.result === "ok") {
+                        if (event.data.signature !== undefined) {
+                            p.resolve({ hex: event.data.signature });
+                        }
+                        else if (event.data.version !== undefined) {
+                            p.resolve(event.data.extension + "/" + event.data.version);
+                        }
+                        else if (event.data.cert !== undefined) {
+                            p.resolve({ hex: event.data.cert });
+                        }
+                        else {
+                            console.log("No idea how to handle message");
+                            console.log(event.data);
+                        }
+                    }
+                    else {
+                        p.reject(new Error(event.data.result));
+                    }
+                    delete eidPromises[event.data.nonce];
+                }
+                else {
+                    console.log("No nonce in event msg");
+                }
+            }
+        }, false);
+        function nonce() {
+            let val = "";
+            const hex = "abcdefghijklmnopqrstuvwxyz0123456789";
+            for (let i = 0; i < 16; i++)
+                val += hex.charAt(Math.floor(Math.random() * hex.length));
+            return val;
+        }
+        function messagePromise(msg) {
+            if (!hasDeprecationWarningDisplayed) {
+                console.warn("TokenSigning API is deprecated. Please consider switching to the new Web-eID library.");
+                hasDeprecationWarningDisplayed = true;
+            }
+            return new Promise(function (resolve, reject) {
+                window.postMessage(msg, "*");
+                eidPromises[msg.nonce] = { resolve, reject };
+            });
+        }
+        window.TokenSigning = class TokenSigning {
+            getCertificate(options) {
+                const msg = {
+                    src: "page.js",
+                    nonce: nonce(),
+                    type: "CERT",
+                    lang: options.lang,
+                    filter: options.filter,
+                };
+                console.log("getCertificate()");
+                return messagePromise(msg);
+            }
+            sign(cert, hash, options) {
+                const msg = {
+                    src: "page.js",
+                    nonce: nonce(),
+                    type: "SIGN",
+                    cert: cert.hex,
+                    hash: hash.hex,
+                    hashtype: hash.type,
+                    lang: options.lang,
+                    info: options.info,
+                };
+                console.log("sign()");
+                return messagePromise(msg);
+            }
+            getVersion() {
+                const msg = {
+                    src: "page.js",
+                    nonce: nonce(),
+                    type: "VERSION",
+                };
+                console.log("getVersion()");
+                return messagePromise(msg);
+            }
+        };
+    })();</script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="jquery" src="https://moodle.taltech.ee/lib/javascript.php/1791885836/lib/jquery/jquery-3.7.1.min.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+    config: ["Accessible.js", "Safe.js"],
+    errorSettings: { message: ["!"] },
+    skipStartupTypeset: true,
+    messageStyle: "none"
+});</script></head>
+<body id="page-login-index" class="format-site path-login gecko dir-ltr lang-et yui-skin-sam yui3-skin-sam moodle-taltech-ee pagelayout-login course-1 context-1 theme jsenabled eupopup">
+<div class="toast-wrapper mx-auto py-0 fixed-top" role="status" aria-live="polite"></div>
+
+<div id="page-wrapper">
+
+    <div>
+    <a class="sr-only sr-only-focusable" href="#maincontent">Jäta vahele peasisuni</a>
+</div><script src="https://moodle.taltech.ee/lib/javascript.php/1791885836/lib/polyfills/polyfill.js"></script>
+<script src="https://moodle.taltech.ee/theme/yui_combo.php?rollup/3.18.1/yui-moodlesimple-min.js"></script><script src="https://moodle.taltech.ee/lib/javascript.php/1791885836/lib/javascript-static.js"></script>
+<script>
+//<![CDATA[
+document.body.className += ' jsenabled';
+//]]>
+</script>
+
+<div class="eupopup eupopup-container eupopup-container-block eupopup-container-bottom eupopup-block eupopup-style-compact" role="dialog" aria-label="Kasutustingimused">
+    </div>
+    <div class="eupopup-markup d-none">
+        <div class="eupopup-head"></div>
+        <div class="eupopup-body">
+            Kui jätkate selle veebisaidi sirvimist, nõustute meie tingimustega:
+            <ul>
+                    <li>
+                        <a href="https://moodle.taltech.ee/admin/tool/policy/view.php?versionid=4&amp;returnurl=https%3A%2F%2Fmoodle.taltech.ee%2Flogin%2Findex.php" data-action="view-guest" data-versionid="4" data-behalfid="1">
+                            Kasutustingimused
+                        </a>
+                    </li>
+            </ul>
+        </div>
+        <div class="eupopup-buttons">
+            <a href="#" class="eupopup-button eupopup-button_1">Jätka</a>
+        </div>
+        <div class="clearfix"></div>
+        <a href="#" class="eupopup-closebutton">x</a>
+    </div>
+    <div id="page" class="container-fluid mt-0">
+        <div id="page-content" class="row">
+            <div id="region-main-box" class="col-12">
+                <section id="region-main" class="col-12" aria-label="Sisu">
+                    <span class="notifications" id="user-notifications"></span>
+                    <div role="main"><span id="maincontent"></span><div class="page-login-main animation-slide-right animation-duration-1">
+        <div id="lang-dropdown" class="dropdown">
+            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="lang-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Eesti ‎(et)‎
+            </button>
+            <div class="dropdown-menu" aria-labelledby="lang-btn">
+                    <a class="dropdown-item" href="/login/?lang=et">Eesti ‎(ET)‎</a>
+                    <a class="dropdown-item" href="/login/?lang=en">English ‎(EN)‎</a>
+            </div>
+        </div>
+    <button id="faq-btn" class="btn">Abi</button>
+    <div id="faq-container" class="">
+        <div id="faq-title">Abi</div>
+        <button id="faq-close">
+            <i class="fa fa-close"></i>
+        </button>
+        <div id="faq-content">
+            <div id="faq-accordion" class="accordion">
+                <div class="card">
+                    <div class="card-header" id="headingOne">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">Kuidas Moodle’isse sisse logida?</button>
+                        </h5>
+                    </div>
+                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#faq-accordion">
+                        <div class="card-body">
+                            <h5>Sisselogimine Uni-ID-ga</h5>
+<p>1. Valige esilehelt autentimisviisiks TalTech Uni-ID.</p>
+<p>2. Sisestage oma Uni-ID andmed.</p>
+<p>
+Kui olete unustanud oma Uni-ID konto kasutajanime või parooli, siis saate selle taastada aadressil <a href="https://pass.taltech.ee" target="_blank">pass.ttu.ee</a>
+logides keskkonda sisse oma ID-kaardi või Mobiil-IDga. Uni-ID kontoga seonduvate probleemide korral pöörduge IT
+kasutajatoe poole, kirjutades meiliaadressil <a href="mailto:helpdesk@taltech.ee" target="_blank">helpdesk@taltech.ee</a> või helistades telefonil 620 3333.
+</p>
+
+<h5>Sisselogimine ID-kaardiga</h5>
+<p>Valige esilehelt autentimisviisiks ID-kaart.</p>
+<h5>Kuidas käituda, kui ID-kaardiga ei õnnestunud sisse logida?</h5>
+<p>Kontrollige, kas veebibrauseri seadetes on ID-kaardi laiendus installitud ja lubatud (Token Signing).</p>
+
+<h5>Sisselogimine Mobiil-IDga</h5>
+<p>Selleks, et Mobiil-IDga sisse logida, peab Teil eelnevalt olema aktiveeritud sobiv kõnekaart mobiiltelefonis ning tehtud telefonileping. Mobiil-ID teenuse maksumus sõltub operaatori hinnakirjast.
+</p>
+<p>Rohkem infot vt <a href="https://www.id.ee/artikkel/soovid-alustada-mobiil-id-kasutamist/" target="_blank">https://www.id.ee/artikkel/soovid-alustada-mobiil-id-kasutamist/</a>
+</p>
+<p>Sisse logimiseks valige esilehelt autentimisviisiks Mobiil-ID.</p>
+
+<h5>Sisselogimine Smart-IDga</h5>
+<p>Selleks, et Smart-IDga sisse logida, peab Teil eelnevalt olema alla laetud nutiseadmesse Smart-ID tasuta mobiilirakendus. Pärast Smart-ID rakenduse alla laadimist tuleks Teil selle kasutamiseks luua konto. NB! Pea meeles, et iga Smart-ID konto tuleb isikustada Eesti, Läti või Leedu isikukoodiga.
+</p>
+<p>Rohkem infot vt <a href="https://www.smart-id.com/et/" target="_blank">https://www.smart-id.com/et/</a>
+</p>
+<p>Moodlesse sisse logimiseks valige esilehelt autentimisviisiks Smart-ID.</p>
+
+<h5>Kasutajatunnusega sisenemine</h5>
+<p>Valige esilehelt „Rohkem sisselogimise võimalusi“ ning teile avaneb võimalus sisestada kasutajatunnust ning parooli.</p>
+<p>NB! Moodle’i kasutajanime ja parooliga sisselogimine on lubatud juhul, kui Teil puudub Uni-ID konto. Eelduseks on Moodle administraatori poolt loodud Moodle konto olemasolu. See luuakse erandjuhtumiteks, kui ei ole võimalik sisse logida ID-kaardi, Mobiil-ID või Smart-ID abil.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="brand ">
+            <img src="https://moodle.taltech.ee/pluginfile.php/1/core_admin/logo/0x200/1791885836/taltech_white.png" class="brand-img" title="TalTech Moodle" alt="TalTech Moodle">
+    </div>
+    <h1 class="sign-in-text">Logi sisse</h1>
+        <div class="potentialidplist">
+                <div class="potentialidp">
+                    <a href="https://moodle.taltech.ee/auth/oidc/?source=loginpage" title="TalTech Uni-ID" class="btn btn-outline-primary btn-block">
+                        TalTech Uni-ID
+                    </a>
+                </div>
+                <div class="potentialidp">
+                    <a href="https://moodle.taltech.ee/auth/tara/login.php?scp=idcard" title="ID-kaart" class="btn btn-outline-primary btn-block">
+                        ID-kaart
+                    </a>
+                </div>
+                <div class="potentialidp">
+                    <a href="https://moodle.taltech.ee/auth/tara/login.php?scp=mid" title="Mobiil-ID" class="btn btn-outline-primary btn-block">
+                        Mobiil-ID
+                    </a>
+                </div>
+                <div class="potentialidp">
+                    <a href="https://moodle.taltech.ee/auth/tara/login.php?scp=smartid" title="Smart-ID" class="btn btn-outline-primary btn-block">
+                        Smart-ID
+                    </a>
+                </div>
+        </div>
+
+    <a href="#" title="More sign in options" class="" id="show-more-login-options">Rohkem sisselogimise võimalusi</a>
+    <div id="more-login-options">
+        <form class="w-p100" action="https://moodle.taltech.ee/login/index.php" method="post" id="login">
+            <h5>Kasutajatunnusega sisenemine</h5>
+            <input id="anchor" type="hidden" name="anchor" value="">
+            <script>document.getElementById('anchor').value = location.hash;</script>
+            <div class="form-group">
+                <label for="username" class="sr-only">
+                        Kasutajanimi
+                </label>
+                <input type="text" class="form-control" id="username" name="username" value="" placeholder="Kasutajanimi" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="password" class="sr-only">Parool</label>
+                <input type="password" name="password" id="password" value="" class="form-control" placeholder="Parool" autocomplete="current-password">
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block" id="loginbtn">Logi sisse</button>
+            </div>
+            <div class="form-group">
+                <input type="hidden" name="logintoken" value="REDACTED">
+            </div>
+        </form>
+
+    </div>
+
+    <!-- <div class="forgetpass m-t-1">
+        <p><a href="https://moodle.taltech.ee/login/forgot_password.php">Oled unustanud oma kasutajanime või parooli?</a></p>
+    </div> -->
+    <footer class="page-copyright">
+    </footer>
+</div></div>
+                    
+                </section>
+            </div>
+        </div>
+    </div>
+    <footer id="page-footer" class="py-3 bg-dark text-light">
+        <div class="container">
+            <div id="course-footer"></div>
+
+
+            <div class="logininfo">Olete sisenenud külaliskasutajana</div>
+            <div class="homelink"><a href="https://moodle.taltech.ee/">Kataloog</a></div>
+            <div class="tool_dataprivacy"><a href="https://moodle.taltech.ee/admin/tool/dataprivacy/summary.php">Andmete säilitamise kokkuvõte</a></div><div class="policiesfooter"><a href="https://moodle.taltech.ee/admin/tool/policy/viewall.php?returnurl=https%3A%2F%2Fmoodle.taltech.ee%2Flogin%2Findex.php">Kasutustingimused</a></div><div><a class="mobilelink" href="https://taltech.ee/uudised/lae-alla-taltechi-mobiilirakendus">Lae alla mobiilirakendus</a></div>
+            <script>
+//<![CDATA[
+var require = {
+    baseUrl : 'https://moodle.taltech.ee/lib/requirejs.php/1791885836/',
+    // We only support AMD modules with an explicit define() statement.
+    enforceDefine: true,
+    skipDataMain: true,
+    waitSeconds : 0,
+
+    paths: {
+        jquery: 'https://moodle.taltech.ee/lib/javascript.php/1791885836/lib/jquery/jquery-3.7.1.min',
+        jqueryui: 'https://moodle.taltech.ee/lib/javascript.php/1791885836/lib/jquery/ui-1.13.2/jquery-ui.min',
+        jqueryprivate: 'https://moodle.taltech.ee/lib/javascript.php/1791885836/lib/requirejs/jquery-private'
+    },
+
+    // Custom jquery config map.
+    map: {
+      // '*' means all modules will get 'jqueryprivate'
+      // for their 'jquery' dependency.
+      '*': { jquery: 'jqueryprivate' },
+
+      // 'jquery-private' wants the real jQuery module
+      // though. If this line was not here, there would
+      // be an unresolvable cyclic dependency.
+      jqueryprivate: { jquery: 'jquery' }
+    }
+};
+
+//]]>
+</script>
+<script src="https://moodle.taltech.ee/lib/javascript.php/1791885836/lib/requirejs/require.min.js"></script>
+<script>
+//<![CDATA[
+M.util.js_pending("core/first");
+require(['core/first'], function() {
+require(['core/prefetch'])
+;
+M.util.js_pending('filter_glossary/autolinker'); require(['filter_glossary/autolinker'], function(amd) {amd.init(); M.util.js_complete('filter_glossary/autolinker');});;
+require(["media_videojs/loader"], function(loader) {
+    loader.setUp('et');
+});;
+M.util.js_pending('filter_mathjaxloader/loader'); require(['filter_mathjaxloader/loader'], function(amd) {amd.configure({"mathjaxconfig":"MathJax.Hub.Config({\r\n    config: [\"Accessible.js\", \"Safe.js\"],\r\n    errorSettings: { message: [\"!\"] },\r\n    skipStartupTypeset: true,\r\n    messageStyle: \"none\"\r\n});","lang":"en"}); M.util.js_complete('filter_mathjaxloader/loader');});;
+
+        require(['jquery', 'tool_policy/jquery-eu-cookie-law-popup', 'tool_policy/policyactions'], function($, Popup, ActionsMod) {
+            // Initialise the guest popup.
+            $(document).ready(function() {
+                // Initialize popup.
+                $(document.body).addClass('eupopup');
+                if ($(".eupopup").length > 0) {
+                    $(document).euCookieLawPopup().init();
+                }
+
+                // Initialise the JS for the modal window which displays the policy versions.
+                ActionsMod.init('[data-action="view-guest"]');
+            });
+        });
+    ;
+
+M.util.js_pending('theme_boost/loader');
+require(['theme_boost/loader'], function() {
+  M.util.js_complete('theme_boost/loader');
+});
+;
+
+    require(['jquery'], function($) {
+    $(document).ready(function() {
+    document.getElementById("show-more-login-options").addEventListener("click", showMoreLoginOptions);
+    document.getElementById("faq-btn").addEventListener("click", showFaq);
+    document.getElementById("faq-close").addEventListener("click", showFaq);
+    document.getElementById("faq-title").addEventListener("click", showFaq)
+    });
+    });
+
+    function showMoreLoginOptions() {
+    document.getElementById("show-more-login-options").classList.toggle('active');
+    document.getElementById("more-login-options").classList.toggle('show')
+    }
+
+    function showFaq() {
+    document.getElementById("faq-container").classList.toggle('show');
+    if(document.getElementById("faq-container").classList.contains('show')) {
+    document.getElementById("faq-btn").style.display = 'none'
+    } else {
+    document.getElementById("faq-btn").style.display = 'block'
+    }
+    }
+
+    function checkIfLoginNotificationEmpty() {
+    var empt = document.getElementById("login-notification").innerHTML;
+    if (empt == null || empt == "") {
+    alert("Please input a Value");
+    return !1
+    } else {
+    return !0
+    }
+    }
+;
+M.util.js_pending('core/notification'); require(['core/notification'], function(amd) {amd.init(1, []); M.util.js_complete('core/notification');});;
+M.util.js_pending('core/log'); require(['core/log'], function(amd) {amd.setConfig({"level":"warn"}); M.util.js_complete('core/log');});;
+M.util.js_pending('core/page_global'); require(['core/page_global'], function(amd) {amd.init(); M.util.js_complete('core/page_global');});;
+M.util.js_pending('core/utility'); require(['core/utility'], function(amd) {M.util.js_complete('core/utility');});;
+M.util.js_pending('core/storage_validation'); require(['core/storage_validation'], function(amd) {amd.init(null); M.util.js_complete('core/storage_validation');});
+    M.util.js_complete("core/first");
+});
+//]]>
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?delayStartupUntil=configured"></script>
+<script>
+//<![CDATA[
+M.str = {"moodle":{"lastmodified":"Viimati muudetud","name":"Nimi","error":"T\u00f5rge","info":"Teave","yes":"Jah","no":"Ei","cancel":"Loobu","confirm":"Kinnita","areyousure":"Kas olete kindel?","closebuttontitle":"Sule","unknownerror":"Tundmatu t\u00f5rge","file":"Fail","url":"URL","collapseall":"Ahenda k\u00f5ik","expandall":"Laienda k\u00f5ik"},"repository":{"type":"T\u00fc\u00fcp","size":"Maht","invalidjson":"Sobimatu JSON-string","nofilesattached":"Manustatud faile pole","filepicker":"Failivalija","logout":"Logi v\u00e4lja","nofilesavailable":"Faile pole saadaval","norepositoriesavailable":"Kahjuks ei saa \u00fckski teie praegustest hoidlatest tagastada n\u00f5utud vormingus faile.","fileexistsdialogheader":"Fail on juba olemas","fileexistsdialog_editor":"Sellise nimega fail on juba teie redigeeritavale tekstile manustatud.","fileexistsdialog_filemanager":"Sellise nimega fail on juba manustatud","renameto":"Nimeta \u00fcmber nimega \u201e{$a}\u201c","referencesexist":"Seda faili kasutab allikana {$a} aliast\/otseteefaili","select":"Valige"},"admin":{"confirmdeletecomments":"Kas soovite kommentaarid kindlasti kustutada?","confirmation":"Kinnitus"},"debug":{"debuginfo":"Debugimise info","line":"Rida","stacktrace":"Pinu j\u00e4lg"},"langconfig":{"labelsep":":"}};
+//]]>
+</script>
+<script>
+//<![CDATA[
+(function() {M.util.help_popups.setup(Y);
+ M.util.js_pending('random6ad10fbb592e94'); Y.on('domready', function() { M.util.js_complete("init");  M.util.js_complete('random6ad10fbb592e94'); });
+})();
+//]]>
+</script>
+
+        </div>
+    </footer>
+</div><div id="yui3-css-stamp" style="position: absolute !important; visibility: hidden !important" class=""></div>
+
+
+</body></html>

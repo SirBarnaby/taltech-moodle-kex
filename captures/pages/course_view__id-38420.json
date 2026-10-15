@@ -1,0 +1,16 @@
+{
+  "url": "https://moodle.taltech.ee/course/view.php?id=38420",
+  "kind": "course-view-tiles",
+  "title": "Course: MMO5770 MMO5500 Management and Leadership (2026 sügis) | Moodle",
+  "bodyClass": "format-tiles limitedwidth path-course path-course-view gecko dir-ltr lang-en yui-skin-sam yui3-skin-sam moodle-taltech-ee pagelayout-course course-38420 context-1283077 category-303 theme uses-drawers jsenabled format-tiles-subtiles",
+  "viewport": {
+    "w": 1854,
+    "h": 1011,
+    "dpr": 1
+  },
+  "sheets": [
+    "https://moodle.taltech.ee/theme/yui_combo.php?rollup/3.18.1/yui-moodlesimple-min.css",
+    "https://moodle.taltech.ee/theme/styles.php/taltech4_boost/1791885836_1788332547/all"
+  ],
+  "savedAt": "2026-10-15T17:41:30.202Z"
+}
