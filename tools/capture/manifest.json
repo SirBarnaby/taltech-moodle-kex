@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "TalTech Moodle page capture (dev)",
+  "version": "1.0.0",
+  "description": "Saves the structure and theme CSS of each moodle.taltech.ee page you open, so the KEX redesign can be built against the real pages. Session tokens are removed before saving.",
+  "browser_specific_settings": {
+    "gecko": { "id": "taltech-moodle-capture@kex.local", "strict_min_version": "128.0" }
+  },
+  "permissions": ["downloads", "storage"],
+  "host_permissions": ["https://moodle.taltech.ee/*"],
+  "background": { "scripts": ["background.js"] },
+  "action": { "default_title": "Moodle capture: on" },
+  "content_scripts": [
+    {
+      "matches": ["https://moodle.taltech.ee/*"],
+      "js": ["capture.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
