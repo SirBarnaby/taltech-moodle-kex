@@ -4,7 +4,9 @@
   "private": true,
   "description": "A fast, keyboard-first redesign of moodle.taltech.ee (Firefox extension).",
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:dev": "node scripts/build.mjs --dev",
@@ -47,5 +49,8 @@
     "typescript-eslint": "^8.71.2",
     "vitest": "^3.2.7",
     "web-ext": "10.8.0"
+  },
+  "overrides": {
+    "playwright-core": "1.56.1"
   }
 }

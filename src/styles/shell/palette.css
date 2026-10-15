@@ -63,7 +63,7 @@
     font-weight: 500;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--kex-mono-soft);
+    color: var(--kex-mono);
   }
   .kex-palette__row {
     position: relative;
@@ -79,6 +79,8 @@
       background: var(--kex-tint);
       color: var(--kex-violet);
       border-radius: 2px;
+      padding: 0;
+      margin: 0;
     }
   }
   .kex-palette__row--sel {
@@ -118,7 +120,7 @@
     font-weight: 500;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--kex-mono-soft);
+    color: var(--kex-mono);
   }
   .kex-palette__empty {
     padding: 22px 16px;

@@ -409,3 +409,12 @@
 :root[data-kex="skin"][data-kex-theme="dark"] :is(.text-dark, .text-body) {
   color: var(--kex-text-2) !important;
 }
+
+/* Dark theme: Moodle's loading skeletons, forum activity details and submit-icon buttons keep light fills otherwise. */
+:root[data-kex="skin"][data-kex-theme="dark"] :is(.bg-pulse-grey, .activity-details, .btn-submit.search-icon) {
+  background-color: var(--kex-hover) !important;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"][data-kex-theme="dark"] .bg-pulse-grey {
+  background-color: var(--kex-tint) !important;
+}

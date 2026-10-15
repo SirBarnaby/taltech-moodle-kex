@@ -25,7 +25,7 @@ export function splitCode(code: string): [string, string] {
 function Wordmark() {
   const src = logoSrc.value;
   return (
-    <a class="kex-sb__brand" href={homeUrl('/my/')} aria-label={t('nav.workspace')} data-kex-test="sb-brand">
+    <a class="kex-sb__brand" href={homeUrl('/my/')} data-kex-test="sb-brand">
       {src ? (
         <img class="kex-sb__logo" src={src} alt="" />
       ) : (

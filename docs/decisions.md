@@ -78,3 +78,21 @@ can sit next to a release build.
 
 ### Console noise
 `Failed to fetch` and `ERR_ABORTED` (Moodle ESM modules) appear with and without the extension; they are Moodle's own.
+
+### Accessibility (axe-core on `#kex-root`, light, dark, palette open: 0 serious/critical)
+- Fixed `label-content-name-mismatch` by letting the sidebar brand link and the header search button take their accessible name
+  from their visible text (the search button adds `aria-keyshortcuts`); an `aria-label` that does not contain the visible text fails WCAG 2.5.3.
+- Palette group heads and meta labels use `--kex-mono` (#494280) instead of `--kex-mono-soft` (#7771a0, 4.4:1 on the palette
+  background, 3.7:1 on the selected row).
+- `@axe-core/playwright` pulled in `playwright-core@1.64`, whose `Page` type does not match `playwright@1.56.1`; `package.json`
+  `overrides` pins `playwright-core` to 1.56.1.
+
+### Tests
+- Chromium e2e: `npx playwright test` (`test/e2e-chromium/shell.spec.ts`, 12 tests incl. the screenshots written to `artifacts/m1/`).
+- The "no light flash" test samples the root background every animation frame from document start (init script) until
+  `data-kex-shell="ready"` and requires the first sampled `data-kex-theme` to be `dark` and no frame to be light.
+- Firefox: `node test/e2e-firefox/smoke.mjs` runs MV2 M0+M1 (27 asserts), fail-open and CSS-only; `--variant probe` runs the MV3 matrix.
+  Key events go through Marionette actions (`Ctrl+K` reaches the page and the palette input is focused, so the browser did not take it).
+- Dark theme, skin baseline: Moodle's own loading skeletons (`.bg-pulse-grey`), the forum `.activity-details` box and the
+  `.btn-submit.search-icon` button hard-code light fills and are re-coloured under `[data-kex-theme=dark]`.
+- Page `<mark>` styling from Bootstrap (padding) spread the palette's fuzzy highlights; reset to `padding: 0`.

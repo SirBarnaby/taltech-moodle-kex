@@ -26,7 +26,7 @@ function Popup() {
       </header>
       <div class="ext-row">
         <label for="p-enabled">{t('ext.enabled')}</label>
-        <Switch id="p-enabled" label="Enabled" checked={s.enabled} onChange={(enabled) => update({ enabled })} />
+        <Switch id="p-enabled" label={t('ext.enabled')} checked={s.enabled} onChange={(enabled) => update({ enabled })} />
       </div>
       <div class="ext-row">
         <label for="p-fx">{t('settings.effects')}</label>

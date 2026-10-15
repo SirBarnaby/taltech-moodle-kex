@@ -106,7 +106,7 @@ export function Header() {
           </>
         )}
       </div>
-      <button type="button" class="kex-search" data-kex-test="search" aria-label={t('header.searchAria')} aria-haspopup="dialog" onClick={() => (paletteOpen.value = true)}>
+      <button type="button" class="kex-search" data-kex-test="search" aria-keyshortcuts={mac ? 'Meta+K' : 'Control+K'} aria-haspopup="dialog" onClick={() => (paletteOpen.value = true)}>
         <Search class="kex-search__icon" size={24} strokeWidth={1.6} aria-hidden="true" />
         <span class="kex-search__text">{t('header.search')}</span>
         <span class="kex-search__kbd" aria-hidden="true">
