@@ -139,3 +139,25 @@ export function parsePinsJson(text: string, wwwroot = ''): { pins: Pin[]; droppe
 export function pinsToJson(pins: readonly Pin[]): string {
   return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), pins }, null, 2);
 }
+
+export interface PinGroup {
+  courseId: number;
+  heading: string;
+  pins: Pin[];
+}
+
+/** Pins grouped by course, groups in order of their first pin; inside a group the stored order. */
+export function groupPins(pins: readonly Pin[], names: ReadonlyMap<number, string>): PinGroup[] {
+  const groups: PinGroup[] = [];
+  for (const p of pins) {
+    let g = groups.find((x) => x.courseId === p.courseId);
+    if (!g) {
+      const name = names.get(p.courseId);
+      g = { courseId: p.courseId, heading: [p.courseCode, name].filter(Boolean).join(' / ').toUpperCase(), pins: [] };
+      groups.push(g);
+    }
+    g.pins.push(p);
+  }
+  return groups;
+}
+

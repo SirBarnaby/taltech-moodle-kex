@@ -3,9 +3,8 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { go, homeUrl } from '../../actions/navigate';
 import { dragPin, exportPins, importPins, pinEdit, pinRenaming, reorderPin, unpinItem } from '../../actions/pins';
 import { monoLabel } from '../../data/classify';
-import type { Pin } from '../../data/model';
 import { displayName } from '../../data/repo/courses';
-import { pinsStore } from '../../data/repo/pins';
+import { groupPins, pinsStore } from '../../data/repo/pins';
 import { prefetchStates } from '../../data/repo/prefetch';
 import { t } from '../../i18n';
 import { pageInfo, sidebarCourses } from '../../state';
@@ -17,27 +16,6 @@ import { ItemRow, type RowAction } from '../components/ItemRow';
 import { editKeys, RenameInput } from '../components/PinnedRow';
 import { EmptyState } from '../components/States';
 import { Thumb, thumbVariant } from '../components/Thumb';
-
-interface Group {
-  courseId: number;
-  heading: string;
-  pins: Pin[];
-}
-
-/** Pins grouped by course, groups in order of their first pin; inside a group the stored order. */
-export function groupPins(pins: readonly Pin[], names: ReadonlyMap<number, string>): Group[] {
-  const groups: Group[] = [];
-  for (const p of pins) {
-    let g = groups.find((x) => x.courseId === p.courseId);
-    if (!g) {
-      const name = names.get(p.courseId);
-      g = { courseId: p.courseId, heading: [p.courseCode, name].filter(Boolean).join(' / ').toUpperCase(), pins: [] };
-      groups.push(g);
-    }
-    g.pins.push(p);
-  }
-  return groups;
-}
 
 const isModified = (e: MouseEvent): boolean => e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0;
 

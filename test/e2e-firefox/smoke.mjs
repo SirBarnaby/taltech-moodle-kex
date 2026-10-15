@@ -1,5 +1,5 @@
 // Firefox smoke test for the real extension (M0 + M1).
-//   node test/e2e-firefox/smoke.mjs [--variant dev|probe] [--only m0|m1|failopen|cssonly]
+//   node test/e2e-firefox/smoke.mjs [--variant dev|probe] [--only m0|m1|m3|failopen|cssonly]
 // Builds + packs the variant, installs it on the Selenium grid and asserts the acceptance checks.
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
@@ -60,6 +60,7 @@ async function m0AndM1(kind) {
 
     if (want('m1')) await m1Checks(driver, r);
     if (want('m2')) await m2Checks(driver, r);
+    if (want('m3')) await m3Checks(driver, r);
   } finally {
     await driver.quit();
   }
@@ -258,9 +259,9 @@ async function m2Checks(driver, r) {
   });
   await r.check('course: tab 3 (Labs) filters rows, 1 restores', async () => {
     await driver.actions().sendKeys('3').perform();
-    await waitFor(driver, `document.querySelectorAll('[data-kex-row]').length === 2`, 8000, 'labs filter');
+    await waitFor(driver, `document.querySelectorAll('[data-kex-row]').length === 3`, 8000, 'labs filter');
     await driver.actions().sendKeys('1').perform();
-    await waitFor(driver, `document.querySelectorAll('[data-kex-row]').length === 4`, 8000, 'all rows');
+    await waitFor(driver, `document.querySelectorAll('[data-kex-row]').length === 5`, 8000, 'all rows');
     return 'ok';
   });
   await r.check('course: Space opens the preview sheet, Esc closes it', async () => {
@@ -275,5 +276,44 @@ async function m2Checks(driver, r) {
     const m = await driver.executeScript(`return document.querySelector('.kex-hero__canvas').dataset.fx`);
     if (!['running', 'paused', 'static', 'fallback'].includes(m)) throw new Error(String(m));
     return m;
+  });
+}
+
+async function m3Checks(driver, r) {
+  await driver.get(`${LAB}/my/`);
+  await waitFor(driver, `document.querySelectorAll('[data-kex-test=feed-rows] > li[data-kex-item]').length > 3`, 30000, 'workspace feed');
+  await r.check('workspace: overdue rows first, hero label and summary', async () => {
+    const f = await driver.executeScript(`return { first: document.querySelector('[data-kex-test=feed-1]').className, label: document.querySelector('[data-kex-test=hero-label]').textContent }`);
+    if (!/kex-row--overdue/.test(f.first) || !/^WORKSPACE \//.test(f.label)) throw new Error(JSON.stringify(f));
+    return f.label;
+  });
+  await r.check('workspace: 3 switches to Updates and writes the hash', async () => {
+    await driver.actions().sendKeys('3').perform();
+    await waitFor(driver, `location.hash === '#updates' && document.querySelector('[data-kex-test=feed-label]').textContent === 'UPDATES'`, 8000, 'updates tab');
+    return 'ok';
+  });
+  await r.check('pinned: the sidebar link switches views in place', async () => {
+    await driver.executeScript(`document.querySelector('.kex-sb__nav li:nth-child(2) a').click()`);
+    await waitFor(driver, `!!document.querySelector('[data-kex-test=pinned-page]')`, 8000, 'pinned page');
+    return 'ok';
+  });
+  await driver.get(`${LAB}/my/courses.php#all`);
+  await r.check('my courses: all six courses listed, filter ignores diacritics', async () => {
+    await waitFor(driver, `document.querySelectorAll('[data-kex-mc]').length >= 6`, 30000, 'course rows');
+    await driver.actions().sendKeys('f').perform();
+    await driver.actions().sendKeys('tarkade asjade vorgud').perform();
+    await waitFor(driver, `document.querySelectorAll('[data-kex-mc]').length === 1`, 8000, 'filtered');
+    return 'ok';
+  });
+  await driver.get(`${LAB}/my/`);
+  await r.check('palette: "kubernetes" finds materials of two courses after the idle prefetch', async () => {
+    await waitFor(driver, `!!document.querySelector('[data-kex-test=workspace]')`, 20000, 'workspace');
+    await driver.sleep(6000);
+    await driver.actions().keyDown(Key.CONTROL).sendKeys('k').keyUp(Key.CONTROL).perform();
+    await waitFor(driver, `!!document.querySelector('[data-kex-test=palette] input')`, 8000, 'palette');
+    await driver.actions().sendKeys('kubernetes').perform();
+    await waitFor(driver, `(() => { const t = [...document.querySelectorAll('[data-kex-test=palette] [role=option]')].map(e => e.textContent).join('|'); return /ITI8801/.test(t) && /EMT0140/.test(t); })()`, 15000, 'kubernetes results');
+    await driver.actions().sendKeys(Key.ESCAPE).perform();
+    return 'ok';
   });
 }

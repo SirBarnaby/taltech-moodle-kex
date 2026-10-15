@@ -21,6 +21,7 @@ export interface Entry {
   run?: () => void;
   /** Material entries can be pinned from the palette (Alt+P). */
   cmId?: number;
+  modname?: string;
 }
 
 export interface ResultRow {
@@ -32,6 +33,8 @@ export interface ResultRow {
 
 export interface ResultGroup {
   key: GroupKey;
+  /** The trailing "Search Moodle" row: no group header. */
+  footer?: boolean;
   rows: ResultRow[];
 }
 

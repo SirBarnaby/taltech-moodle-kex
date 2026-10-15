@@ -1,10 +1,14 @@
 import { BookOpen, FileText, GraduationCap, Hash, PanelsTopLeft, Pin, Search, Zap, type LucideIcon } from 'lucide-preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { go } from '../../actions/navigate';
+import { pinItem } from '../../actions/pins';
+import { searchCourses } from '../../data/repo/coursesearch';
+import type { Pin as PinModel } from '../../data/model';
+import { norm } from '../../search/fuzzy';
 import { t, type MessageKey } from '../../i18n';
 import { buildPaletteEntries } from '../../search/entries';
-import { search, type Entry, type GroupKey, type ResultRow } from '../../search';
-import { activeCourseId, paletteOpen } from '../../state';
+import { parseQuery, search, type Entry, type GroupKey, type ResultGroup, type ResultRow } from '../../search';
+import { activeCourseId, pageInfo, paletteOpen, settings, sidebarCourses } from '../../state';
 import { Kbd } from '../components/Kbd';
 
 type IconType = LucideIcon;
@@ -48,8 +52,43 @@ export function Palette() {
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const entries = useMemo(() => buildPaletteEntries(), []);
-  const groups = useMemo(() => search(entries, query, { activeCourseId: activeCourseId.value }), [entries, query]);
+  const [others, setOthers] = useState<Entry[]>([]);
+  const base = useMemo(() => search(entries, query, { activeCourseId: activeCourseId.value }), [entries, query]);
+  const text = parseQuery(query).text;
+  const root = pageInfo.value?.wwwroot ?? '';
+  const groups = useMemo<ResultGroup[]>(() => {
+    const out = [...base];
+    const mine = new Set(sidebarCourses.value.map((c) => c.id));
+    const extra = others.filter((e) => e.courseId !== undefined && !mine.has(e.courseId));
+    if (extra.length) out.push({ key: 'other', rows: extra.map((entry) => ({ entry, score: 0, ranges: [] })) });
+    if (text) {
+      const entry: Entry = {
+        id: 'search-moodle', type: 'page', title: t('palette.searchMoodle', { q: text }), keywords: [],
+        url: `${root}/course/search.php?search=${encodeURIComponent(text)}`, meta: t('palette.kind.page'),
+      };
+      out.push({ key: 'pages', rows: [{ entry, score: 0, ranges: [] }], footer: true } as ResultGroup);
+    }
+    return out;
+  }, [base, others, text, root]);
   const rows = useMemo(() => groups.flatMap((g) => g.rows.map((r) => ({ ...r, group: g.key }))), [groups]);
+
+  // Courses the user is not enrolled in come from Moodle's own search, after a short pause (3+ characters).
+  useEffect(() => {
+    setOthers([]);
+    if (text.length < 3 || norm(text).length < 3) return;
+    let live = true;
+    const timer = window.setTimeout(() => {
+      searchCourses(text, root, settings.value.uiLanguage)
+        .then((list) => live && setOthers(list.map((c) => ({
+          id: `other:${c.id}`, type: 'course' as const, title: c.name, courseCode: c.code, courseId: c.id, url: c.url, keywords: [], meta: c.code,
+        }))))
+        .catch(() => undefined);
+    }, 250);
+    return () => {
+      live = false;
+      window.clearTimeout(timer);
+    };
+  }, [text, root]);
 
   // Focus the input on open and give focus back to what had it on close.
   useEffect(() => {
@@ -84,6 +123,16 @@ export function Palette() {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       activate(rows[sel], e.ctrlKey || e.metaKey);
+    } else if (e.altKey && e.key.toLowerCase() === 'p') {
+      const en = rows[sel]?.entry;
+      if (en?.cmId !== undefined && en.url) {
+        e.preventDefault();
+        const pin: PinModel = {
+          cmid: en.cmId, courseId: en.courseId ?? 0, courseCode: en.courseCode ?? '', title: en.title, modname: en.modname ?? 'resource',
+          kind: (en.kind ?? 'material') as PinModel['kind'], format: (en.format ?? 'FILE') as PinModel['format'], url: en.url, addedAt: Date.now(),
+        };
+        void pinItem(pin);
+      }
     } else if (e.key === 'Tab') {
       e.preventDefault();
       if (!groups.length) return;
@@ -123,9 +172,9 @@ export function Palette() {
         </div>
         <ul class="kex-palette__list" id="kex-pal-list" role="listbox" aria-label={t('palette.label')} ref={list}>
           {groups.map((g) => (
-            <li key={g.key} role="presentation">
-              <div class="kex-palette__group" id={`kex-pal-g-${g.key}`}>{t(GROUP_LABEL[g.key])}</div>
-              <ul role="group" aria-labelledby={`kex-pal-g-${g.key}`}>
+            <li key={g.footer ? 'footer' : g.key} role="presentation" class={g.footer ? 'kex-palette__footer' : undefined}>
+              {!g.footer && <div class="kex-palette__group" id={`kex-pal-g-${g.key}`}>{t(GROUP_LABEL[g.key])}</div>}
+              <ul role="group" aria-labelledby={g.footer ? undefined : `kex-pal-g-${g.key}`} aria-label={g.footer ? t('palette.searchMoodleShort') : undefined}>
                 {g.rows.map((r) => {
                   flat++;
                   const i = flat;

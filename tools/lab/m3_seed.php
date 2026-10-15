@@ -245,5 +245,20 @@ if (!$DB->record_exists('event', ['name' => 'Study group: Kubernetes', 'userid' 
     echo "created calendar events\n";
 }
 
+// ---- palette fixtures: a diacritic title and a second course that mentions kubernetes -----------------
+set_config('enablemycourses', 1);
+$extra = [
+    ['MMO5770', 'Õiguse alused: lepinguõigus', '<p>Sissejuhatus lepinguõigusesse.</p>'],
+    ['EMT0140', 'Kubernetes at the edge', '<p>Running k3s on small gateways.</p>'],
+];
+foreach ($extra as [$short, $name, $intro]) {
+    $cr = $DB->get_record('course', ['shortname' => $short]);
+    if ($cr && !cm_of('page', $cr->id, $name)) {
+        $gen->create_module('page', ['course' => $cr->id, 'section' => 1, 'name' => $name, 'intro' => '', 'content' => $intro, 'contentformat' => FORMAT_HTML]);
+        rebuild_course_cache($cr->id, true);
+        echo "created page $name\n";
+    }
+}
+
 rebuild_course_cache($c2->id, true);
 echo "m3 seed done\n";

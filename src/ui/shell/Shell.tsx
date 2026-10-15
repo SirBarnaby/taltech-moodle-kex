@@ -4,6 +4,8 @@ import { t } from '../../i18n';
 import { hash, headerCompact, helpOpen, paletteOpen, route, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
 import { CourseView } from '../views/Course';
 import { MyCoursesView } from '../views/MyCourses';
+import { SkinChrome } from '../views/SkinChrome';
+import { chromeKeys } from '../../state/skin';
 import { PinnedView } from '../views/Pinned';
 import { WorkspaceView } from '../views/Workspace';
 import { Header } from './Header';
@@ -84,6 +86,7 @@ function skipToContent(e: MouseEvent): void {
 /** The page content for the current route; skin routes have none (Moodle's own content stays in place). */
 function View() {
   const r = route.value;
+  if (r?.effective === 'skin' && chromeKeys.has(r.key)) return <SkinChrome />;
   if (r?.effective !== 'app') return null;
   if (r.key === 'course' || r.key === 'section') return <CourseView />;
   if (r.key === 'workspace') return hash.value === '#pinned' ? <PinnedView /> : <WorkspaceView />;

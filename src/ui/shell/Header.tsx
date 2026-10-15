@@ -4,7 +4,7 @@ import { stripBase } from '../../content/router';
 import { toggleTheme } from '../../actions/theme';
 import { t } from '../../i18n';
 import {
-  headerCompact, headerTitle, pageInfo, paletteOpen, resolvedTheme, sidebarCourses, sidebarMode, sidebarOverlay,
+  hash, headerCompact, headerTitle, pageInfo, paletteOpen, resolvedTheme, sidebarCourses, sidebarMode, sidebarOverlay,
 } from '../../state';
 import { IconButton } from '../components/IconButton';
 import { buildBreadcrumb, collapseBreadcrumb, type ShellCrumb } from './breadcrumb';
@@ -87,6 +87,7 @@ export function Header() {
         { home: t('crumb.home'), workspace: t('crumb.workspace'), mycourses: t('crumb.mycourses') },
       )
     : [];
+  if (hash.value === '#pinned' && crumbs.length === 2 && /\/my\/?$/.test(info?.wwwroot ? stripBase(location.pathname, info.wwwroot) : '')) crumbs[1] = { text: t('pinned.title'), href: null };
   const mac = isMac();
 
   return (

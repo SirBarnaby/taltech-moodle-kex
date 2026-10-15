@@ -1,10 +1,16 @@
 import { go, PAGES } from '../actions/navigate';
 import { toggleEffects, toggleMotion, toggleTheme } from '../actions/theme';
 import { displayName } from '../data/repo/courses';
-import { readPins } from '../data/repo/pins';
+import { classifyFormat, classifyKind } from '../data/classify';
+import { isPinned, readPins } from '../data/repo/pins';
+import { cachedStates } from '../data/repo/prefetch';
+import { topicSections } from '../data/repo/coursestate';
+import { pad2 } from '../data/topics';
+import { decodeEntities } from '../lib/sanitize';
 import { findLogoutHref } from '../data/scrape/usermenu';
 import { t } from '../i18n';
 import { helpOpen, hooks, pageInfo, quickSettingsOpen, route, sidebarCourses } from '../state';
+import type { Course } from '../data/model';
 import type { Entry } from './index';
 
 const logout = (): void => {
@@ -79,6 +85,35 @@ export function buildPaletteEntries(): Entry[] {
       meta: c.code,
     });
   }
-  out.push(...pageEntries(), ...actionEntries());
+  out.push(...topicAndMaterialEntries(courses), ...pageEntries(), ...actionEntries());
+  return out;
+}
+
+/** Topics and materials of every sidebar course whose state is cached (the hourly idle prefetch fills them). */
+function topicAndMaterialEntries(courses: readonly Course[]): Entry[] {
+  const out: Entry[] = [];
+  const pins = readPins();
+  for (const st of cachedStates(courses.map((c) => c.id))) {
+    const course = courses.find((c) => c.id === st.courseId);
+    if (!course) continue;
+    const titles = new Map(st.sections.map((sec) => [sec.id, decodeEntities(sec.title)]));
+    for (const sec of topicSections(st)) {
+      const title = decodeEntities(sec.title) || t('course.weekN', { n: sec.number });
+      out.push({
+        id: `topic:${course.id}:${sec.number}`, type: 'topic', title, courseCode: course.code, courseId: course.id,
+        url: `${course.url}#topic-${sec.number}`, keywords: [], meta: t('palette.topicMeta', { code: course.code, n: pad2(sec.number) }),
+      });
+    }
+    for (const cm of st.cms) {
+      if (!cm.uservisible || cm.modname === 'label' || cm.modname === 'subsection' || !cm.name) continue;
+      const name = decodeEntities(cm.name);
+      const kind = classifyKind({ modname: cm.modname, name });
+      out.push({
+        id: `cm:${cm.id}`, type: 'cm', title: name, subtitle: titles.get(cm.sectionId) || undefined, courseCode: course.code, courseId: course.id,
+        url: cm.url, kind, format: classifyFormat({ modname: cm.modname, name }, kind), modname: cm.modname, cmId: cm.id, keywords: [],
+        pinned: isPinned(cm.id, pins), meta: course.code,
+      });
+    }
+  }
   return out;
 }

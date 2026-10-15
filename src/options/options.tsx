@@ -1,7 +1,9 @@
 import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { lang, t } from '../i18n';
-import { storageGetAll, storageRemove } from '../lib/storage';
+import { storageGetAll, storageRemove, storageSet } from '../lib/storage';
+import type { Pin } from '../data/model';
+import { MAX_PINS, parsePinsJson, pinsToJson } from '../data/repo/pins';
 import { SETTINGS_KEY, type RouteMode } from '../lib/settings';
 import { resolveTheme } from '../lib/theme';
 import { useSettings } from '../lib/useSettings';
@@ -26,6 +28,30 @@ async function cachedCourseNames(): Promise<Map<number, CachedCourse>> {
     if (Array.isArray(data)) for (const c of data) out.set(c.id, c);
   }
   return out;
+}
+
+interface PinsKey {
+  key: string;
+  host: string;
+  count: number;
+}
+
+/** Every `kex:v1:{host}:{userId}:pins` key in this profile (usually one). */
+async function pinKeys(): Promise<PinsKey[]> {
+  const all = await storageGetAll();
+  return Object.entries(all)
+    .filter(([k]) => /^kex:v1:[^:]+(?::\d+)?:\d+:pins$/.test(k))
+    .map(([k, v]) => ({ key: k, host: k.split(':').slice(2, -2).join(':'), count: ((v as { data?: unknown[] }).data ?? []).length }));
+}
+
+function download(name: string, text: string): void {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 
 function Section({ title, children, id }: { title: string; children: preact.ComponentChildren; id: string }) {
@@ -53,6 +79,7 @@ function Options() {
   const [s, update, ready] = useSettings();
   const [names, setNames] = useState<Map<number, CachedCourse>>(new Map());
   const [status, setStatus] = useState('');
+  const [pinSets, setPinSets] = useState<PinsKey[]>([]);
 
   useEffect(() => {
     lang.value = s.uiLanguage;
@@ -62,6 +89,9 @@ function Options() {
   useEffect(() => {
     void cachedCourseNames().then(setNames);
   }, [s.courseAliases]);
+  useEffect(() => {
+    void pinKeys().then(setPinSets);
+  }, [status]);
 
   if (!ready) return null;
 
@@ -77,6 +107,26 @@ function Options() {
     const all = await storageGetAll();
     await storageRemove(Object.keys(all).filter((k) => k.startsWith('kex:') || k === SETTINGS_KEY));
     setStatus(t('ext.resetDone'));
+  };
+  const exportPins = async (k: PinsKey): Promise<void> => {
+    const all = await storageGetAll();
+    const data = ((all[k.key] as { data?: Pin[] } | undefined)?.data ?? []) as Pin[];
+    download('kex-pins.json', pinsToJson(data));
+  };
+  const importPins = async (k: PinsKey, file: File | undefined): Promise<void> => {
+    if (!file) return;
+    try {
+      const { pins } = parsePinsJson(await file.text(), `https://${k.host}`);
+      if (!pins.length) return setStatus(t('pinned.importFailed'));
+      const all = await storageGetAll();
+      const cur = ((all[k.key] as { data?: Pin[] } | undefined)?.data ?? []) as Pin[];
+      const have = new Set(cur.map((p) => p.cmid));
+      const merged = [...cur, ...pins.filter((p) => !have.has(p.cmid))].slice(0, MAX_PINS);
+      await storageSet({ [k.key]: { v: 1, at: Date.now(), data: merged } });
+      setStatus(t('pinned.imported', { n: merged.length - cur.length }));
+    } catch {
+      setStatus(t('pinned.importFailed'));
+    }
   };
   const aliasRows = Object.entries(s.courseAliases);
   const modeOptions: { value: RouteMode | ''; label: string }[] = [
@@ -208,6 +258,26 @@ function Options() {
             ))}
           </tbody>
         </table>
+      </Section>
+
+      <Section id="o-pins" title={t('ext.pins')}>
+        <p class="ext-hint">{t('ext.pinsHint')}</p>
+        {pinSets.length === 0 && <p class="ext-hint">{t('ext.pinsNoUser')}</p>}
+        {pinSets.map((k) => (
+          <div class="ext-row ext-row--wide" key={k.key} data-kex-test="pins-set">
+            <div>
+              <p>{k.host}</p>
+              <p class="ext-hint">{t('ext.pinsCount', { n: k.count })}</p>
+            </div>
+            <div class="ext-row__ctl ext-actions">
+              <button type="button" class="ext-btn ext-btn--outline" onClick={() => void exportPins(k)}>{t('ext.exportPins')}</button>
+              <label class="ext-btn ext-btn--outline ext-filebtn">
+                {t('ext.importPins')}
+                <input type="file" accept="application/json,.json" hidden onChange={(e) => { void importPins(k, e.currentTarget.files?.[0]); e.currentTarget.value = ''; }} />
+              </label>
+            </div>
+          </div>
+        ))}
       </Section>
 
       <Section id="o-data" title={t('ext.data')}>

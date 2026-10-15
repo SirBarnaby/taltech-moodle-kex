@@ -39,12 +39,13 @@ describe('resolveRoute', () => {
 
 describe('effectiveMode', () => {
   it('renders app routes as skin until their view ships, and respects overrides', () => {
-    expect(effectiveMode(r('/my/', 'page-my-index'), {}).effective).toBe('skin');
+    expect(effectiveMode(r('/my/', 'page-my-index'), {}).effective).toBe('app');
+    expect(effectiveMode(r('/my/', 'page-my-index'), { workspace: 'skin' }).effective).toBe('skin');
     expect(effectiveMode(r('/user/profile.php', 'page-user-profile'), { generic: 'off' }).effective).toBe('off');
   });
-  it('keeps login and quiz attempts pure Moodle until M5/M4', () => {
+  it('keeps login pure Moodle until M5; quiz attempts are focus mode', () => {
     expect(effectiveMode(r('/login/index.php', 'page-login-index'), {}).effective).toBe('off');
-    expect(effectiveMode(r('/mod/quiz/attempt.php', 'page-mod-quiz-attempt'), {}).effective).toBe('off');
+    expect(effectiveMode(r('/mod/quiz/attempt.php', 'page-mod-quiz-attempt'), {}).effective).toBe('skin');
   });
 });
 

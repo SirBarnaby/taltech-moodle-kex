@@ -109,6 +109,9 @@
       background: var(--kex-primary-hover);
     }
   }
+  .ext-filebtn {
+    cursor: pointer;
+  }
   .ext-btn--outline {
     width: auto;
     padding: 0 18px;

@@ -4,7 +4,7 @@ import { COURSE_TABS } from '../data/repo/mycourses';
 import { storeOf, stepMcTab, toggleHide, toggleStar } from './mycourses';
 import { go } from './navigate';
 import { pinEdit } from './pins';
-import { markEverythingRead, markNotifRead, manualOf, openFeedItem, pinFeedItem, rowFromRecent, setFeedTab, toggleDoneById } from './workspace';
+import { markEverythingRead, markNotifRead, manualOf, openFeedItem, pinFeedItem, rowFromRecent, selectFeed, setFeedTab, toggleDoneById } from './workspace';
 import { undoLast } from './undo';
 import { feed, feedSel, wsPreview } from '../state/workspace';
 import { mcFilter, mcSel, mcSort, mcTab, matchesFilter, sortCourses, lastAccess } from '../state/mycourses';
@@ -35,7 +35,7 @@ function moveFeed(delta: 1 | -1): void {
   const i = list.findIndex((x) => x.key === feedSel.value);
   const next = list[Math.max(0, Math.min(list.length - 1, (i < 0 ? 0 : i + delta)))];
   if (!next) return;
-  feedSel.value = next.key;
+  selectFeed(next.key);
   focusRow('data-kex-item', next.key);
 }
 

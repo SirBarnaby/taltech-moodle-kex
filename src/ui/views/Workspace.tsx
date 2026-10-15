@@ -1,7 +1,7 @@
 import { ArrowUpRight, Bell, CircleCheck, Eye, Megaphone, MessagesSquare, Pin as PinIcon } from 'lucide-preact';
 import { useEffect } from 'preact/hooks';
 import {
-  feedPinned, initWorkspace, manualOf, markEverythingRead, markNotifRead, openCourse, openFeedItem, pinFeedItem, recentKind, rowFromRecent, setFeedTab,
+  feedPinned, initWorkspace, manualOf, markEverythingRead, markNotifRead, openCourse, openFeedItem, pinFeedItem, recentKind, rowFromRecent, selectFeed, setFeedTab,
   toggleDoneById,
 } from '../../actions/workspace';
 import { go, homeUrl, PAGES } from '../../actions/navigate';
@@ -96,11 +96,11 @@ function DeadlineRow({ item, index, now, selected, first }: { item: Extract<Feed
   return (
     <ItemRow
       id={item.key}
-      testId={`feed-${index}`}
+      testId={`feed-${index + 1}`}
       class={`kex-row--deadline${d.overdue ? ' kex-row--overdue' : ''}`}
       selected={selected}
       enter={index}
-      onSelect={(k) => (feedSel.value = k)}
+      onSelect={selectFeed}
       ariaLabel={`${d.title}, ${dueSubtitle(d, now)}`}
       thumb={<DateTile day={String(new Date(ms).getDate())} sub={d.overdue ? t('label.overdue') : `${mon} · ${wd}`} overdue={d.overdue} soon={soon} testId="date-tile" />}
       tone={d.overdue ? 'overdue' : 'normal'}
@@ -129,11 +129,11 @@ function ContinueRow({ item, index, now, selected }: { item: Extract<FeedItem, {
   return (
     <ItemRow
       id={item.key}
-      testId={`feed-${index}`}
+      testId={`feed-${index + 1}`}
       class="kex-row--continue"
       selected={selected}
       enter={index}
-      onSelect={(k) => (feedSel.value = k)}
+      onSelect={selectFeed}
       ariaLabel={r.title}
       thumb={<Thumb variant={thumbVariant(kind, format)} format={format} seed={r.cmid} />}
       label={`${monoLabel(kind, format)} · ${r.courseCode}`}
@@ -177,12 +177,12 @@ function UpdateRow({ item, index, selected }: { item: Extract<FeedItem, { type: 
   return (
     <ItemRow
       id={item.key}
-      testId={`feed-${index}`}
+      testId={`feed-${index + 1}`}
       class={`kex-row--update${n.read ? '' : ' kex-row--unread'}`}
       selected={selected}
       unread={!n.read}
       enter={index}
-      onSelect={(k) => (feedSel.value = k)}
+      onSelect={selectFeed}
       ariaLabel={`${n.subject}${n.read ? '' : `, ${t('ws.unread')}`}`}
       thumb={<GlyphTile testId="glyph-tile">{glyph}</GlyphTile>}
       label={n.courseCode ? `${word} / ${n.courseCode}` : word}

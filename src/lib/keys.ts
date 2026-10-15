@@ -1,6 +1,6 @@
 import { inModal, isTypingTarget } from './dom';
 
-export type Scope = 'global' | 'palette' | 'course' | 'workspace' | 'preview';
+export type Scope = 'global' | 'palette' | 'course' | 'workspace' | 'preview' | 'activity';
 
 export interface Binding {
   /** "ctrl+k", "alt+shift+o", "g w" (chord), "?", "escape". Lower-case. */

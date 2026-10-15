@@ -38,7 +38,7 @@ export function prefetchStates(courses: readonly Pick<Course, 'id'>[], force = f
   const last = cache.peek<number>('prefetch:at')?.data ?? 0;
   const missing = ids.some((id) => !cache.peek(`state:${id}`));
   if (!force && !missing && Date.now() - last < HOUR) {
-    statesVersion.value++;
+    statesVersion.value = statesVersion.peek() + 1;
     return;
   }
   if (started && !force) return;
@@ -49,7 +49,7 @@ export function prefetchStates(courses: readonly Pick<Course, 'id'>[], force = f
       .catch((e: unknown) => log.warn('prefetch failed', e))
       .finally(() => {
         started = false;
-        statesVersion.value++;
+        statesVersion.value = statesVersion.peek() + 1;
       });
   });
 }

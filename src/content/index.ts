@@ -7,6 +7,9 @@ import { scrapeSummaries } from '../data/scrape/summaries';
 import { scrapeTiles } from '../data/scrape/tiles';
 import { setTileList } from '../actions/course';
 import { courseBindings, previewBindings } from '../actions/coursekeys';
+import { activityBindings, focusBindings } from '../actions/skinkeys';
+import { watchSkinPage } from '../actions/skin';
+import { chromeKeys } from '../state/skin';
 import { mycoursesBindings, pinnedBindings, workspaceBindings, workspacePreviewBindings } from '../actions/wskeys';
 import { configureCounts, countsStore } from '../data/repo/counts';
 import { configureNotifs } from '../data/repo/notifs';
@@ -93,7 +96,8 @@ class Controller {
   // ---------------------------------------------------------------- boot
 
   private applyAttrs(s: Pick<Settings, 'theme' | 'effects' | 'motion' | 'sidebarCollapsed'>): void {
-    applyShellAttrs(this.html, shellAttrs(s, window.innerWidth));
+    const focus = this.route?.key === 'quiz-focus' && this.route.effective === 'skin';
+    applyShellAttrs(this.html, shellAttrs(focus ? { ...s, sidebarCollapsed: true } : s, window.innerWidth));
   }
 
   private async boot(): Promise<void> {
@@ -125,7 +129,7 @@ class Controller {
       pageInfo.value = info;
 
       if (eff.effective === 'off') {
-        const silent = base.mode === 'off' || eff.key === 'login' || eff.key === 'quiz-focus';
+        const silent = base.mode === 'off' || eff.key === 'login';
         const userChoice = s.routeModes[eff.key] === 'off';
         return this.settleOff(!silent && userChoice && s.showOffPill, 'setting');
       }
@@ -243,6 +247,22 @@ class Controller {
         },
       );
     }
+    if (eff.effective === 'skin' && (chromeKeys.has(eff.key) || eff.key === 'quiz-focus')) {
+      const focus = eff.key === 'quiz-focus';
+      // Skin+ pages: our band replaces Moodle's #page-header; a quiz attempt is focus mode (rail sidebar, only Ctrl+K and Alt+Shift+O).
+      if (focus) this.html.dataset.kexFocus = 'true';
+      else this.html.dataset.kexChrome = eff.key;
+      const off = keyManager.register(focus ? focusBindings() : activityBindings());
+      keyManager.setScope('activity', !focus && eff.key === 'activity');
+      if (focus) keyManager.suspend(true);
+      this.stops.push(() => {
+        off();
+        keyManager.setScope('activity', false);
+        keyManager.suspend(false);
+        delete this.html.dataset.kexFocus;
+        delete this.html.dataset.kexChrome;
+      });
+    }
     window.clearTimeout(this.failTimer);
     this.mounted = true;
     this.html.dataset.kexShell = 'ready';
@@ -266,7 +286,10 @@ class Controller {
     await this.dcl;
     if (!this.mounted) return;
     this.refreshFromDom(eff);
-    if (eff.effective === 'skin') setMode('skin');
+    if (eff.effective === 'skin') {
+      setMode('skin');
+      if (chromeKeys.has(eff.key) || eff.key === 'quiz-focus') this.stops.push(watchSkinPage());
+    }
     window.addEventListener('hashchange', () => {
       hashSig.value = location.hash;
       routeSig.value = routeSig.value ? { ...routeSig.value } : null;

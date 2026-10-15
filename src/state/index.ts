@@ -31,7 +31,9 @@ export const resolvedTheme = computed(() => {
   return resolveTheme(settings.value.theme);
 });
 export const resolvedMotion = computed(() => resolveMotion(settings.value.motion));
-export const sidebarMode = computed(() => sidebarModeFor(viewportWidth.value, settings.value.sidebarCollapsed));
+export const sidebarMode = computed(() =>
+  sidebarModeFor(viewportWidth.value, settings.value.sidebarCollapsed || (route.value?.key === 'quiz-focus' && route.value.effective === 'skin')),
+);
 
 export const sidebarCourses = computed<Course[]>(() =>
   applyAliases(orderCourses(coursesRaw.value, settings.value.courseOrder), settings.value.courseAliases),

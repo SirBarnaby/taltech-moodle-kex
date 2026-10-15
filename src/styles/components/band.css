@@ -19,8 +19,8 @@
     display: none;
   }
   .kex-band .kex-cross--b {
-    left: auto;
-    right: calc(9.1% - 12.5px);
+    left: calc(55% - 12.5px);
+    right: auto;
     bottom: 16px;
   }
   .kex-band__inner {

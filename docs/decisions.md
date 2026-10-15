@@ -151,3 +151,54 @@ can sit next to a release build.
   writes a real-Firefox screenshot.
 - The short-window trick (`setViewportSize` 500 high) is needed to scroll the course page in tests: it is shorter than the window.
 - The course view only focuses the active topic row on load when nothing else has focus (otherwise it stole focus from the palette).
+
+## M3: Workspace, pins, Pinned page, My courses
+
+### Routing and chrome
+- `/my/` renders the Workspace; `/my/#pinned` swaps in the Pinned view (the hash lives in the `hash` signal, fed by `hashchange`).
+  `go()` handles "same page, hash dropped" (`/my/#pinned` to `/my/`) with `pushState` instead of a reload; the sidebar links use it.
+- `/my/courses.php` is an app route. The lab redirects it to `/my/` unless `enablemycourses` is set; `tools/lab/m3_seed.php` sets it.
+- The sidebar's Workspace item shows the unread count as a mono pill (a small magenta badge on the rail); the avatar gets a magenta dot
+  when notifications or messages are unread. Counts come from `message_popup_get_unread_popup_notification_count` and
+  `core_message_get_unread_conversations_count`, refreshed on mount and every 2 minutes while visible; marking read is optimistic.
+- Band (PageChrome) crosshair sits at 55% so it never hides behind the right-aligned buttons.
+
+### Workspace
+- Feed order (Everything): overdue, due within 7 days, Continue (up to 3 content materials), unread updates, due in 8 to 14 days. Deadlines:
+  all, overdue first. Updates: unread first. The selection follows the first row until the user selects one; a tab change resets it.
+- Rows: Deadline (date tile), Continue (kind thumb), Update (glyph tile). Done appears only when the manual-completion state of the cm is
+  already known (cached by a course visit). "Submit" is shown for `assign` events whose `action.actionable` is true, else "Open".
+  Quiz deadlines say "Closes".
+- Overdue wording is "overdue, 2 days ago" (the relative formatter has no bare duration).
+- Loading shows 3 skeleton rows only when nothing is cached (no skeleton under cached content, to avoid a flash on every visit).
+- The week number is `floor((now - earliest started course startdate) / 7 d) + 1`; no started course means no week in the label.
+
+### Pins
+- One global ordered list (max 50) in `kex:v1:{host}:{userId}:pins`. The PINNED row shows the current course first. Edit mode (`e` or the
+  Edit button) reorders inside the displayed order (`Alt+Left/Right`, Alt+Up/Down on the Pinned page, or drag by the grip), renames
+  (F2, inline) and removes. Every change sets a one-level Undo (`z`, 5.5 s).
+- The Pinned page groups pins by course in order of first pin; a drag moves a pin onto another pin of its list with one Undo.
+- Unavailable pins: after the hourly idle prefetch, a pin whose cm is no longer in the cached state of its course is shown struck
+  through with `UNAVAILABLE` and cannot be opened.
+- Export downloads `kex-pins.json`; import merges new cmids (URLs must start with the Moodle origin; invalid entries are dropped and
+  counted). The options page does the same per stored `host:user` pins key.
+
+### My courses
+- Tabs use the timeline classification (`future`, `past`, `favourites`, `hidden`, `all`); Current mirrors the site grouping: customfield
+  `-1` when the TalTech `is_archived` field was seen on a /my page, else `inprogress`. Archived appears only with that field.
+- Star calls `core_course_set_favourite_courses`; hide writes `block_myoverview_hidden_course_<id>` with `core_user_update_user_preferences`
+  (args are `{type, value}`; `null` unhides). Both are optimistic and refresh the lists afterwards; hide has Undo.
+- Last access comes from `core_course_get_recent_courses`; courses without an `http(s)` course image get a gradient tile with the code
+  (the lab returns `data:` images, which are never stored or shown).
+
+### Palette
+- After the sidebar list is known, an idle prefetch fetches `get_state` for every sidebar course in one batched POST (hourly) and the
+  palette indexes topics and materials from the cached states. "Other courses" runs `core_course_search_courses` after 250 ms and 3
+  characters; a final row searches Moodle (`/course/search.php`). `Alt+P` pins the highlighted material.
+- `prefetchStates` bumps `statesVersion` with `peek()`: writing a signal it also reads inside the mount effect threw "Cycle detected".
+
+### Lab and tests
+- `tools/lab/m3_seed.php` (idempotent) adds due dates, a submitted/graded set, a quiz, forum posts, notifications, a conversation, events,
+  an "Õiguse alused" page in MMO5770 and "Kubernetes at the edge" in EMT0140. Lab 5 stays a draft (a realistic "not submitted yet").
+  `tools/lab/m3_reset.php` makes every notification unread again; the updates spec runs it before and after.
+- `test/e2e-chromium/workspace.spec.ts` covers every M3 acceptance item; `test/unit/workspace.test.ts` the pure parts.

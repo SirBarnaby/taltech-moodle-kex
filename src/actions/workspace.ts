@@ -13,7 +13,7 @@ import type { RowModel } from '../data/topics';
 import { ws } from '../data/ws';
 import { t } from '../i18n';
 import { hash, settings } from '../state';
-import { feed, feedSel, nowSec, wsPreview } from '../state/workspace';
+import { feed, feedSel, feedTab, nowSec, wsPreview } from '../state/workspace';
 import { go } from './navigate';
 import { pinItem } from './pins';
 import { pushToast } from './toasts';
@@ -22,19 +22,32 @@ import { log } from '../lib/log';
 
 /** Workspace actions (page-designs §2, happy-path §2). Plain functions over src/state/workspace.ts. */
 
+/** Until the user selects a row, the selection follows the first row of the feed (the order can change as data arrives). */
+let touched = false;
+export function selectFeed(key: string): void {
+  touched = true;
+  feedSel.value = key;
+}
+
 export function initWorkspace(): () => void {
+  touched = false;
   feedSel.value = undefined;
   wsPreview.value = undefined;
   nowSec.value = Math.floor(Date.now() / 1000);
   const timer = window.setInterval(() => (nowSec.value = Math.floor(Date.now() / 1000)), 60_000);
   // One batched POST: deadlines, recent, notifications and counts (forced: returning from an assignment must show it as done).
   void Promise.all([eventsStore().refresh(true), recentStore().refresh(true), notifsStore().refresh(true), countsStore().refresh(true)]);
+  let lastTab = feedTab.peek();
   const stop = effect(() => {
-    // Keep the selected row valid; focus nothing automatically.
+    // Keep the selected row valid; focus nothing automatically. A new tab (also through the URL hash) starts at its first row.
+    if (feedTab.value !== lastTab) {
+      lastTab = feedTab.value;
+      touched = false;
+    }
     const list = feed.value;
     const cur = feedSel.value;
     if (!list.length) feedSel.value = undefined;
-    else if (cur === undefined || !list.some((i) => i.key === cur)) feedSel.value = list[0]?.key;
+    else if (!touched || cur === undefined || !list.some((i) => i.key === cur)) feedSel.value = list[0]?.key;
   });
   return () => {
     window.clearInterval(timer);
@@ -47,6 +60,7 @@ export function setFeedTab(tab: 'all' | 'deadlines' | 'updates'): void {
   url.hash = tab === 'all' ? '' : `#${tab}`;
   history.replaceState(null, '', url);
   hash.value = location.hash;
+  touched = false;
   feedSel.value = undefined;
 }
 
