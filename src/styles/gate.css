@@ -1,0 +1,29 @@
+/* No-flash gate (architecture §5.1). Injected before any DOM exists.
+   If our JS never runs, the animation reveals Moodle after 4 s. */
+:root:not([data-kex="off"]) body {
+  visibility: hidden;
+  animation: kex-failsafe 0s linear 4s forwards;
+}
+:root:not([data-kex="off"]) #kex-root {
+  visibility: visible;
+}
+@keyframes kex-failsafe {
+  to {
+    visibility: visible;
+  }
+}
+:root[data-kex="app"] body,
+:root[data-kex="skin"] body {
+  visibility: visible;
+  animation: none;
+}
+:root[data-kex="app"] #page-wrapper {
+  display: none !important;
+}
+:root:not([data-kex="off"]) {
+  background: var(--kex-bg, #fbfbfd);
+}
+/* Moodle overlays appended to <body> stay visible in app mode; tool tours are hidden. */
+:root[data-kex="app"] :is([data-flexitour], .flexitour) {
+  display: none !important;
+}

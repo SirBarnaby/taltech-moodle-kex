@@ -1,0 +1,173 @@
+/* Design tokens (design-spec §2). Defined on :root[data-kex] (content pages) and :root[data-ext] (popup, options). */
+:root[data-kex],
+:root[data-ext] {
+  color-scheme: light;
+
+  /* Fonts (design-spec §1) */
+  --kex-font-ui: "Inter Variable", system-ui, "Segoe UI", sans-serif;
+  --kex-font-display: "Inter Tight Variable", "Inter Variable", system-ui, sans-serif;
+  --kex-font-mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Mono", Menlo, monospace;
+
+  /* Light theme */
+  --kex-bg: #fbfbfd;
+  --kex-header-bg: #fcfcfd;
+  --kex-text: #06043d;
+  --kex-text-2: #241e60;
+  --kex-text-3: #5f598c;
+  --kex-text-4: #8f8ab3;
+  --kex-mono-strong: #2e2470;
+  --kex-mono: #494280;
+  --kex-mono-soft: #7771a0;
+  --kex-violet: #1a0f8f;
+  --kex-violet-2: #3625ad;
+  --kex-accent: #c114fe;
+  --kex-accent-bar: linear-gradient(180deg, #c753f0, #b300f5 50%, #c233f5);
+  --kex-magenta: #a10982;
+  --kex-primary: #201055;
+  --kex-primary-hover: #2e1a78;
+  --kex-on-primary: #f7f6fa;
+  --kex-outline: #3a3171;
+  --kex-outline-text: #0a0847;
+  --kex-border: #e3e3f0;
+  --kex-border-card: #dddded;
+  --kex-border-strong: #d0cadb;
+  --kex-divider-v: #d5d3ea;
+  --kex-tint: #efe6fd;
+  --kex-tint-border: #e0dcf3;
+  --kex-hover: #f5f1fe;
+  --kex-search-bg: #f2edfd;
+  --kex-search-border: #ddd8f2;
+  --kex-search-text: #37219d;
+  --kex-search-icon: #150773;
+  --kex-kbd-bg: #e5e0fb;
+  --kex-kbd-border: #d8d3f7;
+  --kex-kbd-text: #2c1890;
+  --kex-iconbtn-bg: #ebebf9;
+  --kex-iconbtn-border: #e0e2f1;
+  --kex-iconbtn-fg: #0a0538;
+  --kex-actions: #43397a;
+  --kex-actions-divider: #e8eaf4;
+  --kex-focus: #c114fe;
+  --kex-switch-off: #d8d3f0;
+  --kex-success: #2f8f5b;
+  --kex-warning: #c47a00;
+  --kex-scrim: rgba(10, 6, 30, 0.35);
+
+  /* Sidebar (same in both themes) */
+  --kex-sb-bg:
+    radial-gradient(120% 38% at 100% 0%, rgba(88, 58, 140, 0.28) 0%, rgba(88, 58, 140, 0) 60%),
+    linear-gradient(180deg, #1f1339 0%, #1b1034 9%, #18102f 22%, #160f2c 40%, #150f2b 70%, #140f29 100%);
+  --kex-sb-text: #f2f1f8;
+  --kex-sb-text-2: #e7e6f1;
+  --kex-sb-mono: #a5a3c5;
+  --kex-sb-mono-active: #ac8ac9;
+  --kex-sb-label: #a39bc0;
+  --kex-sb-divider: #3a2e62;
+  --kex-sb-logo-divider: #583f89;
+  --kex-sb-hover: rgba(255, 255, 255, 0.045);
+  --kex-sb-avatar-bg: #4f4b70;
+  --kex-sb-avatar-ring: rgba(255, 255, 255, 0.55);
+  --kex-sb-focus: #f0a6f8;
+  --kex-pop-bg: #1b1334;
+  --kex-pop-border: #3a2e62;
+  --kex-pop-hover: rgba(255, 255, 255, 0.06);
+
+  /* Hero */
+  --kex-hero-bg: linear-gradient(90deg, #251443 0%, #1f133e 25%, #1d1238 45%, #24164a 62%, #2a1153 100%);
+  --kex-hero-text: #ffffff;
+  --kex-hero-label: #c6c1d9;
+  --kex-hero-link: #e6e4ef;
+  --kex-hero-link-underline: rgba(255, 255, 255, 0.16);
+  --kex-hero-gradient-text: linear-gradient(90deg, #b9a4ff 0%, #cea3f9 12%, #eba4f8 30%, #f8aaf3 50%, #f8a8ef 100%);
+  --kex-hero-cross: rgba(150, 100, 210, 0.55);
+  --kex-hero-cross-bright: rgba(200, 165, 235, 0.75);
+  --kex-hero-fallback: url("assets/hero-fallback.webp") right center / cover no-repeat, var(--kex-hero-bg);
+
+  /* Geometry */
+  --kex-sb-w-full: clamp(232px, 15.52vw, 300px);
+  --kex-sb-w: var(--kex-sb-w-full);
+  --kex-pad: clamp(24px, 1.77vw, 40px);
+  --kex-header-h: 67px;
+  --kex-header-h-compact: 52px;
+  --kex-hero-h: clamp(232px, 15.96vw, 340px);
+  --kex-topics-w: clamp(300px, 20.7vw, 400px);
+  --kex-r-xs: 2px;
+  --kex-r-s: 3px;
+  --kex-r-m: 4px;
+  --kex-r-l: 6px;
+  --kex-r-xl: 10px;
+  --kex-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --kex-ease-slide: cubic-bezier(0.625, 0.05, 0, 1);
+
+  /* z-index scale */
+  --kex-z-header: 40;
+  --kex-z-sidebar: 50;
+  --kex-z-popover: 60;
+  --kex-z-sheet: 65;
+  --kex-z-palette: 70;
+  --kex-z-toast: 80;
+  --kex-z-pill: 90;
+
+  /* Shadows (nothing else has a shadow: the design is flat) */
+  --kex-shadow-palette: 0 24px 64px -16px rgba(20, 10, 60, 0.35), 0 0 0 1px rgba(32, 16, 85, 0.08);
+  --kex-shadow-popover: 0 12px 32px -8px rgba(20, 10, 60, 0.28);
+  --kex-shadow-compact: 0 6px 24px -12px rgba(32, 16, 85, 0.18);
+  --kex-shadow-sheet: -24px 0 64px -24px rgba(20, 10, 60, 0.35);
+}
+
+/* Narrow layouts (design-spec §11) */
+:root[data-kex-sidebar="rail"] {
+  --kex-sb-w: 72px;
+}
+:root[data-kex-sidebar="drawer"] {
+  --kex-sb-w: 0px;
+}
+
+/* Dark theme: content area; sidebar and hero are unchanged */
+:root[data-kex][data-kex-theme="dark"],
+:root[data-ext][data-kex-theme="dark"] {
+  color-scheme: dark;
+  --kex-bg: #0f0b1f;
+  --kex-header-bg: rgba(15, 11, 31, 0.86);
+  --kex-text: #efedfa;
+  --kex-text-2: #d9d6ee;
+  --kex-text-3: #a7a2c6;
+  --kex-text-4: #6f6a92;
+  --kex-mono-strong: #c9c1f2;
+  --kex-mono: #b3abd8;
+  --kex-mono-soft: #9a93c4;
+  --kex-violet: #d6c8ff;
+  --kex-violet-2: #c7b6ff;
+  --kex-accent: #d35cff;
+  --kex-magenta: #ff6ed3;
+  --kex-primary: #efeafe;
+  --kex-primary-hover: #ffffff;
+  --kex-on-primary: #1a1040;
+  --kex-outline: #7d73b8;
+  --kex-outline-text: #efedfa;
+  --kex-border: #251e3f;
+  --kex-border-card: #2c2549;
+  --kex-border-strong: #2e2650;
+  --kex-divider-v: #2c2549;
+  --kex-tint: rgba(193, 20, 254, 0.13);
+  --kex-tint-border: rgba(193, 20, 254, 0.28);
+  --kex-hover: rgba(255, 255, 255, 0.04);
+  --kex-search-bg: #1a1430;
+  --kex-search-border: #2e2650;
+  --kex-search-text: #b8afe6;
+  --kex-search-icon: #d8d0ff;
+  --kex-kbd-bg: #251d45;
+  --kex-kbd-border: #3a3166;
+  --kex-kbd-text: #d8d0ff;
+  --kex-iconbtn-bg: #1a1532;
+  --kex-iconbtn-border: #2e2650;
+  --kex-iconbtn-fg: #ecebf7;
+  --kex-actions: #c3bde6;
+  --kex-actions-divider: #2c2549;
+  --kex-focus: #f0a6f8;
+  --kex-switch-off: #3a2e62;
+  --kex-scrim: rgba(5, 3, 15, 0.55);
+  --kex-shadow-palette: 0 24px 64px -16px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --kex-shadow-popover: 0 12px 32px -8px rgba(0, 0, 0, 0.55);
+  --kex-shadow-compact: 0 6px 24px -12px rgba(0, 0, 0, 0.5);
+}

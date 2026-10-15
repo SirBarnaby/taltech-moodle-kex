@@ -1,0 +1,4 @@
+{
+  "manifest_version": 3,
+  "note": "Overlay applied by scripts/build.mjs --mv3-probe: host_permissions, background.scripts (event page), action. Used only for the M0 verification matrix."
+}

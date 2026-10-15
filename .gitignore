@@ -3,3 +3,7 @@ dist/
 *.zip
 *.xpi
 .web-ext-artifacts/
+.scratch/
+test-results/
+playwright-report/
+web-ext-artifacts/

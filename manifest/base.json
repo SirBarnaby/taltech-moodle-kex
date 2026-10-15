@@ -1,0 +1,75 @@
+{
+  "manifest_version": 2,
+  "name": "TalTech Moodle KEX",
+  "short_name": "Moodle KEX",
+  "version": "0.1.0",
+  "description": "A fast, keyboard-first redesign of moodle.taltech.ee. Runs entirely in your browser and sends nothing anywhere.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "taltech-moodle-kex@kex.local",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    },
+    "gecko_android": {
+      "strict_min_version": "142.0"
+    }
+  },
+  "permissions": [
+    "storage",
+    "https://moodle.taltech.ee/*"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": false
+  },
+  "browser_action": {
+    "default_title": "TalTech Moodle KEX",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "32": "assets/icon-32.png"
+    }
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://moodle.taltech.ee/*"
+      ],
+      "exclude_matches": [
+        "https://moodle.taltech.ee/pluginfile.php/*",
+        "https://moodle.taltech.ee/draftfile.php/*",
+        "https://moodle.taltech.ee/tokenpluginfile.php/*",
+        "https://moodle.taltech.ee/webservice/*",
+        "https://moodle.taltech.ee/lib/ajax/*",
+        "https://moodle.taltech.ee/theme/*",
+        "https://moodle.taltech.ee/r.php/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "kex.css"
+      ],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    "fonts/*.woff2",
+    "assets/*"
+  ],
+  "icons": {
+    "48": "assets/icon-48.png",
+    "96": "assets/icon-96.png"
+  }
+}

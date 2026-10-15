@@ -1,0 +1,86 @@
+/* Popovers (Quick settings, user menu): dark panel anchored to the sidebar, opening to the right (design-spec §7). */
+#kex-root {
+  .kex-popover {
+    position: fixed;
+    z-index: var(--kex-z-popover);
+    width: 300px;
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid var(--kex-pop-border);
+    border-radius: var(--kex-r-xl);
+    background: var(--kex-pop-bg);
+    color: var(--kex-sb-text);
+    box-shadow: var(--kex-shadow-popover);
+    animation: kex-pop-in 120ms var(--kex-ease);
+    /* Switches and segmented controls inside the dark panel use their dark variants */
+    --kex-switch-off: #3a2e62;
+    --kex-search-border: #3a2e62;
+    --kex-text-3: #a39bc0;
+    --kex-hover: rgba(255, 255, 255, 0.06);
+    --kex-tint: rgba(193, 20, 254, 0.22);
+    --kex-violet: #f0d4ff;
+  }
+  .kex-pop__section {
+    padding: 8px 8px 10px;
+  }
+  .kex-pop__label {
+    margin-bottom: 8px;
+    font-family: var(--kex-font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--kex-sb-label);
+  }
+  .kex-pop__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    height: 40px;
+    padding: 0 8px;
+    font-size: 15px;
+  }
+  .kex-pop__rowlabel {
+    flex: 1 1 auto;
+  }
+  .kex-pop__divider {
+    height: 1px;
+    margin: 6px 4px;
+    background: var(--kex-pop-border);
+  }
+  .kex-pop__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    height: 40px;
+    padding: 0 8px;
+    border-radius: var(--kex-r-s);
+    font-size: 15px;
+    color: var(--kex-sb-text);
+    text-align: left;
+    &:hover,
+    &:focus-visible {
+      background: var(--kex-pop-hover);
+    }
+    &:focus-visible {
+      outline-offset: -2px;
+    }
+    svg {
+      color: var(--kex-sb-label);
+    }
+  }
+}
+@keyframes kex-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+:root[data-kex-motion="reduced"] #kex-root .kex-popover {
+  animation: none;
+}

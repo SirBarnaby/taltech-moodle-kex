@@ -1,0 +1,104 @@
+/* Off pill (architecture §13). Lives outside #kex-root, so it is styled by id. */
+#kex-offpill {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 12px 0 10px;
+  border-radius: 16px;
+  background: #201055;
+  color: #f7f6fa;
+  font: 400 14px/20px "Inter Variable", system-ui, sans-serif;
+  box-shadow: 0 6px 20px -8px rgba(20, 10, 60, 0.5);
+  transition: width 160ms ease, padding 160ms ease, background 160ms ease;
+  visibility: visible;
+}
+#kex-offpill * {
+  box-sizing: border-box;
+}
+#kex-offpill button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+#kex-offpill .kex-offpill__main {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+}
+#kex-offpill .kex-offpill__main:disabled {
+  cursor: default;
+}
+#kex-offpill .kex-offpill__dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e4067e;
+}
+#kex-offpill .kex-offpill__kbd {
+  padding: 1px 6px;
+  border: 1px solid #4a3a8c;
+  border-radius: 4px;
+  background: #2e1a78;
+  font: 500 12px/16px "Inter Variable", system-ui, sans-serif;
+  color: #f7f6fa;
+}
+#kex-offpill .kex-offpill__link {
+  margin-left: 10px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+#kex-offpill :is(button, a):focus-visible {
+  outline: 2px solid #f0a6f8;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+#kex-offpill .kex-offpill__details {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  width: min(560px, 80vw);
+  max-height: 240px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #1b1334;
+  color: #f2f1f8;
+  font: 400 12px/18px "JetBrains Mono Variable", ui-monospace, monospace;
+  white-space: pre-wrap;
+}
+#kex-offpill .kex-offpill__details[hidden] {
+  display: none;
+}
+#kex-offpill[data-collapsed="true"]:not(:hover):not(:focus-within) {
+  width: 10px;
+  min-height: 10px;
+  height: 10px;
+  padding: 0;
+  gap: 0;
+  background: #e4067e;
+  overflow: hidden;
+}
+#kex-offpill[data-collapsed="true"]:not(:hover):not(:focus-within) > * {
+  /* stays focusable (Tab reaches it, which expands the pill) but is invisible */
+  opacity: 0;
+  pointer-events: none;
+}
+@media (forced-colors: active) {
+  #kex-offpill {
+    border: 1px solid CanvasText;
+  }
+}

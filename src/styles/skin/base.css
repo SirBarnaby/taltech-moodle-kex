@@ -1,0 +1,411 @@
+/* Skin baseline (page-designs §0). Applies to every skin page: Moodle's own content inside our shell.
+   Every rule is prefixed :root[data-kex="skin"]. !important only where Bootstrap utilities force our hand. */
+
+/* ---- hidden chrome ---- */
+:root[data-kex="skin"] :is(
+  nav.tt-level1,
+  nav.navbar.fixed-top,
+  #page-footer,
+  .drawer-toggles,
+  #theme_boost-drawers-primary,
+  #theme_boost-drawers-courseindex,
+  #theme_boost-drawers-blocks,
+  #page-navbar .breadcrumb,
+  .btn-footer-popover,
+  .drawer-toggler,
+  .tt-level1,
+  [data-region="drawer-toggle"]
+) {
+  display: none !important;
+}
+
+/* ---- layout: the window is the only scroller ---- */
+:root[data-kex="skin"] {
+  background: var(--kex-bg);
+  scroll-padding-top: calc(var(--kex-header-h-compact) + 16px);
+}
+:root[data-kex="skin"] body {
+  background: var(--kex-bg);
+  color: var(--kex-text-2);
+  padding: 0 !important;
+  margin: 0;
+  overflow: visible !important;
+  font-family: var(--kex-font-ui);
+  font-size: 16px;
+  line-height: 1.55;
+}
+:root[data-kex="skin"] #page-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  padding: var(--kex-header-h) 0 0 var(--kex-sb-w);
+  background: var(--kex-bg);
+  height: auto;
+  display: block;
+}
+:root[data-kex="skin"] #page.drawers,
+:root[data-kex="skin"] #page {
+  position: static;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  margin: 0 !important;
+  padding: 0 var(--kex-pad) 48px;
+  background: var(--kex-bg);
+  left: auto;
+  right: auto;
+  transition: none;
+}
+:root[data-kex="skin"] :is(#topofscroll, .main-inner) {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-kex="skin"] .limitedwidth :is(.main-inner),
+:root[data-kex="skin"] :is(#page-content) {
+  background: transparent;
+}
+:root[data-kex="skin"] #page-content {
+  padding-bottom: 0 !important;
+}
+:root[data-kex="skin"] :is(#region-main-box, #region-main) {
+  background: transparent !important;
+  border: 0 !important;
+  padding-left: 0;
+  padding-right: 0;
+}
+:root[data-kex="skin"] .limitedwidth #region-main > :is(.card, .box, form, div[role="main"]):not(.course-content) {
+  max-width: 1100px;
+}
+:root[data-kex="skin"] #page-header {
+  padding: 28px 0 8px;
+  margin: 0;
+  background: transparent;
+  max-width: none;
+}
+
+/* ---- typography ---- */
+:root[data-kex="skin"] :is(h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6) {
+  font-family: var(--kex-font-display);
+  color: var(--kex-text);
+  letter-spacing: -0.03em;
+}
+:root[data-kex="skin"] :is(h1, .h1) {
+  font-size: 40px;
+  font-weight: 300;
+  line-height: 1.15;
+}
+:root[data-kex="skin"] #page-header :is(h1, .h2) {
+  font-size: 40px;
+  font-weight: 300;
+}
+:root[data-kex="skin"] :is(h2, .h2) {
+  font-size: 28px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+:root[data-kex="skin"] :is(h3, .h3) {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+:root[data-kex="skin"] :is(h4, h5, h6, .h4, .h5, .h6) {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+:root[data-kex="skin"] a {
+  color: var(--kex-violet);
+  text-underline-offset: 3px;
+}
+:root[data-kex="skin"] a:hover {
+  color: var(--kex-accent);
+}
+:root[data-kex="skin"] :is(code, pre, kbd, samp) {
+  font-family: var(--kex-font-mono);
+}
+:root[data-kex="skin"] pre {
+  background: var(--kex-hover);
+  border: 1px solid var(--kex-border);
+  border-radius: var(--kex-r-m);
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] :is(.text-muted, .text-secondary) {
+  color: var(--kex-text-3) !important;
+}
+:root[data-kex="skin"] hr {
+  border-color: var(--kex-border);
+  opacity: 1;
+}
+
+/* ---- buttons ---- */
+:root[data-kex="skin"] .btn {
+  border-radius: var(--kex-r-s);
+  font-weight: 600;
+  min-height: 40px;
+  padding: 8px 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.3;
+  box-shadow: none;
+  transition: background 120ms var(--kex-ease), border-color 120ms var(--kex-ease);
+}
+:root[data-kex="skin"] .btn-primary {
+  background: var(--kex-primary);
+  border: 1.5px solid var(--kex-primary);
+  color: var(--kex-on-primary);
+}
+:root[data-kex="skin"] .btn-primary:is(:hover, :focus, :active) {
+  background: var(--kex-primary-hover);
+  border-color: var(--kex-primary-hover);
+  color: var(--kex-on-primary);
+}
+:root[data-kex="skin"] :is(.btn-secondary, .btn-outline-secondary, .btn-outline-primary, .btn-outline-dark, .btn-light) {
+  background: transparent;
+  border: 1.5px solid var(--kex-outline);
+  color: var(--kex-outline-text);
+}
+:root[data-kex="skin"] :is(.btn-secondary, .btn-outline-secondary, .btn-outline-primary, .btn-outline-dark, .btn-light):is(:hover, :focus, :active) {
+  background: var(--kex-hover);
+  color: var(--kex-outline-text);
+  border-color: var(--kex-outline);
+}
+:root[data-kex="skin"] .btn-link {
+  color: var(--kex-violet);
+  border-color: transparent;
+  background: transparent;
+  min-height: 0;
+  padding: 2px 4px;
+  font-weight: 500;
+}
+:root[data-kex="skin"] :is(.btn-danger, .btn-outline-danger) {
+  border-radius: var(--kex-r-s);
+}
+:root[data-kex="skin"] .btn:focus-visible {
+  outline: 2px solid var(--kex-focus);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+:root[data-kex="skin"] .icon-no-margin.btn,
+:root[data-kex="skin"] .btn.btn-icon {
+  min-height: 0;
+  padding: 4px 8px;
+}
+
+/* ---- cards, lists, tables ---- */
+:root[data-kex="skin"] .card {
+  background: var(--kex-bg);
+  border: 1px solid var(--kex-border-card);
+  border-radius: var(--kex-r-xs);
+  box-shadow: none;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] :is(.card-header, .card-footer) {
+  background: transparent;
+  border-color: var(--kex-border);
+}
+:root[data-kex="skin"] .list-group-item {
+  background: transparent;
+  border-color: var(--kex-border);
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] :is(.table, .generaltable) {
+  color: var(--kex-text-2);
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--kex-text-2);
+  --bs-table-striped-bg: transparent;
+  --bs-table-hover-bg: var(--kex-hover);
+  border-color: var(--kex-border);
+}
+:root[data-kex="skin"] :is(.table, .generaltable) :is(th, td) {
+  border-color: var(--kex-border) !important;
+  background-color: transparent;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-kex="skin"] :is(.table, .generaltable) thead :is(th, td),
+:root[data-kex="skin"] :is(.table, .generaltable) th.header {
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kex-mono-soft);
+  border-bottom-color: var(--kex-border) !important;
+}
+:root[data-kex="skin"] :is(.table, .generaltable) tbody tr:hover > * {
+  background-color: var(--kex-hover);
+}
+:root[data-kex="skin"] .badge {
+  border: 1px solid var(--kex-border-card);
+  border-radius: 999px;
+  background: transparent !important;
+  color: var(--kex-text-2) !important;
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+/* ---- forms ---- */
+:root[data-kex="skin"] :is(.form-control, .custom-select, .form-select, select, input[type="text"], input[type="search"], input[type="email"], input[type="number"], input[type="password"], input[type="url"], textarea) {
+  background-color: var(--kex-bg);
+  border: 1px solid var(--kex-search-border);
+  border-radius: var(--kex-r-m);
+  color: var(--kex-text);
+  min-height: 40px;
+  box-shadow: none;
+}
+:root[data-kex="skin"] textarea.form-control {
+  min-height: 80px;
+}
+:root[data-kex="skin"] :is(.form-control, .custom-select, .form-select, select, textarea):focus {
+  border-color: var(--kex-focus);
+  outline: 2px solid var(--kex-focus);
+  outline-offset: 0;
+  box-shadow: none;
+  background-color: var(--kex-bg);
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] :is(.form-control, textarea)::placeholder {
+  color: var(--kex-text-3);
+}
+:root[data-kex="skin"] .form-check-input:checked {
+  background-color: var(--kex-violet);
+  border-color: var(--kex-violet);
+}
+
+/* ---- tabs, pagination, dropdowns, modals, alerts ---- */
+:root[data-kex="skin"] .nav-tabs {
+  border-bottom: 1px solid var(--kex-border);
+  gap: 24px;
+}
+:root[data-kex="skin"] .nav-tabs .nav-link {
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  padding: 12px 4px;
+  margin-bottom: -1px;
+  font-size: 17px;
+  color: var(--kex-text-3);
+}
+:root[data-kex="skin"] .nav-tabs .nav-link:hover {
+  color: var(--kex-text);
+  border-bottom-color: var(--kex-border-strong);
+}
+:root[data-kex="skin"] .nav-tabs .nav-link.active {
+  color: var(--kex-violet);
+  font-weight: 600;
+  border-bottom-color: var(--kex-accent);
+  background: transparent;
+}
+:root[data-kex="skin"] .pagination .page-link {
+  font-family: var(--kex-font-mono);
+  font-size: 13px;
+  background: transparent;
+  color: var(--kex-text-2);
+  border-color: var(--kex-border);
+}
+:root[data-kex="skin"] .pagination .active > .page-link {
+  background: var(--kex-tint);
+  border-color: var(--kex-tint-border);
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] :is(.dropdown-menu, .popover) {
+  background: var(--kex-pop-bg);
+  border: 1px solid var(--kex-pop-border);
+  border-radius: var(--kex-r-xl);
+  box-shadow: var(--kex-shadow-popover);
+  color: var(--kex-sb-text);
+}
+:root[data-kex="skin"] .dropdown-item {
+  color: var(--kex-sb-text);
+  border-radius: var(--kex-r-s);
+}
+:root[data-kex="skin"] .dropdown-item:is(:hover, :focus) {
+  background: var(--kex-pop-hover);
+  color: #fff;
+}
+:root[data-kex="skin"] .modal-content {
+  background: var(--kex-bg);
+  color: var(--kex-text-2);
+  border: 1px solid var(--kex-search-border);
+  border-radius: var(--kex-r-xl);
+  box-shadow: var(--kex-shadow-palette);
+}
+:root[data-kex="skin"] .modal-header {
+  border-color: var(--kex-border);
+}
+:root[data-kex="skin"] .modal-title {
+  font-family: var(--kex-font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] .modal-footer {
+  border-color: var(--kex-border);
+}
+:root[data-kex="skin"] .alert {
+  border: 0;
+  border-left: 3px solid var(--kex-violet);
+  border-radius: var(--kex-r-xs);
+  background: var(--kex-tint);
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .alert-success {
+  border-left-color: var(--kex-success);
+  background: color-mix(in srgb, var(--kex-success) 12%, var(--kex-bg));
+}
+:root[data-kex="skin"] .alert-warning {
+  border-left-color: var(--kex-warning);
+  background: color-mix(in srgb, var(--kex-warning) 12%, var(--kex-bg));
+}
+:root[data-kex="skin"] :is(.alert-danger, .alert-error) {
+  border-left-color: var(--kex-magenta);
+  background: color-mix(in srgb, var(--kex-magenta) 10%, var(--kex-bg));
+}
+:root[data-kex="skin"] .progress {
+  background: var(--kex-border);
+  border-radius: 999px;
+}
+:root[data-kex="skin"] .progress-bar {
+  background: linear-gradient(90deg, #b300f5, #e4067e);
+}
+
+/* ---- Moodle chrome that stays (secondary navigation, headings) ---- */
+:root[data-kex="skin"] .secondary-navigation {
+  margin: 0 0 20px;
+  border-bottom: 1px solid var(--kex-border);
+}
+:root[data-kex="skin"] .secondary-navigation .nav-tabs {
+  border-bottom: 0;
+}
+:root[data-kex="skin"] .moremenu .nav-link {
+  color: var(--kex-text-3);
+}
+:root[data-kex="skin"] .moremenu .nav-link.active {
+  color: var(--kex-violet);
+}
+
+/* Font Awesome icons keep their glyphs and take the surrounding colour. */
+:root[data-kex="skin"] :is(.fa, .fas, .far, .icon.fa) {
+  color: currentColor;
+}
+
+/* Moodle user content with hard-coded colours is left alone, except a white background. */
+:root[data-kex="skin"][data-kex-theme="dark"] .no-overflow [style*="background-color: white"],
+:root[data-kex="skin"][data-kex-theme="dark"] .no-overflow [style*="background-color: #fff"] {
+  background-color: var(--kex-bg) !important;
+}
+
+/* Dark theme: Bootstrap surfaces that carry their own light colours. */
+:root[data-kex="skin"][data-kex-theme="dark"] :is(.bg-white, .bg-light, .bg-body, .bg-body-tertiary) {
+  background-color: var(--kex-bg) !important;
+}
+:root[data-kex="skin"][data-kex-theme="dark"] :is(.text-dark, .text-body) {
+  color: var(--kex-text-2) !important;
+}

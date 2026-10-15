@@ -1,0 +1,133 @@
+/* Base for everything inside #kex-root. Resets use :where() so they cost (1,0,0): they beat Bootstrap's
+   element and class selectors regardless of sheet order, yet any .kex-* rule (1,1,0) beats them. */
+#kex-root {
+  font-family: var(--kex-font-ui);
+  font-size: 16px;
+  line-height: 1.375;
+  font-weight: 400;
+  color: var(--kex-text);
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: normal;
+
+  :where(*, *::before, *::after) {
+    box-sizing: border-box;
+  }
+  :where(a, button, input, select, textarea, h1, h2, h3, h4, h5, h6, p, ul, ol, li, dl, dt, dd, kbd, nav, header, main, section, span, div, label, svg, img) {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    background: none;
+    text-align: inherit;
+    text-transform: none;
+    text-shadow: none;
+    box-shadow: none;
+    vertical-align: baseline;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  :where(ul, ol) {
+    list-style: none;
+  }
+  :where(a) {
+    text-decoration: none;
+    cursor: pointer;
+  }
+  :where(button) {
+    cursor: pointer;
+    text-align: center;
+  }
+  :where(svg) {
+    flex: none;
+    display: block;
+    max-width: none;
+  }
+  :where(img) {
+    max-width: 100%;
+    display: block;
+  }
+  :where(kbd) {
+    font-family: inherit;
+  }
+
+  /* One focus ring everywhere (inside the dark sidebar it is lighter). */
+  :where(a, button, input, select, textarea, [tabindex], [role="switch"], [role="radio"], [role="option"]):focus-visible {
+    outline: 2px solid var(--kex-focus);
+    outline-offset: 2px;
+    border-radius: var(--kex-r-m);
+  }
+  .kex-sidebar :where(a, button, input):focus-visible,
+  .kex-popover :where(a, button, input, [role="switch"], [role="radio"]):focus-visible {
+    outline-color: var(--kex-sb-focus);
+  }
+  :where(a, button, input, select, textarea, [tabindex]):focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  .kex-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Skip link */
+  .kex-skip {
+    position: fixed;
+    left: 12px;
+    top: -60px;
+    z-index: calc(var(--kex-z-pill) + 1);
+    padding: 10px 16px;
+    border-radius: var(--kex-r-m);
+    background: var(--kex-primary);
+    color: var(--kex-on-primary);
+    font-size: 15px;
+    font-weight: 600;
+    transition: top 120ms var(--kex-ease);
+    &:focus {
+      top: 12px;
+    }
+  }
+
+  .kex-layer {
+    display: contents;
+  }
+
+  .kex-mono {
+    font-family: var(--kex-font-mono);
+    text-transform: uppercase;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #kex-root :where(*, *::before, *::after) {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+:root[data-kex-motion="reduced"] #kex-root :where(*, *::before, *::after) {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (forced-colors: active) {
+  #kex-root :where(a, button, input, [role="switch"], [role="radio"]):focus-visible {
+    outline: 2px solid Highlight;
+  }
+  #kex-root .kex-header {
+    border-bottom: 1px solid CanvasText;
+  }
+  #kex-root .kex-sidebar {
+    border-right: 1px solid CanvasText;
+  }
+  #kex-root .kex-switch {
+    border: 1px solid CanvasText;
+  }
+}
