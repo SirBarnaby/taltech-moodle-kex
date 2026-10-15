@@ -44,8 +44,11 @@ test.describe('shell on lab pages', () => {
   }
 
   test('header compresses 67 -> 52 without changing scrollHeight', async ({ page }) => {
+    // The course page is shorter than a tall window; a short one leaves something to scroll.
+    await page.setViewportSize({ width: 1585, height: 500 });
     await page.goto('/course/view.php?id=2');
     await waitForShell(page);
+    await page.waitForLoadState('networkidle'); // the course page prefetches topic details
     const measure = () =>
       page.evaluate(() => ({
         h: document.querySelector('[data-kex-test=header]')!.getBoundingClientRect().height,
@@ -55,15 +58,13 @@ test.describe('shell on lab pages', () => {
     const top = await measure();
     expect(Math.abs(top.h - 67)).toBeLessThanOrEqual(1);
     await page.evaluate(() => window.scrollTo(0, 300));
-    await page.waitForTimeout(600);
+    await expect.poll(async () => Math.abs((await measure()).h - 52) <= 1, { timeout: 8000 }).toBe(true);
     const scrolled = await measure();
     expect(scrolled.y).toBeGreaterThanOrEqual(300 - 1);
-    expect(Math.abs(scrolled.h - 52)).toBeLessThanOrEqual(1);
     expect(scrolled.sh).toBe(top.sh);
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForTimeout(600);
+    await expect.poll(async () => Math.abs((await measure()).h - 67) <= 1, { timeout: 8000 }).toBe(true);
     const back = await measure();
-    expect(Math.abs(back.h - 67)).toBeLessThanOrEqual(1);
     expect(back.sh).toBe(top.sh);
   });
 

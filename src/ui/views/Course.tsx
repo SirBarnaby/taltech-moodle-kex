@@ -192,7 +192,12 @@ export function CourseView() {
   useEffect(() => {
     if (focused.current || status !== 'ready' || topicNumber.value === undefined) return;
     focused.current = true;
-    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-topic="${topicNumber.value}"]`)?.focus({ preventScroll: true }));
+    requestAnimationFrame(() => {
+      // Only when nothing else has taken focus meanwhile (the search box, the palette, a dialog).
+      const a = document.activeElement;
+      if (a && a !== document.body && a !== document.documentElement) return;
+      document.querySelector<HTMLElement>(`[data-kex-topic="${topicNumber.value}"]`)?.focus({ preventScroll: true });
+    });
   }, [status, topicNumber.value]);
 
   const loading = status === 'loading' && !st;

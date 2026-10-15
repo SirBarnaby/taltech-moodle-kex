@@ -15,11 +15,5 @@ export default defineConfig({
     deviceScaleFactor: 1,
     actionTimeout: 10_000,
   },
-  projects: [
-    {
-      name: 'chromium',
-      // Software WebGL2 so the hero shader runs in headless Chromium.
-      use: { browserName: 'chromium', launchOptions: { args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] } },
-    },
-  ],
+  projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
 });

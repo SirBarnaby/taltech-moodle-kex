@@ -40,25 +40,26 @@ async function m0AndM1(kind) {
         if (d.t !== 'content.fetch') throw new Error(`transport=${d.t}`);
         return `courses=${d.n} transport=${d.t}`;
       });
-      await r.check('(c) fonts.check("16px \\"Inter Variable\\"") after fonts.ready, from extension CSS', async () => {
+      await r.check('(c) fonts.check("16px \\"Inter Tight Variable\\"") after fonts.ready, from extension CSS', async () => {
         const d = await driver.executeAsyncScript(`
           const done = arguments[arguments.length - 1];
           document.fonts.ready.then(() => {
-            const faces = [...document.fonts].filter((f) => f.family.replace(/"/g,'') === 'Inter Variable');
-            done({ check: document.fonts.check('16px "Inter Variable"'), faces: faces.map((f) => f.status), size: document.fonts.size });
+            const faces = [...document.fonts].filter((f) => f.family.replace(/"/g,'') === 'Inter Tight Variable');
+            done({ check: document.fonts.check('16px "Inter Tight Variable"'), faces: faces.map((f) => f.status), size: document.fonts.size });
           });`);
         if (!d.check) throw new Error('document.fonts.check false');
-        if (!d.faces.includes('loaded')) throw new Error(`no loaded Inter Variable face: ${JSON.stringify(d)}`);
+        if (!d.faces.includes('loaded')) throw new Error(`no loaded Inter Tight Variable face: ${JSON.stringify(d)}`);
         return JSON.stringify(d);
       });
-      await r.check('(c2) used font renders as Inter Variable (computed + loaded face)', async () => {
+      await r.check('(c2) used font renders as Inter Tight Variable (computed + loaded face)', async () => {
         const fam = await driver.executeScript(`return getComputedStyle(document.querySelector('.kex-sb__name, .kex-crumbs')).fontFamily`);
-        if (!/Inter/.test(fam)) throw new Error(fam);
+        if (!/Inter Tight/.test(fam)) throw new Error(fam);
         return fam.slice(0, 50);
       });
     }
 
     if (want('m1')) await m1Checks(driver, r);
+    if (want('m2')) await m2Checks(driver, r);
   } finally {
     await driver.quit();
   }
@@ -103,6 +104,7 @@ async function m1Checks(driver, r) {
   // header compression on a course page
   await driver.get(`${LAB}/course/view.php?id=2`);
   await shell('course');
+  await sleep(3000); // the course page loads topic details and grows a little while it does
   await r.check('header height 67 at scrollY=0, 52 after 300px, scrollHeight unchanged', async () => {
     const m = () => driver.executeScript(`return { h: document.querySelector('[data-kex-test=header]').getBoundingClientRect().height, sh: document.documentElement.scrollHeight, y: scrollY }`);
     const a = await m();
@@ -232,3 +234,46 @@ try {
   failed += 1;
 }
 process.exit(failed ? 1 : 0);
+
+async function m2Checks(driver, r) {
+  await driver.get(`${LAB}/course/view.php?id=2#topic-6`);
+  await waitFor(driver, `document.querySelector('[data-kex-test=course] [data-kex-test=topics-row-6][aria-current=true]') && document.querySelectorAll('[data-kex-row]').length === 3`, 30000, 'course page');
+  const text = (sel) => driver.executeScript(`return (document.querySelector(${JSON.stringify(sel)})||{}).textContent`);
+  await r.check('course: hero title read once by assistive tech', async () => {
+    const t = await driver.executeScript(`return [...document.querySelectorAll('[data-kex-test=hero-title] .kex-sr')].map(e => e.textContent)`);
+    if (t.length !== 1 || t[0] !== 'Cloud Architectures & DevOps') throw new Error(JSON.stringify(t));
+    return t[0];
+  });
+  await r.check('course: topic 06 shows 3 resources and the topic title', async () => {
+    const k = await text('[data-kex-test=detail-kicker]');
+    const c = await text('[data-kex-test=detail-count]');
+    if (k.trim() !== 'TOPIC 06' || c.trim() !== '3 RESOURCES') throw new Error(`${k} / ${c}`);
+    return `${k} / ${c}`;
+  });
+  await r.check('course: k moves to topic 05 and updates the hash', async () => {
+    await driver.executeScript(`document.querySelector('[data-kex-topic="6"]').focus()`);
+    await driver.actions().sendKeys('k').perform();
+    await waitFor(driver, `location.hash === '#topic-5' && document.querySelector('[data-kex-test=detail-kicker]').textContent.trim() === 'TOPIC 05'`, 8000, 'topic 05');
+    return 'ok';
+  });
+  await r.check('course: tab 3 (Labs) filters rows, 1 restores', async () => {
+    await driver.actions().sendKeys('3').perform();
+    await waitFor(driver, `document.querySelectorAll('[data-kex-row]').length === 2`, 8000, 'labs filter');
+    await driver.actions().sendKeys('1').perform();
+    await waitFor(driver, `document.querySelectorAll('[data-kex-row]').length === 4`, 8000, 'all rows');
+    return 'ok';
+  });
+  await r.check('course: Space opens the preview sheet, Esc closes it', async () => {
+    await driver.executeScript(`document.querySelector('[data-kex-row]').focus()`);
+    await driver.actions().sendKeys(' ').perform();
+    await waitFor(driver, `!!document.querySelector('[data-kex-test=preview]')`, 8000, 'preview');
+    await driver.actions().sendKeys(Key.ESCAPE).perform();
+    await waitFor(driver, `!document.querySelector('[data-kex-test=preview]')`, 8000, 'preview closed');
+    return 'ok';
+  });
+  await r.check('course: hero canvas is drawn (WebGL2) or falls back without errors', async () => {
+    const m = await driver.executeScript(`return document.querySelector('.kex-hero__canvas').dataset.fx`);
+    if (!['running', 'paused', 'static', 'fallback'].includes(m)) throw new Error(String(m));
+    return m;
+  });
+}

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T22:32:45.896Z",
+  "generatedAt": "2026-10-15T22:59:18.602Z",
   "viewport": [
     1585,
     992
@@ -43,13 +43,13 @@
       "informational": false
     },
     "topics": {
-      "mismatchPct": 4.95,
+      "mismatchPct": 4.93,
       "maxPct": 15,
       "pass": true,
       "informational": false
     },
     "detail": {
-      "mismatchPct": 5.09,
+      "mismatchPct": 5.05,
       "maxPct": 18,
       "pass": true,
       "informational": false
@@ -57,6 +57,6 @@
   },
   "pass": true,
   "overall": {
-    "mismatchPct": 8.93
+    "mismatchPct": 8.92
   }
 }

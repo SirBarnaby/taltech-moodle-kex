@@ -99,6 +99,15 @@
   :root[data-kex-theme="dark"] & .kex-thumb--code .kex-thumb__svg {
     stroke: #ff8ee6;
   }
+  :root[data-kex-theme="dark"] & .kex-thumb--code [stroke="#2d1a96"] {
+    stroke: #b9a8ff;
+  }
+  :root[data-kex-theme="dark"] & .kex-thumb--code [stroke="#5f1a98"] {
+    stroke: #d08bf5;
+  }
+  :root[data-kex-theme="dark"] & .kex-thumb--doc::before {
+    display: none;
+  }
   :root[data-kex-theme="dark"] & .kex-thumb--code .kex-thumb__code {
     fill: #ff8ee6;
   }

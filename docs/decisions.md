@@ -96,3 +96,58 @@ can sit next to a release build.
 - Dark theme, skin baseline: Moodle's own loading skeletons (`.bg-pulse-grey`), the forum `.activity-details` box and the
   `.btn-submit.search-icon` button hard-code light fills and are re-coloured under `[data-kex-theme=dark]`.
 - Page `<mark>` styling from Bootstrap (padding) spread the palette's fuzzy highlights; reset to `padding: 0`.
+
+## M2: course page
+
+### Fonts and type (measured against iteration3)
+- The mock's UI text is narrower than Inter: `--kex-font-ui` is now Inter Tight Variable (sidebar and header included), and
+  `--kex-font-hero` is Inter Variable. The hero title is Inter 300 at -0.02em; the design-spec's "Inter Tight -0.035em" made
+  the title 10% narrower than the mock.
+- "Learning materials" is 510/-0.0205em and the topic title 520/-0.029em (Inter Tight). Heavier weights with tighter tracking
+  matched the width but not the ink: pixel counts were 25-35% above the mock.
+- Tabs are 16px, the active one 17px/600 (this is what puts the underline at x=1276, w=98).
+
+### Names and order
+- English short names ship as the default aliases of the six TalTech courses (ITI8801 "Cloud & DevOps", EMT0140 "IoT for
+  Industry", IAS0230 "Embedded Systems", MMO5770 "Management & Leadership", ITB8833 "Digital State ICT", IEE2630 "Smart
+  Networks") in the mock's order. A rename (F2) overrides them.
+
+### Hero ribbons shader
+- design-spec §9's starting point (layered sines) could not get near the mock. The shader is built from four traced key curves
+  (arch A, arch B with its lower sweep, pink rim C/E, pink rim P) in a 1339x253 reference frame, translucent fills between them
+  and hairline strands, plus the uniform `uWin` (the part of the frame a canvas shows; `x0 > x1` mirrors it).
+- The constants (`K_*`, `Q_*`) are fitted with `scripts/fit-ribbons.mjs` (coordinate search on a blurred L1 loss, 4 sweeps:
+  26.7 -> 22.5). Strand strength was then raised by hand because a blurred loss pushes it to zero.
+- Clock `uTime * .07`; `debug.freezeTime` = 7.3 gives the static frame used by the visual diff and the fallback image
+  (`scripts/render-fallback.mjs` -> `assets/hero-fallback.webp`).
+- Video thumbnails use the same shader on a mirrored window of the hero's right edge (flat purple before: an offscreen canvas has
+  `clientWidth` 0, so the renderer resized it to 1x1; offscreen canvases now keep their size).
+- Each canvas carries `data-fx="running|paused|static|fallback"`; the e2e tests read it (shader stops offscreen and on
+  `visibilitychange`, static under reduced motion, fallback for effects off and for a lost context).
+
+### Data
+- `core_courseformat_get_state` is the source of sections and cms; details of a cm (icon type, dates, completion toggle) come from
+  `core_course_get_module` HTML, fetched for the selected topic first, then its neighbours, then the rest when idle. The server
+  state wins over a cached completion toggle on every load.
+- Previews of `resource` modules probe the module URL with `redirect=1` (`ws.probe`) to learn the file type; pages and URLs use the
+  rendered HTML. PDFs open in an iframe, images and video natively, other files as a link card.
+- Assignment due text from Moodle's long date ("Due: Thursday, 10 September 2026, 5:38 PM") is shortened to "Due Thu 10 Sep".
+- When `get_state` fails and nothing is cached, the page switches to the skin ("Moodle layout in KEX") with a toast.
+- The weeks format shows "Week N" for default date-range titles; tiles format rows get the tile photo as the topic thumbnail
+  (unit-tested; the lab course is weeks format with real titles, so neither is exercised live).
+
+### Known deviations from the mock (kept on purpose)
+- The seeded "Kubernetes slides" pin makes row 1 say "Unpin" where the mock says "Pin" (it is pinned; the mock is not consistent).
+- Row 3 (recording) shows the Preview/Pin line, the mock omits it for recordings.
+- The mock's "&" in the hero title is a wider glyph than Inter's; line 2 is 3% narrower.
+- The mock's pinned cells have unequal widths; ours grow evenly from their content (close, not identical).
+
+### Tests
+- `test/e2e-chromium/course.spec.ts` (topic switch <= 16 ms measured from the `kex:topic-switch` mark to the DOM update, hash and
+  history, tabs, dimming via a trimmed state response, preview, `x` with reload, slide-up, axe, thumbs),
+  `hero-shader.spec.ts` (needs software WebGL, so it has its own `launchOptions`; the other specs run without a GPU),
+  `test/visual/iter3-geometry.spec.ts`, and `node scripts/visual-diff.mjs` (pixelmatch, writes `artifacts/visual/iter3/`).
+- Firefox smoke gained `m2` (course page: title read once, topic, `k`, tabs, preview, canvas); `node scripts/firefox-shot.mjs`
+  writes a real-Firefox screenshot.
+- The short-window trick (`setViewportSize` 500 high) is needed to scroll the course page in tests: it is shorter than the window.
+- The course view only focuses the active topic row on load when nothing else has focus (otherwise it stole focus from the palette).

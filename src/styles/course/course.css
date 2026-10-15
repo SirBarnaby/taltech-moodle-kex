@@ -103,7 +103,8 @@
     pointer-events: none;
     background: linear-gradient(118deg, transparent 56%, rgba(255, 255, 255, 0.5) 63%, rgba(255, 214, 250, 0.42) 66%, transparent 73%);
   }
-  :root[data-kex-theme="dark"] & :is(.kex-pin--hot::before, .kex-topic--active::after) {
+  :root[data-kex-theme="dark"] & .kex-pin--hot::before,
+  :root[data-kex-theme="dark"] & .kex-topic--active::after {
     display: none;
   }
   .kex-pin--hot .kex-pin__tack {

@@ -1,4 +1,4 @@
-import { animTrack } from './anim';
+import { animSettle, animTrack } from './anim';
 
 /** Slide Up Text (architecture §15): masked pieces slide up with a stagger. Screen readers get the full text once. */
 
@@ -209,5 +209,7 @@ export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions 
   } else {
     items.forEach((i) => (i.style.transform = 'translateY(110%)'));
   }
+  // Nothing animating (reduced motion, held until in view): the page is settled for tests and screenshots.
+  animSettle();
   return { play, cancel, finished };
 }
