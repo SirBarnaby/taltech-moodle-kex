@@ -1,0 +1,62 @@
+{
+  "generatedAt": "2026-10-15T22:32:45.896Z",
+  "viewport": [
+    1585,
+    992
+  ],
+  "threshold": 0.15,
+  "regions": {
+    "sidebar": {
+      "mismatchPct": 6.89,
+      "maxPct": 12,
+      "pass": true,
+      "informational": false
+    },
+    "header": {
+      "mismatchPct": 2.55,
+      "maxPct": 8,
+      "pass": true,
+      "informational": false
+    },
+    "hero-text": {
+      "mismatchPct": 9.03,
+      "maxPct": 10,
+      "pass": true,
+      "informational": false
+    },
+    "hero-ribbons": {
+      "mismatchPct": 34.4,
+      "maxPct": 45,
+      "pass": true,
+      "informational": true
+    },
+    "pinned": {
+      "mismatchPct": 4.89,
+      "maxPct": 15,
+      "pass": true,
+      "informational": false
+    },
+    "materials-header": {
+      "mismatchPct": 5.11,
+      "maxPct": 12,
+      "pass": true,
+      "informational": false
+    },
+    "topics": {
+      "mismatchPct": 4.95,
+      "maxPct": 15,
+      "pass": true,
+      "informational": false
+    },
+    "detail": {
+      "mismatchPct": 5.09,
+      "maxPct": 18,
+      "pass": true,
+      "informational": false
+    }
+  },
+  "pass": true,
+  "overall": {
+    "mismatchPct": 8.93
+  }
+}

@@ -3,6 +3,11 @@ import { cache } from '../data/cache';
 import { createCoursesStore, loadCustomField } from '../data/repo/courses';
 import { cachedUser, fetchUser, storeUser } from '../data/repo/user';
 import { scrapeMyoverview } from '../data/scrape/myoverview';
+import { scrapeSummaries } from '../data/scrape/summaries';
+import { scrapeTiles } from '../data/scrape/tiles';
+import { setTileList } from '../actions/course';
+import { courseBindings, previewBindings } from '../actions/coursekeys';
+import { previewCmId, summaries } from '../state/course';
 import { scrapeTtLinks, scrapeUser } from '../data/scrape/user';
 import { scrapeUserMenu } from '../data/scrape/usermenu';
 import { ws } from '../data/ws';
@@ -58,7 +63,14 @@ class Controller {
     hooks.openOptions = () => {
       void browser.runtime.sendMessage({ type: 'kex:open-options' }).catch(() => undefined);
     };
-    hooks.moodleLayout = () => setMode('skin');
+    hooks.moodleLayout = () => {
+      // Moodle's own content inside our shell: the app view goes away, the page comes back.
+      if (this.route) {
+        this.route = { ...this.route, effective: 'skin' };
+        routeSig.value = this.route;
+      }
+      setMode('skin');
+    };
 
     this.preload = cache.preload().catch((e: unknown) => recordError('cache.preload', e));
     this.settingsLoaded = loadSettings().catch(() => DEFAULT_SETTINGS);
@@ -194,6 +206,18 @@ class Controller {
     mountShell(root, (e) => this.failOpen('shell', e));
     keyManager.attach();
     this.bindingsOff = keyManager.register(globalBindings());
+    if (eff.effective === 'app' && (eff.key === 'course' || eff.key === 'section')) {
+      const off = keyManager.register([...courseBindings(), ...previewBindings()]);
+      keyManager.setScope('course', true);
+      this.stops.push(
+        effect(() => keyManager.setScope('preview', previewCmId.value !== undefined)),
+        () => {
+          off();
+          keyManager.setScope('course', false);
+          keyManager.setScope('preview', false);
+        },
+      );
+    }
     window.clearTimeout(this.failTimer);
     this.mounted = true;
     this.html.dataset.kexShell = 'ready';
@@ -236,6 +260,11 @@ class Controller {
     const logo = qs<HTMLImageElement>(document, SEL.logo);
     logoSrc.value = logo?.getAttribute('src') ?? undefined;
     if (eff.key === 'workspace' || eff.key === 'mycourses') void scrapeMyoverview(document);
+    if (eff.key === 'course' || eff.key === 'section') {
+      const tiles = scrapeTiles(document);
+      if (tiles.length) setTileList(tiles);
+      summaries.value = scrapeSummaries(document);
+    }
   }
 
   private syncAttrs(): void {

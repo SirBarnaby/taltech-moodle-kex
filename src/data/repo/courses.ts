@@ -58,18 +58,40 @@ export function mapCourse(raw: RawCourse, lang: 'en' | 'et' = 'en', wwwroot = ''
   };
 }
 
-/** Frozen order first, then anything new sorted by course code (stable Alt+1..9 muscle memory). */
+/**
+ * Short English names shipped for the author's six TalTech courses (iteration3). They are only a default:
+ * a user alias (F2 in the sidebar) always wins.
+ */
+export const DEFAULT_ALIASES_BY_CODE: Readonly<Record<string, string>> = {
+  ITI8801: 'Cloud & DevOps',
+  EMT0140: 'IoT for Industry',
+  IAS0230: 'Embedded Systems',
+  MMO5770: 'Management & Leadership',
+  ITB8833: 'Digital State ICT',
+  IEE2630: 'Smart Networks',
+};
+
+/** Default sidebar order for courses that are not in the frozen order yet: the mock's order, then by code. */
+export const DEFAULT_ORDER_BY_CODE: readonly string[] = ['ITI8801', 'EMT0140', 'IAS0230', 'MMO5770', 'ITB8833', 'IEE2630'];
+
+/** Frozen order first, then anything new in the default order (mock order for known codes, then by code). */
 export function orderCourses<T extends { id: number; code: string }>(courses: readonly T[], order: readonly number[]): T[] {
   const idx = new Map(order.map((id, i) => [id, i]));
   const known = courses.filter((c) => idx.has(c.id)).sort((a, b) => (idx.get(a.id) ?? 0) - (idx.get(b.id) ?? 0));
-  const fresh = courses.filter((c) => !idx.has(c.id)).sort((a, b) => a.code.localeCompare(b.code, 'et'));
+  const rank = (c: { code: string }): number => {
+    const i = DEFAULT_ORDER_BY_CODE.indexOf(c.code);
+    return i < 0 ? DEFAULT_ORDER_BY_CODE.length : i;
+  };
+  const fresh = courses
+    .filter((c) => !idx.has(c.id))
+    .sort((a, b) => rank(a) - rank(b) || a.code.localeCompare(b.code, 'et'));
   return [...known, ...fresh];
 }
 
-/** Courses as the sidebar shows them: ordered, with the user's aliases applied. */
+/** Courses as the sidebar shows them: the user's alias, else the shipped default alias for the code. */
 export function applyAliases(courses: readonly Course[], aliases: Record<string, string>): Course[] {
   return courses.map((c) => {
-    const alias = aliases[String(c.id)];
+    const alias = aliases[String(c.id)] || DEFAULT_ALIASES_BY_CODE[c.code];
     return alias ? { ...c, alias } : c;
   });
 }

@@ -14,7 +14,7 @@ export interface Binding {
   /** Fire even while typing in a field (Ctrl+K, Esc). */
   allowInInput?: boolean;
   /** Extra guard; return false to let the key through. */
-  when?: () => boolean;
+  when?: (e: KeyboardEvent) => boolean;
 }
 
 interface Candidate {
@@ -126,7 +126,7 @@ export class KeyManager {
       const { b } = c.binding;
       if (this.suspended && !b.allowInInput) continue;
       if (typing && !b.allowInInput) continue;
-      if (b.when && !b.when()) continue;
+      if (b.when && !b.when(e)) continue;
       if (c.step + 1 < c.binding.p.steps.length) {
         next.push({ binding: c.binding, step: c.step + 1 });
       } else {

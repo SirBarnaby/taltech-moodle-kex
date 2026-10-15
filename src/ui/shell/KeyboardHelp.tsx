@@ -19,20 +19,18 @@ export function KeyboardHelp() {
     };
   }, []);
 
-  // Collapse Alt+1..9 into one row and drop duplicate descriptions (ctrl+k / meta+k).
+  // Collapse Alt+1..9 into one row; bindings with the same description share a row ("j / ↓").
   const all = keyManager.all();
-  const rows = (g: Binding['group']): { spec: string; label: string }[] => {
-    const seen = new Set<string>();
-    const out: { spec: string; label: string }[] = [];
+  const rows = (g: Binding['group']): { specs: string[]; label: string }[] => {
+    const byLabel = new Map<string, string[]>();
     for (const b of all) {
       if (b.group !== g || b.keys === 'meta+k' || /^alt\+[2-9]$/.test(b.keys)) continue;
       const label = t(b.description as Parameters<typeof t>[0]);
-      const key = `${label}|${b.keys}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      out.push({ spec: b.keys === 'alt+1' ? 'alt+1' : b.keys, label });
+      const specs = byLabel.get(label) ?? [];
+      if (!specs.includes(b.keys)) specs.push(b.keys);
+      byLabel.set(label, specs);
     }
-    return out;
+    return [...byLabel].map(([label, specs]) => ({ specs, label }));
   };
 
   return (
@@ -53,10 +51,15 @@ export function KeyboardHelp() {
                 <h3>{t(`help.group.${g}` as Parameters<typeof t>[0])}</h3>
                 <dl>
                   {list.map((r) => (
-                    <div key={r.spec + r.label} class="kex-help__row">
+                    <div key={r.label} class="kex-help__row">
                       <dt>
-                        <KeySpec spec={r.spec} thenLabel={t('help.then')} />
-                        {r.spec === 'alt+1' && <span class="kex-help__range">…9</span>}
+                        {r.specs.map((spec, i) => (
+                          <span key={spec} class="kex-help__spec">
+                            {i > 0 && <span class="kex-help__or" aria-hidden="true">/</span>}
+                            <KeySpec spec={spec} thenLabel={t('help.then')} />
+                            {spec === 'alt+1' && <span class="kex-help__range">…9</span>}
+                          </span>
+                        ))}
                       </dt>
                       <dd>{r.label}</dd>
                     </div>

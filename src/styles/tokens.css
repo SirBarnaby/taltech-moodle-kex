@@ -4,7 +4,8 @@
   color-scheme: light;
 
   /* Fonts (design-spec §1) */
-  --kex-font-ui: "Inter Variable", system-ui, "Segoe UI", sans-serif;
+  --kex-font-ui: "Inter Tight Variable", "Inter Variable", system-ui, "Segoe UI", sans-serif;
+  --kex-font-hero: "Inter Variable", "Inter Tight Variable", system-ui, sans-serif;
   --kex-font-display: "Inter Tight Variable", "Inter Variable", system-ui, sans-serif;
   --kex-font-mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Mono", Menlo, monospace;
 

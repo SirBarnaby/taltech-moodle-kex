@@ -31,6 +31,10 @@ export interface Section {
   cmIds: number[];
   tileImage?: string;
   parentId?: number | null;
+  /** `mod_subsection` for delegated sections (rendered inside their parent topic). */
+  component?: string;
+  /** For delegated sections: the id of the owning cm. */
+  itemid?: number;
 }
 
 export type CompletionState = 0 | 1 | 2 | 3;

@@ -9,5 +9,9 @@
 @import "./shell/popover.css";
 @import "./shell/palette.css";
 @import "./shell/overlays.css";
+@import "./course/hero.css";
+@import "./course/course.css";
+@import "./course/thumb.css";
+@import "./course/sheet.css";
 @import "./offpill.css";
 @import "./skin/base.css";

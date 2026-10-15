@@ -27,14 +27,16 @@ describe('courses repo helpers', () => {
     expect(c.url).toBe('http://l:8080/course/view.php?id=9');
     expect(c.image).toBeUndefined();
   });
-  it('orders by frozen order then code for new courses', () => {
-    expect(orderCourses(courses, []).map((c) => c.code)).toEqual(['EMT0140', 'IAS0230', 'ITI8801']);
+  it('orders by frozen order, then the default (mock) order, then code', () => {
+    expect(orderCourses(courses, []).map((c) => c.code)).toEqual(['ITI8801', 'EMT0140', 'IAS0230']);
     expect(orderCourses(courses, [4, 2]).map((c) => c.code)).toEqual(['IAS0230', 'ITI8801', 'EMT0140']);
+    const extra = [...courses, mapCourse(raw(9, 'AAA0001', 'Other (AAA0001)')), mapCourse(raw(10, 'ZZZ9999', 'Last (ZZZ9999)'))];
+    expect(orderCourses(extra, []).map((c) => c.code)).toEqual(['ITI8801', 'EMT0140', 'IAS0230', 'AAA0001', 'ZZZ9999']);
   });
-  it('applies aliases', () => {
-    const a = applyAliases(courses, { '2': 'Cloud & DevOps' });
-    expect(a[0]?.alias).toBe('Cloud & DevOps');
-    expect(a[1]?.alias).toBeUndefined();
+  it('ships default English aliases; a user alias wins; unknown codes have none', () => {
+    const a = applyAliases(courses, { '3': 'My IoT' });
+    expect(a.map((c) => c.alias)).toEqual(['Cloud & DevOps', 'My IoT', 'Embedded Systems']);
+    expect(applyAliases([mapCourse(raw(9, 'AAA0001', 'Other (AAA0001)'))], {})[0]?.alias).toBeUndefined();
   });
   it('semester label is the most common one', () => {
     expect(currentSemester(courses)).toEqual({ season: 'autumn', year: 2026 });

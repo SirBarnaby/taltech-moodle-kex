@@ -1,0 +1,51 @@
+import { RibbonsRenderer } from './ribbons';
+
+/**
+ * Video thumbnails: one offscreen 268x184 render per seed (the cmid), kept as a data URL in memory only.
+ * A single shared canvas is created on demand and released after 5 s of idle (architecture §14).
+ */
+const cache = new Map<number, string>();
+const pending = new Map<number, Promise<string | undefined>>();
+let canvas: HTMLCanvasElement | null = null;
+let renderer: RibbonsRenderer | null = null;
+let idle: number | undefined;
+let queue: Promise<unknown> = Promise.resolve();
+
+function release(): void {
+  renderer?.dispose();
+  renderer = null;
+  canvas = null;
+}
+
+export function videoThumb(seed: number): Promise<string | undefined> {
+  const hit = cache.get(seed);
+  if (hit) return Promise.resolve(hit);
+  const inflight = pending.get(seed);
+  if (inflight) return inflight;
+  const job = queue.then(async () => {
+    window.clearTimeout(idle);
+    try {
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.width = 268;
+        canvas.height = 184;
+        // A flipped window of the hero's right edge (x0 > x1 mirrors it): a magenta curve rising to the right over dark strands.
+        renderer = new RibbonsRenderer(canvas, { seed, intensity: 0.8, leftFade: 0, window: [1339, -18, 1139, 119] });
+      }
+      if (!renderer?.ok) return undefined;
+      // Different seeds sample different moments of the animation.
+      renderer.renderStatic(7.3 + (seed % 9) * 0.9);
+      const url = canvas.toDataURL('image/webp', 0.8);
+      cache.set(seed, url);
+      return url;
+    } catch {
+      return undefined;
+    } finally {
+      idle = window.setTimeout(release, 5000);
+      pending.delete(seed);
+    }
+  });
+  queue = job;
+  pending.set(seed, job);
+  return job;
+}

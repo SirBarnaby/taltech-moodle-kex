@@ -1,0 +1,156 @@
+/* Hero (design-spec §4.3): dark band, ribbons canvas, crosshairs, slide-up title, links. */
+#kex-root {
+  .kex-main {
+    margin-left: var(--kex-sb-w);
+    padding-top: var(--kex-header-h);
+    min-height: 100vh;
+    background: var(--kex-bg);
+    transition: margin-left 200ms var(--kex-ease);
+  }
+
+  .kex-hero {
+    position: relative;
+    height: var(--kex-hero-h);
+    overflow: hidden;
+    color: var(--kex-hero-text);
+    background: var(--kex-hero-bg);
+    box-shadow: inset 0 -1px 0 rgba(12, 6, 44, 0.9);
+    isolation: isolate;
+  }
+  .kex-hero[data-mode="fallback"] {
+    background: var(--kex-hero-fallback);
+  }
+  .kex-hero__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 0;
+  }
+  .kex-hero[data-mode="fallback"] .kex-hero__canvas {
+    display: none;
+  }
+
+  .kex-cross {
+    position: absolute;
+    z-index: 1;
+    color: var(--kex-hero-cross);
+    pointer-events: none;
+  }
+  .kex-cross__dot {
+    fill: rgba(255, 255, 255, 0.75);
+  }
+  .kex-cross--a {
+    left: calc(46.75% - 12.5px);
+    top: 28px;
+  }
+  .kex-cross--b {
+    left: calc(90.9% - 12.5px);
+    bottom: 20px;
+    color: var(--kex-hero-cross-bright);
+  }
+
+  .kex-hero__inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 32px var(--kex-pad) 0;
+    max-width: 100%;
+  }
+  .kex-hero__label {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--kex-hero-label);
+    margin-left: 1px;
+    animation: kex-fade 200ms var(--kex-ease) both;
+  }
+  .kex-hero__title {
+    display: block;
+    max-width: 62%;
+    margin: 13px 0 0 -1px;
+    font-family: var(--kex-font-hero);
+    font-size: clamp(52px, 4.04vw, 92px);
+    line-height: 1;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--kex-hero-text);
+  }
+  .kex-hero__links {
+    display: flex;
+    gap: 31px;
+    margin-top: 22px;
+    margin-left: 3px;
+  }
+  .kex-hero__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 15px;
+    line-height: 20px;
+    color: var(--kex-hero-link);
+    & > span {
+      text-decoration: underline;
+      text-decoration-color: var(--kex-hero-link-underline);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 6px;
+      transition: text-decoration-color 120ms var(--kex-ease);
+    }
+    &:hover > span {
+      text-decoration-color: rgba(255, 255, 255, 0.7);
+    }
+    &:focus-visible {
+      outline-color: var(--kex-sb-focus);
+    }
+    svg {
+      opacity: 0.9;
+    }
+  }
+}
+@keyframes kex-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slide Up Text (architecture §15). */
+#kex-root {
+  .kex-su {
+    display: block;
+  }
+  .kex-su-line {
+    display: block;
+    white-space: nowrap;
+  }
+  .kex-su-clip {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: top;
+    padding: 0.14em 0.06em;
+    margin: -0.14em -0.06em;
+  }
+  .kex-su-item {
+    display: inline-block;
+    will-change: transform;
+  }
+  .kex-su-word {
+    display: inline-block;
+    white-space: nowrap;
+  }
+  .kex-su-item--grad {
+    /* The gradient box includes the descenders. */
+    padding-bottom: 0.16em;
+    margin-bottom: -0.16em;
+    background-image: var(--kex-hero-gradient-text);
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}

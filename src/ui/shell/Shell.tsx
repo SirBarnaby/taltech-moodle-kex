@@ -1,7 +1,8 @@
 import { Component, type ComponentChildren } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { t } from '../../i18n';
-import { headerCompact, helpOpen, paletteOpen, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
+import { headerCompact, helpOpen, paletteOpen, route, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
+import { CourseView } from '../views/Course';
 import { Header } from './Header';
 import { KeyboardHelp } from './KeyboardHelp';
 import { Palette } from './Palette';
@@ -77,6 +78,14 @@ function skipToContent(e: MouseEvent): void {
   target.focus();
 }
 
+/** The page content for the current route; skin routes have none (Moodle's own content stays in place). */
+function View() {
+  const r = route.value;
+  if (r?.effective !== 'app') return null;
+  if (r.key === 'course' || r.key === 'section') return <CourseView />;
+  return null;
+}
+
 export function Shell() {
   useShellEffects();
   return (
@@ -86,6 +95,7 @@ export function Shell() {
       <Sidebar />
       <Header />
       <SessionBanner />
+      <View />
       <div class="kex-layer">
         {paletteOpen.value && <Palette />}
         {helpOpen.value && <KeyboardHelp />}

@@ -70,6 +70,29 @@ export class WsClient {
     if (wwwroot && sesskey) this.markReady();
   }
 
+  get base(): string {
+    return this.wwwroot;
+  }
+
+  /** GET a Moodle page as text (same transport as the API, so cookies are the page's). */
+  async fetchText(path: string): Promise<string> {
+    await this.ready;
+    const res = await this.http(this.wwwroot + path, { credentials: 'same-origin' });
+    if (!res.ok) throw new NetworkError(`HTTP ${res.status}`);
+    return res.text();
+  }
+
+  /** GET a URL and report where it ended up: PDFs and images answer with their final pluginfile URL and type, pages with their HTML. */
+  async probe(url: string): Promise<{ url: string; type: string; html?: string }> {
+    await this.ready;
+    const res = await this.http(url, { credentials: 'same-origin' });
+    if (!res.ok) throw new NetworkError(`HTTP ${res.status}`);
+    const type = (res.headers.get('content-type') ?? '').toLowerCase();
+    if (type.includes('html')) return { url: res.url || url, type, html: await res.text() };
+    void res.body?.cancel().catch(() => undefined);
+    return { url: res.url || url, type };
+  }
+
   /** Test hook: swap the transport. */
   setHttp(h: Http): void {
     this.http = h;
