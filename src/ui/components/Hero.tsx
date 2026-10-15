@@ -20,6 +20,8 @@ interface HeroProps {
   /** Seed for the shader (course id), so each course has its own phase. */
   seed?: number;
   intensity?: number;
+  /** Extra class on the section (page variants). */
+  class?: string;
 }
 
 /** A single "+" mark (25x25, 1px lines). */
@@ -32,7 +34,7 @@ export function Crosshair({ class: cls }: { class: string }) {
   );
 }
 
-export function Hero({ label, lines, links, seed = 0, intensity = 1 }: HeroProps) {
+export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls }: HeroProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const root = useRef<HTMLElement>(null);
   const mode = heroEffectMode.value;
@@ -55,7 +57,7 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1 }: HeroProps
 
   const text = lines[1] ? `${lines[0]}\n${lines[1]}` : lines[0];
   return (
-    <section class="kex-hero" ref={root} data-kex-test="hero" data-mode={mode}>
+    <section class={`kex-hero${cls ? ` ${cls}` : ''}`} ref={root} data-kex-test="hero" data-mode={mode}>
       <canvas class="kex-hero__canvas" ref={canvas} aria-hidden="true" />
       <Crosshair class="kex-cross--a" />
       <Crosshair class="kex-cross--b" />

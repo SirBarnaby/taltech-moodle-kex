@@ -1,6 +1,6 @@
 import { signal } from '@preact/signals';
 import type { Pin } from '../data/model';
-import { addPin, isPinned, movePin, readPins, removePin, renamePin, replacePins, restorePin, rowPins } from '../data/repo/pins';
+import { addPin, isPinned, MAX_PINS, movedTo, movePin, parsePinsJson, pinsToJson, readPins, removePin, renamePin, replacePins, restorePin, rowPins } from '../data/repo/pins';
 import { t } from '../i18n';
 import { activeCourseId } from '../state';
 import { pushToast } from './toasts';
@@ -44,4 +44,50 @@ export async function reorderPin(cmid: number, delta: -1 | 1, order: readonly Pi
 export async function retitlePin(cmid: number, title: string): Promise<void> {
   const old = await renamePin(cmid, title);
   if (old !== undefined) withUndo(t('toast.renamed'), () => void renamePin(cmid, old));
+}
+
+/** Drag a pin onto another pin of the same list: it takes that place. One Undo for the whole drag. */
+export async function dragPin(cmid: number, overCmid: number): Promise<void> {
+  if (cmid === overCmid) return;
+  const all = readPins();
+  const to = all.findIndex((p) => p.cmid === overCmid);
+  const { next, from } = movedTo(all, cmid, to);
+  if (from < 0) return;
+  await replacePins(next);
+  withUndo(t('toast.moved'), () => void replacePins(all));
+}
+
+/** Download the pins as `kex-pins.json`. */
+export function exportPins(): void {
+  const blob = new Blob([pinsToJson(readPins())], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'kex-pins.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/** Merge a pins file into the current pins (new cmids are appended; the 50 pin limit applies). */
+export async function importPins(file: File, wwwroot: string): Promise<number> {
+  let parsed: { pins: Pin[]; dropped: number };
+  try {
+    parsed = parsePinsJson(await file.text(), wwwroot);
+  } catch {
+    pushToast(t('pinned.importFailed'));
+    return 0;
+  }
+  const cur = readPins();
+  const have = new Set(cur.map((p) => p.cmid));
+  const add = parsed.pins.filter((p) => !have.has(p.cmid));
+  if (!parsed.pins.length) {
+    pushToast(t('pinned.importFailed'));
+    return 0;
+  }
+  const merged = [...cur, ...add].slice(0, MAX_PINS);
+  await replacePins(merged);
+  const n = merged.length - cur.length;
+  withUndo(t('pinned.imported', { n }), () => void replacePins(cur));
+  return n;
 }

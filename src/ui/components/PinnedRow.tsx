@@ -13,7 +13,7 @@ interface PinnedRowProps {
   courseId: number | null;
 }
 
-function RenameInput({ pin }: { pin: Pin }) {
+export function RenameInput({ pin }: { pin: Pin }) {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
     ref.current?.focus();

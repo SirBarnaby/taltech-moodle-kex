@@ -19,3 +19,17 @@ export function focusSibling(current: Element | null, delta: 1 | -1, selector: s
   const next = list[Math.max(0, Math.min(list.length - 1, (i < 0 ? (delta === 1 ? -1 : list.length) : i) + delta))];
   next?.focus();
 }
+
+/** No focus ring until the first key press: programmatic focus on arrival stays quiet. */
+export function useQuietFocus(): void {
+  useEffect(() => {
+    const root = document.getElementById('kex-root');
+    const off = (): void => root?.removeAttribute('data-quiet');
+    root?.setAttribute('data-quiet', '');
+    window.addEventListener('keydown', off, { once: true, capture: true });
+    return () => {
+      window.removeEventListener('keydown', off, true);
+      off();
+    };
+  }, []);
+}

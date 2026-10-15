@@ -9,7 +9,7 @@ export interface Binding {
   /** i18n key of the description shown in the help overlay. */
   description: string;
   /** Display group in the help overlay. */
-  group: 'General' | 'Navigate' | 'Lists' | 'Course';
+  group: 'General' | 'Navigate' | 'Lists' | 'Course' | 'Workspace';
   run: (e: KeyboardEvent) => void;
   /** Fire even while typing in a field (Ctrl+K, Esc). */
   allowInInput?: boolean;

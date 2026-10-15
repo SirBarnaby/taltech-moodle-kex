@@ -7,6 +7,11 @@ import { scrapeSummaries } from '../data/scrape/summaries';
 import { scrapeTiles } from '../data/scrape/tiles';
 import { setTileList } from '../actions/course';
 import { courseBindings, previewBindings } from '../actions/coursekeys';
+import { mycoursesBindings, pinnedBindings, workspaceBindings, workspacePreviewBindings } from '../actions/wskeys';
+import { configureCounts, countsStore } from '../data/repo/counts';
+import { configureNotifs } from '../data/repo/notifs';
+import { prefetchStates } from '../data/repo/prefetch';
+import { wsPreview } from '../state/workspace';
 import { previewCmId, summaries } from '../state/course';
 import { scrapeTtLinks, scrapeUser } from '../data/scrape/user';
 import { scrapeUserMenu } from '../data/scrape/usermenu';
@@ -21,7 +26,7 @@ import {
 import { applyShellAttrs, shellAttrs } from '../lib/theme';
 import { mountShell, unmountShell } from '../ui/mount';
 import {
-  coursesLoading, coursesRaw, hooks, logoSrc, pageInfo, resolvedMotion, resolvedTheme, route as routeSig, settings, sidebarCourses, sidebarMode,
+  coursesLoading, coursesRaw, hash as hashSig, hooks, logoSrc, pageInfo, resolvedMotion, resolvedTheme, route as routeSig, settings, sidebarCourses, sidebarMode,
   systemDark, ttLinks, user, userMenuItems, viewportWidth,
 } from '../state';
 import { updateSettings } from '../actions/settings';
@@ -154,6 +159,8 @@ class Controller {
     const s = settings.value;
     ws.configure(info.wwwroot, info.sesskey);
     cache.bind(location.host, info.userId);
+    configureCounts(info.userId);
+    configureNotifs(info.userId);
 
     this.syncAttrs();
     const root = document.createElement('div');
@@ -218,12 +225,40 @@ class Controller {
         },
       );
     }
+    if (eff.effective === 'app' && (eff.key === 'workspace' || eff.key === 'mycourses')) {
+      // The Pinned page is the Workspace route with `#pinned`; its keys follow the hash (one set registered at a time).
+      const wsPrev = keyManager.register(workspacePreviewBindings());
+      this.stops.push(
+        effect(() => {
+          const view = eff.key === 'mycourses' ? 'mycourses' : hashSig.value === '#pinned' ? 'pinned' : 'workspace';
+          this.html.dataset.kexView = view;
+          keyManager.setScope('workspace', true);
+          return keyManager.register(view === 'mycourses' ? mycoursesBindings() : view === 'pinned' ? pinnedBindings() : workspaceBindings());
+        }),
+        effect(() => keyManager.setScope('preview', wsPreview.value !== undefined)),
+        () => {
+          wsPrev();
+          keyManager.setScope('workspace', false);
+          keyManager.setScope('preview', false);
+        },
+      );
+    }
     window.clearTimeout(this.failTimer);
     this.mounted = true;
     this.html.dataset.kexShell = 'ready';
     setMode(eff.effective === 'app' ? 'app' : 'boot');
 
     // Everything below runs without blocking the first paint.
+    this.stops.push(
+      effect(() => {
+        // Idle prefetch of every sidebar course's state: feeds the palette's topics and materials and the unavailable-pin check.
+        const cs = sidebarCourses.value;
+        if (cs.length) prefetchStates(cs);
+      }),
+    );
+    void countsStore().refresh();
+    const countsTimer = window.setInterval(() => document.visibilityState === 'visible' && void countsStore().refresh(), 2 * 60 * 1000);
+    this.stops.push(() => window.clearInterval(countsTimer));
     void store.refresh().then(() => {
       if (DEBUG) this.html.dataset.kexTransport = (globalThis as unknown as { content?: unknown }).content ? 'content.fetch' : 'fetch';
       if (DEBUG) this.html.dataset.kexCourses = String(coursesRaw.value.length);
@@ -232,7 +267,10 @@ class Controller {
     if (!this.mounted) return;
     this.refreshFromDom(eff);
     if (eff.effective === 'skin') setMode('skin');
-    window.addEventListener('hashchange', () => (routeSig.value = routeSig.value ? { ...routeSig.value } : null));
+    window.addEventListener('hashchange', () => {
+      hashSig.value = location.hash;
+      routeSig.value = routeSig.value ? { ...routeSig.value } : null;
+    });
     window.addEventListener('resize', () => (viewportWidth.value = window.innerWidth), { passive: true });
   }
 

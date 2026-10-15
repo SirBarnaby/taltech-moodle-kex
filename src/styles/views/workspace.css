@@ -1,0 +1,160 @@
+/* Workspace (page-designs §2): hero variant, COURSES column, feed header. */
+#kex-root {
+  .kex-hero--ws .kex-hero__title {
+    max-width: 100%;
+    font-size: clamp(40px, 3.3vw, 72px);
+    line-height: 1.04;
+  }
+
+  /* ---- COURSES column ---- */
+  .kex-wscourses__list {
+    border-top: 1px solid var(--kex-border);
+  }
+  .kex-wc {
+    position: relative;
+    display: block;
+    height: 76px;
+    padding: 9px 17px 0 19px;
+    border-bottom: 1px solid var(--kex-border);
+    color: var(--kex-text-2);
+    transition: background 140ms var(--kex-ease);
+    &:hover:not(.kex-wc--active) {
+      background: var(--kex-hover);
+    }
+    &:focus-visible {
+      outline-offset: -3px;
+    }
+  }
+  .kex-wc__top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    height: 14px;
+  }
+  .kex-wc__code {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--kex-mono);
+  }
+  .kex-wc__pct {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--kex-mono-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .kex-wc__name {
+    display: block;
+    margin-top: 3px;
+    font-size: 17px;
+    line-height: 22px;
+    color: var(--kex-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .kex-wc__next {
+    display: block;
+    margin-top: 2px;
+    font-size: 13.5px;
+    line-height: 18px;
+    color: var(--kex-text-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .kex-wc__bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--kex-border);
+    i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #6d4dff, #c114fe);
+    }
+  }
+  .kex-wc--active {
+    background: linear-gradient(90deg, #f1e8fd 0%, #efe6fd 60%, #fbeffd 75%, #f3e4fd 90%, #ece2fc 100%);
+    box-shadow: inset 0 1px 0 var(--kex-tint-border);
+    .kex-wc__name {
+      font-weight: 600;
+      color: var(--kex-violet);
+    }
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: -1px;
+      width: 4px;
+      background: var(--kex-accent-bar);
+    }
+  }
+  :root[data-kex-theme="dark"] & .kex-wc--active {
+    background: var(--kex-tint);
+  }
+
+  /* ---- feed ---- */
+  .kex-feedhead {
+    height: 16px;
+  }
+  .kex-feedhead__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 18px;
+    margin: 6px 0 -4px;
+  }
+  .kex-feedhead__stamp {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--kex-mono-soft);
+  }
+  .kex-feedhead__stamp--offline {
+    color: var(--kex-magenta);
+  }
+  .kex-feedhead__all {
+    font-size: 14px;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+  .kex-feed .kex-rows {
+    margin-top: 10px;
+  }
+  .kex-row--overdue .kex-row__title a {
+    color: var(--kex-text);
+  }
+  .kex-row__label--overdue {
+    color: var(--kex-magenta);
+  }
+  .kex-row--unread .kex-row__title::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin: 0 9px 3px -16px;
+    border-radius: 50%;
+    background: var(--kex-magenta);
+  }
+  .kex-row--update .kex-row__sub {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 0;
+    font-size: 15px;
+    line-height: 21px;
+  }
+  .kex-row--item .kex-row__title {
+    margin-top: 6px;
+  }
+}

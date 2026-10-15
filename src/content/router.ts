@@ -55,7 +55,7 @@ export function resolveRoute({ path, bodyId, bodyClasses }: RouteInput): Route {
 }
 
 /** Views that exist in this build. App routes without a view render as skin (Moodle inside our shell). */
-export const IMPLEMENTED_VIEWS: ReadonlySet<RouteKey> = new Set<RouteKey>(['course', 'section']);
+export const IMPLEMENTED_VIEWS: ReadonlySet<RouteKey> = new Set<RouteKey>(['course', 'section', 'workspace', 'mycourses']);
 
 /** Routes that must stay pure Moodle until their dedicated chrome ships. */
 export const PURE_MOODLE_UNTIL_READY: ReadonlySet<RouteKey> = new Set<RouteKey>(['login', 'quiz-focus']);

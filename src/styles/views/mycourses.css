@@ -1,0 +1,202 @@
+/* My courses (page-designs §4). */
+#kex-root {
+  .kex-mcbar {
+    margin-top: 0;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .kex-mcbar__tools {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 8px;
+  }
+  .kex-mcfilter {
+    display: block;
+  }
+  .kex-mcfilter__input {
+    width: 280px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--kex-search-border);
+    border-radius: var(--kex-r-s);
+    background: var(--kex-bg);
+    color: var(--kex-text);
+    font-size: 15px;
+    &::placeholder {
+      color: var(--kex-text-3);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kex-focus);
+      outline-offset: 1px;
+    }
+  }
+  .kex-mclist {
+    padding-top: 6px;
+  }
+  .kex-mcrows {
+    margin: 0;
+  }
+  .kex-mc {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 64px;
+    border-bottom: 1px solid var(--kex-border);
+    transition: background 120ms var(--kex-ease);
+    &:hover,
+    &:focus-within {
+      background: var(--kex-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kex-focus);
+      outline-offset: -2px;
+      border-radius: var(--kex-r-s);
+    }
+  }
+  .kex-mc--hidden {
+    opacity: 0.7;
+  }
+  .kex-mc__main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) 140px 200px;
+    align-items: center;
+    column-gap: 20px;
+    height: 100%;
+    padding: 0 6px 0 8px;
+    color: var(--kex-text);
+    &:hover .kex-mc__name {
+      color: var(--kex-violet);
+    }
+  }
+  .kex-mc__img {
+    display: block;
+    width: 64px;
+    height: 40px;
+    border-radius: var(--kex-r-s);
+    object-fit: cover;
+    background: var(--kex-border);
+  }
+  .kex-mc__img--ph {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, hsl(calc(255 + var(--kex-ph) * 1deg) 62% 28%), hsl(calc(285 + var(--kex-ph) * 1deg) 70% 38%));
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+  .kex-mc__text {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 14px 22px;
+    row-gap: 2px;
+    min-width: 0;
+    align-content: center;
+  }
+  .kex-mc__code {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--kex-mono);
+  }
+  .kex-mc__name {
+    grid-column: 1;
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    transition: color 120ms var(--kex-ease);
+  }
+  .kex-mc__cat {
+    grid-column: 2;
+    align-self: center;
+    margin-left: 14px;
+    font-size: 13.5px;
+    line-height: 18px;
+    color: var(--kex-text-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .kex-mc__progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .kex-mc__bar {
+    flex: 1 1 auto;
+    max-width: 90px;
+    height: 2px;
+    background: var(--kex-border);
+    i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #6d4dff, #c114fe);
+    }
+  }
+  .kex-mc__pct {
+    min-width: 34px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--kex-mono-soft);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .kex-mc__access {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--kex-mono-soft);
+    white-space: nowrap;
+  }
+  .kex-mc__tools {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px 0 4px;
+  }
+  .kex-mc__tool {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--kex-r-s);
+    color: var(--kex-iconbtn-fg);
+    transition: background 120ms var(--kex-ease), color 120ms var(--kex-ease);
+    &:hover {
+      background: var(--kex-tint);
+      color: var(--kex-violet);
+    }
+  }
+  .kex-mc__tool--on {
+    color: var(--kex-violet);
+  }
+  .kex-skel--mc {
+    display: block;
+    width: 100%;
+    height: 40px;
+    margin: 0 8px;
+  }
+  .kex-mcrows--skel .kex-mc {
+    pointer-events: none;
+  }
+}
+@media (max-width: 1100px) {
+  #kex-root .kex-mc__main {
+    grid-template-columns: 64px minmax(0, 1fr) 120px;
+  }
+  #kex-root .kex-mc__access {
+    display: none;
+  }
+}

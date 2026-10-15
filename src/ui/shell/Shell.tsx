@@ -1,8 +1,11 @@
 import { Component, type ComponentChildren } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { t } from '../../i18n';
-import { headerCompact, helpOpen, paletteOpen, route, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
+import { hash, headerCompact, helpOpen, paletteOpen, route, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
 import { CourseView } from '../views/Course';
+import { MyCoursesView } from '../views/MyCourses';
+import { PinnedView } from '../views/Pinned';
+import { WorkspaceView } from '../views/Workspace';
 import { Header } from './Header';
 import { KeyboardHelp } from './KeyboardHelp';
 import { Palette } from './Palette';
@@ -83,6 +86,8 @@ function View() {
   const r = route.value;
   if (r?.effective !== 'app') return null;
   if (r.key === 'course' || r.key === 'section') return <CourseView />;
+  if (r.key === 'workspace') return hash.value === '#pinned' ? <PinnedView /> : <WorkspaceView />;
+  if (r.key === 'mycourses') return <MyCoursesView />;
   return null;
 }
 

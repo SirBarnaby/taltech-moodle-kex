@@ -1,13 +1,14 @@
 import { ArrowUpRight, BookMarked, ChevronRight, House, Settings as SettingsIcon, SquareArrowOutUpRight } from 'lucide-preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { setCourseAlias } from '../../actions/settings';
-import { homeUrl, PAGES } from '../../actions/navigate';
+import { go, homeUrl, PAGES } from '../../actions/navigate';
+import { countsStore } from '../../data/repo/counts';
 import type { Course } from '../../data/model';
 import { seasonLabel } from '../../data/names';
 import { currentSemester, displayName } from '../../data/repo/courses';
 import { t } from '../../i18n';
 import {
-  activeCourseId, coursesLoading, logoSrc, pageInfo, quickSettingsOpen, route, sidebarCourses, sidebarMode, sidebarOverlay,
+  activeCourseId, coursesLoading, hash, logoSrc, pageInfo, quickSettingsOpen, route, sidebarCourses, sidebarMode, sidebarOverlay,
   ttLinks, user, userMenuOpen,
 } from '../../state';
 import { QuickSettings } from './QuickSettings';
@@ -137,8 +138,17 @@ export function Sidebar() {
   const label = `${t('sidebar.courses')} / ${seasonLabel(sem.season)} ${sem.year}`;
   const links = ttLinks.value;
   const key = r?.key;
-  const isHome = key === 'workspace' && !/#pinned/.test(location.hash);
-  const isPinned = key === 'workspace' && /#pinned/.test(location.hash);
+  const isHome = key === 'workspace' && hash.value !== '#pinned';
+  const isPinned = key === 'workspace' && hash.value === '#pinned';
+  const counts = countsStore().value.value;
+  const unread = counts?.notifs ?? 0;
+  const anyUnread = unread + (counts?.messages ?? 0) > 0;
+  // Links to the page we are on switch views in place (a plain navigation to `/my/` from `/my/#pinned` would reload).
+  const here = (e: MouseEvent, path: string): void => {
+    if (key !== 'workspace' || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    go(homeUrl(path));
+  };
   const inert = mode === 'drawer' && !overlayOpen;
   const expanded = mode === 'full' || overlayOpen;
 
@@ -158,13 +168,16 @@ export function Sidebar() {
         <div class="kex-sb__divider" />
         <ul class="kex-sb__nav">
           <li>
-            <a class="kex-sb__row" href={homeUrl(PAGES.workspace)} aria-current={isHome ? 'page' : undefined} data-tip={t('nav.workspace')}>
+            <a class="kex-sb__row" href={homeUrl(PAGES.workspace)} aria-current={isHome ? 'page' : undefined} data-tip={t('nav.workspace')} data-kex-test="sb-workspace" onClick={(e) => here(e, PAGES.workspace)}>
               <House size={24} strokeWidth={1.5} aria-hidden="true" />
               <span class="kex-sb__rowlabel">{t('nav.workspace')}</span>
+              {unread > 0 && (
+                <span class="kex-sb__pill kex-mono" data-kex-test="sb-unread" aria-label={t('sidebar.unread', { n: unread })}>{unread > 99 ? '99+' : unread}</span>
+              )}
             </a>
           </li>
           <li>
-            <a class="kex-sb__row" href={homeUrl(PAGES.pinned)} aria-current={isPinned ? 'page' : undefined} data-tip={t('nav.pinned')}>
+            <a class="kex-sb__row" href={homeUrl(PAGES.pinned)} aria-current={isPinned ? 'page' : undefined} data-tip={t('nav.pinned')} onClick={(e) => here(e, PAGES.pinned)}>
               <BookMarked size={24} strokeWidth={1.5} aria-hidden="true" />
               <span class="kex-sb__rowlabel">{t('nav.pinned')}</span>
             </a>
@@ -229,10 +242,14 @@ export function Sidebar() {
               userMenuOpen.value = !userMenuOpen.value;
             }}
           >
-            <span class="kex-sb__avatar" aria-hidden="true">
-              {u?.avatar ? <img src={u.avatar} alt="" onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')} /> : null}
-              <span>{u?.initials ?? '·'}</span>
+            <span class="kex-sb__avwrap">
+              <span class="kex-sb__avatar" aria-hidden="true">
+                {u?.avatar ? <img src={u.avatar} alt="" onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')} /> : null}
+                <span>{u?.initials ?? '·'}</span>
+              </span>
+              {anyUnread && <span class="kex-sb__dot" data-kex-test="sb-dot" aria-hidden="true" />}
             </span>
+
             <span class="kex-sb__username">{u?.fullname ?? pageInfo.value?.heading ?? ''}</span>
             <ChevronRight class="kex-sb__chev" size={16} strokeWidth={1.75} aria-hidden="true" />
           </button>

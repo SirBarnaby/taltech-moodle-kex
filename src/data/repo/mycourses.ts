@@ -29,10 +29,15 @@ const stores = new Map<string, Store<Course[]>>();
 export interface CoursesCtx {
   wwwroot: string;
   lang: () => 'en' | 'et';
-  /** Custom field of the archived filter (TalTech `is_archived`), when the site has one. */
-  customField: () => { name: string; value: string } | undefined;
-  /** What the user's own grouping shows for "Current". */
-  inprogress: () => Promise<Course[]>;
+  /** Name of the site's "archived" custom field (TalTech `is_archived`), when the page showed one. */
+  customFieldName: () => string | undefined;
+}
+
+/** The classification request of a tab. `current` mirrors the site's own grouping: customfield -1 ("not archived") when it exists. */
+export function requestFor(tab: CoursesTab, field: string | undefined): { classification: Classification; field?: { name: string; value: string } } | undefined {
+  if (tab === 'current') return field ? { classification: 'customfield', field: { name: field, value: '-1' } } : { classification: 'inprogress' };
+  if (tab === 'archived') return field ? { classification: 'customfield', field: { name: field, value: '1' } } : undefined;
+  return { classification: CLASSIFICATION[tab] };
 }
 
 /** The store of a tab (5 min TTL). Tab data is fetched only when the tab is opened. */
@@ -40,19 +45,11 @@ export function tabStore(tab: CoursesTab, ctx: CoursesCtx): Store<Course[]> {
   let s = stores.get(tab);
   if (!s) {
     s = cache.swr<Course[]>(`mycourses:${tab}`, 5 * 60 * 1000, async () => {
-      if (tab === 'current') return ctx.inprogress();
-      let classification: Classification;
-      let field: { name: string; value: string } | undefined;
-      if (tab === 'archived') {
-        field = ctx.customField();
-        if (!field) return [];
-        classification = 'customfield';
-      } else {
-        classification = CLASSIFICATION[tab];
-      }
+      const req = requestFor(tab, ctx.customFieldName());
+      if (!req) return [];
       const res = await ws.call<Timeline>(TIMELINE, {
-        offset: 0, limit: 0, classification, sort: 'fullname',
-        customfieldname: field?.name ?? '', customfieldvalue: field?.value ?? '',
+        offset: 0, limit: 0, classification: req.classification, sort: 'fullname',
+        customfieldname: req.field?.name ?? '', customfieldvalue: req.field?.value ?? '',
       });
       return res.courses.map((c) => mapCourse(c, ctx.lang(), ctx.wwwroot));
     });

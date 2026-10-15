@@ -15,7 +15,7 @@ import {
   allRows, courseError, courseState, courseStatus, focusZone, infoOpen, pinnedRow, previewCmId, rows, selectedCmId, summaries, tab, topicNumber, topics, currentTopic,
 } from '../../state/course';
 import { Button } from '../components/Button';
-import { useEffectsConfig } from '../components/hooks';
+import { useEffectsConfig, useQuietFocus } from '../components/hooks';
 import { Hero, type HeroLink } from '../components/Hero';
 import { PinnedRow } from '../components/PinnedRow';
 import { PreviewSheet } from '../components/PreviewSheet';
@@ -69,19 +69,6 @@ function useCompactTitle(code: string, courseName: string, topicLabel: { chip: s
     };
   }, [courseState.value === undefined, infoOpen.value, topicNumber.value]);
   useEffect(() => syncRef.current(), [code, courseName, topicLabel?.chip, topicLabel?.text]);
-}
-
-function useQuietFocus(): void {
-  useEffect(() => {
-    const root = document.getElementById('kex-root');
-    const off = (): void => root?.removeAttribute('data-quiet');
-    root?.setAttribute('data-quiet', '');
-    window.addEventListener('keydown', off, { once: true, capture: true });
-    return () => {
-      window.removeEventListener('keydown', off, true);
-      off();
-    };
-  }, []);
 }
 
 export function CourseView() {

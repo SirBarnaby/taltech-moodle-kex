@@ -1,10 +1,21 @@
-import { pageInfo } from '../state';
+import { hash, pageInfo } from '../state';
 
 /** Same-tab navigation, or a new tab with noopener. Relative URLs resolve against the Moodle root. */
 export function go(url: string, newTab = false): void {
   const abs = new URL(url, pageInfo.value?.wwwroot ? pageInfo.value.wwwroot + '/' : location.href).href;
-  if (newTab) window.open(abs, '_blank', 'noopener');
-  else window.location.assign(abs);
+  if (newTab) {
+    window.open(abs, '_blank', 'noopener');
+    return;
+  }
+  // Same page, hash dropped (`/my/#pinned` -> `/my/`): switch in place, a plain assign would reload.
+  const target = new URL(abs);
+  if (target.origin === location.origin && target.pathname === location.pathname && target.search === location.search && target.hash === '' && location.hash !== '') {
+    history.pushState(null, '', target.href);
+    hash.value = '';
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    return;
+  }
+  window.location.assign(abs);
 }
 
 export function homeUrl(path: string): string {

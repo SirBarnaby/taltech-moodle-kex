@@ -1,0 +1,58 @@
+/* Pinned page (page-designs §3). */
+#kex-root {
+  .kex-pinpage .kex-content {
+    max-width: 1180px;
+    padding-top: 8px;
+  }
+  .kex-prows {
+    margin-top: 0;
+  }
+  .kex-prows__group {
+    padding-top: 30px;
+    list-style: none;
+    &:first-child {
+      padding-top: 22px;
+    }
+  }
+  .kex-prow__thumb {
+    position: relative;
+    align-self: start;
+  }
+  .kex-prow__grip {
+    position: absolute;
+    left: -34px;
+    top: 36px;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--kex-r-s);
+    color: var(--kex-iconbtn-fg);
+    cursor: grab;
+    touch-action: none;
+    &:hover {
+      background: var(--kex-tint);
+      color: var(--kex-violet);
+    }
+  }
+  .kex-prow--drag {
+    opacity: 0.55;
+  }
+  .kex-prow--over {
+    box-shadow: inset 0 3px 0 var(--kex-accent);
+  }
+  .kex-prow .kex-pin__rename {
+    height: 30px;
+    width: min(520px, 100%);
+    margin: -2px 0 -2px -7px;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .kex-pinpage[data-edit="true"] .kex-content {
+    padding-left: calc(var(--kex-pad) + 34px);
+  }
+  .kex-band__actions .kex-bandbtn[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}

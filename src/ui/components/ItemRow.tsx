@@ -34,6 +34,9 @@ interface ItemRowProps {
   class?: string;
   /** Rendered inside the text column (inline editor etc.). */
   extra?: ComponentChildren;
+  onKey?: (e: KeyboardEvent) => void;
+  /** Extra data attributes (`data-kex-pin`). */
+  attrs?: Record<string, string | number>;
 }
 
 const isModified = (e: MouseEvent): boolean => e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0;
@@ -49,6 +52,8 @@ export function ItemRow(p: ItemRowProps) {
       data-kex-item={p.id}
       data-kex-test={p.testId}
       aria-label={p.ariaLabel}
+      onKeyDown={p.onKey}
+      {...p.attrs}
       onFocus={() => p.onSelect?.(p.id)}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('a, button, input')) return;

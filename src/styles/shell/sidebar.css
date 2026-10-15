@@ -430,3 +430,51 @@
 :root[data-kex-theme="dark"] #kex-root .kex-sidebar:not([data-open="true"]) {
   box-shadow: 1px 0 0 rgba(255, 255, 255, 0.06);
 }
+
+/* Unread count pill (Workspace item) and the avatar dot (page-designs §0). */
+#kex-root {
+  .kex-sb__pill {
+    margin-left: auto;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #f5f1fb;
+    font-size: 11px;
+    line-height: 20px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .kex-sb__avwrap {
+    position: relative;
+    flex: none;
+    display: block;
+    width: 44px;
+    height: 44px;
+  }
+  .kex-sb__dot {
+    position: absolute;
+    top: 0;
+    right: -1px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff3fc4;
+    box-shadow: 0 0 0 2px var(--kex-sb-bg, #1b1334);
+  }
+  .kex-sidebar[data-mode="rail"]:not([data-open="true"]) .kex-sb__pill {
+    position: absolute;
+    top: 7px;
+    right: 9px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 9px;
+    line-height: 16px;
+    background: #a10982;
+    color: #fff;
+  }
+}

@@ -13,5 +13,9 @@
 @import "./course/course.css";
 @import "./course/thumb.css";
 @import "./course/sheet.css";
+@import "./components/band.css";
+@import "./views/workspace.css";
+@import "./views/pinned.css";
+@import "./views/mycourses.css";
 @import "./offpill.css";
 @import "./skin/base.css";

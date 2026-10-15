@@ -6,7 +6,7 @@ import type { Binding } from '../../lib/keys';
 import { helpOpen } from '../../state';
 import { KeySpec } from '../components/Kbd';
 
-const GROUPS: Binding['group'][] = ['General', 'Navigate', 'Lists', 'Course'];
+const GROUPS: Binding['group'][] = ['General', 'Navigate', 'Lists', 'Course', 'Workspace'];
 
 /** Generated from the registered bindings: what is listed is what works. */
 export function KeyboardHelp() {
