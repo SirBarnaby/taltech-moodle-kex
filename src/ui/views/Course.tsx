@@ -8,14 +8,14 @@ import { pinsStore, isPinned } from '../../data/repo/pins';
 import { cmsOfSection, section0 } from '../../data/repo/coursestate';
 import { primaryIndex, resourceCount, subtitleForRows, type RowModel } from '../../data/topics';
 import { RECORDING_RE } from '../../data/classify';
-import { effects } from '../../fx/effects';
 import { t } from '../../i18n';
 import { sanitizeHtml } from '../../lib/sanitize';
-import { activeCourseId, headerTitle, pageInfo, resolvedMotion, settings, sidebarCourses } from '../../state';
+import { activeCourseId, headerTitle, pageInfo, sidebarCourses } from '../../state';
 import {
   allRows, courseError, courseState, courseStatus, focusZone, infoOpen, pinnedRow, previewCmId, rows, selectedCmId, summaries, tab, topicNumber, topics, currentTopic,
 } from '../../state/course';
 import { Button } from '../components/Button';
+import { useEffectsConfig } from '../components/hooks';
 import { Hero, type HeroLink } from '../components/Hero';
 import { PinnedRow } from '../components/PinnedRow';
 import { PreviewSheet } from '../components/PreviewSheet';
@@ -34,15 +34,6 @@ function useCourseInit(): void {
     if (!id) return;
     return initCourse(id);
   }, [id]);
-}
-
-/** Hero effects follow the settings (architecture §14). */
-function useEffectsConfig(): void {
-  const eff = settings.value.effects;
-  const motion = resolvedMotion.value;
-  useEffect(() => {
-    effects.configure({ effects: eff, motion, freezeTime: settings.value.debug?.freezeTime });
-  }, [eff, motion, settings.value.debug?.freezeTime]);
 }
 
 function useCompactTitle(code: string, courseName: string, topicLabel: { chip: string; text: string } | undefined): void {
@@ -213,7 +204,7 @@ export function CourseView() {
         seed={id ?? 0}
       />
       <div class="kex-content">
-        <PinnedRow pins={pinnedRow.value} courseId={id} onEdit={() => go(homeUrl('/my/#pinned'))} />
+        <PinnedRow pins={pinnedRow.value} courseId={id} />
         <div class="kex-matheader">
           <SlideUpText as="h2" class="kex-matheader__title" text={t('course.materials')} split="words" stagger={0.08} duration={0.6} inView />
           <Tabs value={activeTab} onChange={(k: TabKey) => setTab(k)} />

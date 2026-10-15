@@ -1,20 +1,32 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
-import type { TabKey } from '../../data/classify';
 import { t, type MessageKey } from '../../i18n';
 
-const TABS: { key: TabKey; label: MessageKey; digit: string }[] = [
+export interface TabDef<K extends string = string> {
+  key: K;
+  label: MessageKey;
+  digit: string;
+}
+
+const COURSE_TABS = [
   { key: 'all', label: 'tab.all', digit: '1' },
   { key: 'lectures', label: 'tab.lectures', digit: '2' },
   { key: 'labs', label: 'tab.labs', digit: '3' },
-];
+] as const satisfies readonly TabDef[];
 
-interface TabsProps {
-  value: TabKey;
-  onChange: (k: TabKey) => void;
+interface TabsProps<K extends string = 'all' | 'lectures' | 'labs'> {
+  value: K;
+  onChange: (k: K) => void;
+  /** Defaults to Everything / Lectures / Labs. */
+  items?: readonly TabDef<K>[];
+  label?: string;
+  /** `data-tab` ids and `id`s are prefixed with this. */
+  idPrefix?: string;
+  panelId?: string;
 }
 
 /** Everything / Lectures / Labs with a sliding underline. ARIA tabs with arrow-key navigation. */
-export function Tabs({ value, onChange }: TabsProps) {
+export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, onChange, items, label, idPrefix = 'kex-tab', panelId = 'kex-tabpanel' }: TabsProps<K>) {
+  const TABS = (items ?? COURSE_TABS) as readonly TabDef<K>[];
   const list = useRef<HTMLDivElement>(null);
   const [bar, setBar] = useState({ left: 0, width: 0, ready: false });
 
@@ -46,17 +58,17 @@ export function Tabs({ value, onChange }: TabsProps) {
   };
 
   return (
-    <div class="kex-tabs" role="tablist" aria-label={t('course.tabs')} ref={list} onKeyDown={onKey}>
+    <div class="kex-tabs" role="tablist" aria-label={label ?? t('course.tabs')} ref={list} onKeyDown={onKey}>
       {TABS.map((tb) => (
         <button
           key={tb.key}
           type="button"
           role="tab"
-          id={`kex-tab-${tb.key}`}
+          id={`${idPrefix}-${tb.key}`}
           class={`kex-tab${value === tb.key ? ' kex-tab--active' : ''}`}
           data-tab={tb.key}
           aria-selected={value === tb.key}
-          aria-controls="kex-tabpanel"
+          aria-controls={panelId}
           tabIndex={value === tb.key ? 0 : -1}
           onClick={() => onChange(tb.key)}
           title={`${t(tb.label)} (${tb.digit})`}

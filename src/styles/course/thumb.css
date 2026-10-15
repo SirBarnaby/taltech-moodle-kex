@@ -119,3 +119,64 @@
     stroke: none;
   }
 }
+
+/* Date tile and glyph tile (Workspace feed). */
+#kex-root {
+  .kex-thumb--date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: linear-gradient(160deg, #efeafe, #e3e0fa);
+    color: var(--kex-violet);
+  }
+  .kex-thumb__day {
+    font-family: var(--kex-font-display);
+    font-size: 44px;
+    line-height: 44px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    color: var(--kex-violet);
+  }
+  .kex-thumb__mon {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    color: var(--kex-mono);
+  }
+  .kex-thumb--overdue {
+    background: linear-gradient(160deg, #fdeefb, #fbe5f5);
+    border-color: #f1d3ec;
+  }
+  .kex-thumb--overdue .kex-thumb__day,
+  .kex-thumb--overdue .kex-thumb__mon {
+    color: var(--kex-magenta);
+  }
+  .kex-thumb--soon::after,
+  .kex-thumb--overdue::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 3px;
+    background: var(--kex-magenta);
+  }
+  .kex-thumb--glyph {
+    color: #5239d3;
+  }
+  :root[data-kex-theme="dark"] & .kex-thumb--date {
+    background: linear-gradient(160deg, #211a40, #1a1536);
+    border-color: #2f2752;
+  }
+  :root[data-kex-theme="dark"] & .kex-thumb--overdue {
+    background: linear-gradient(160deg, #2a1433, #21102b);
+    border-color: #3d2048;
+  }
+  :root[data-kex-theme="dark"] & .kex-thumb--glyph {
+    color: #a99bff;
+  }
+}

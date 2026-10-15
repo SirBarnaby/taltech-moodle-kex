@@ -22,6 +22,8 @@ export const coursesRaw = signal<Course[]>([]);
 export const coursesLoading = signal(true);
 
 export const systemDark = signal(prefersDark());
+/** `location.hash`, kept in a signal so views (tabs, Pinned) follow hash changes. */
+export const hash = signal(typeof location === 'undefined' ? '' : location.hash);
 export const viewportWidth = signal(typeof window === 'undefined' ? 1585 : window.innerWidth);
 
 export const resolvedTheme = computed(() => {

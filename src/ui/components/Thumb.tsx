@@ -113,3 +113,22 @@ export function Thumb({ variant, number, format, seed, testId, size = 'row' }: T
     </div>
   );
 }
+
+/** Date tile for deadline rows (page-designs §2): big day number, "OCT · THU", magenta when overdue or due within 48 h. */
+export function DateTile({ day, sub, overdue, soon, testId }: { day: string; sub: string; overdue?: boolean; soon?: boolean; testId?: string }) {
+  return (
+    <div class={`kex-thumb kex-thumb--date${overdue ? ' kex-thumb--overdue' : ''}${soon ? ' kex-thumb--soon' : ''}`} data-kex-test={testId} aria-hidden="true">
+      <span class="kex-thumb__day">{day}</span>
+      <span class="kex-thumb__mon kex-mono">{sub}</span>
+    </div>
+  );
+}
+
+/** A glyph tile (announcement megaphone, notification bell): doc background with one 28px icon. */
+export function GlyphTile({ children, testId }: { children: preact.ComponentChildren; testId?: string }) {
+  return (
+    <div class="kex-thumb kex-thumb--doc kex-thumb--glyph" data-kex-test={testId} aria-hidden="true">
+      {children}
+    </div>
+  );
+}

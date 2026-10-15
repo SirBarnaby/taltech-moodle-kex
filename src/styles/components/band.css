@@ -1,0 +1,122 @@
+/* PageChrome / ActivityChrome band (page-designs §0): the hero at 40% shader intensity. */
+#kex-root {
+  .kex-band {
+    position: relative;
+    height: 132px;
+    overflow: hidden;
+    color: var(--kex-hero-text);
+    background: var(--kex-hero-bg);
+    box-shadow: inset 0 -1px 0 rgba(12, 6, 44, 0.9);
+    isolation: isolate;
+  }
+  .kex-band--activity {
+    height: 168px;
+  }
+  .kex-band[data-mode="fallback"] {
+    background: var(--kex-hero-fallback);
+  }
+  .kex-band[data-mode="fallback"] .kex-hero__canvas {
+    display: none;
+  }
+  .kex-band .kex-cross--b {
+    left: auto;
+    right: calc(9.1% - 12.5px);
+    bottom: 16px;
+  }
+  .kex-band__inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    height: 100%;
+    padding: 24px var(--kex-pad) 22px;
+  }
+  .kex-band__text {
+    min-width: 0;
+    max-width: 70%;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .kex-band__label {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--kex-hero-label);
+    margin-left: 1px;
+    animation: kex-fade 200ms var(--kex-ease) both;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .kex-band__title {
+    display: block;
+    margin: 10px 0 0 -1px;
+    font-family: var(--kex-font-hero);
+    font-size: 40px;
+    line-height: 48px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--kex-hero-text);
+    white-space: nowrap;
+    overflow: visible;
+  }
+  .kex-band--activity .kex-band__title {
+    font-size: 44px;
+    line-height: 52px;
+  }
+  .kex-band__meta {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 22px;
+    font-size: 15px;
+    line-height: 20px;
+    color: var(--kex-hero-link);
+  }
+  .kex-band__meta > * + *::before {
+    content: none;
+  }
+  .kex-band__sep {
+    opacity: 0.55;
+  }
+  .kex-band__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 2px;
+  }
+  .kex-bandbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    height: 40px;
+    padding: 0 16px;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--kex-r-s);
+    color: #fff;
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background 120ms var(--kex-ease), border-color 120ms var(--kex-ease);
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.8);
+    }
+    &:focus-visible {
+      outline-color: var(--kex-sb-focus);
+    }
+    &[aria-pressed="true"] {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.85);
+    }
+  }
+}

@@ -5,7 +5,6 @@ import type { Pin } from '../data/model';
 import { hydrateDetails, loadDetails, setManualDone, staleIds } from '../data/repo/cmdetails';
 import { courseEventsStore } from '../data/repo/courseevents';
 import { courseStateStore, type CourseState } from '../data/repo/coursestate';
-import { addPin, isPinned, readPins, removePin, restorePin } from '../data/repo/pins';
 import { isRecentUi, readCourseUi, writeCourseUi } from '../data/repo/ui';
 import type { Tile } from '../data/scrape/tiles';
 import { deadlineTopic, incompleteTopic, initialTopic, parseTopicHash, type RowModel } from '../data/topics';
@@ -19,7 +18,9 @@ import {
   courseError, courseEvents, courseState, courseStatus, focusZone, infoOpen, previewCmId, rows, selectedCmId, tab, tileImages, topicNumber, topics,
 } from '../state/course';
 import { go } from './navigate';
+import { pinItem } from './pins';
 import { pushToast } from './toasts';
+import { setUndo, undoLast } from './undo';
 
 /** Course-page actions (architecture §11.4): plain functions over the signals in src/state/course.ts. */
 
@@ -362,35 +363,11 @@ export function pinFromRow(row: RowModel): Pin {
   };
 }
 
-let undoFn: { run: () => void; at: number } | undefined;
-
-export function undoLast(): void {
-  if (!undoFn || Date.now() - undoFn.at > 5500) return;
-  const u = undoFn;
-  undoFn = undefined;
-  u.run();
-}
+export { undoLast };
 
 export async function togglePin(row: RowModel): Promise<void> {
   if (row.kind === 'note') return;
-  const pins = readPins();
-  if (isPinned(row.cm.id, pins)) {
-    const idx = pins.findIndex((p) => p.cmid === row.cm.id);
-    const gone = await removePin(row.cm.id);
-    if (!gone) return;
-    const run = (): void => void restorePin(gone, idx);
-    undoFn = { run, at: Date.now() };
-    pushToast(`${t('toast.unpinned')} · ${t('toast.undo')} (z)`, { actionLabel: t('toast.undo'), onAction: run });
-    return;
-  }
-  const ok = await addPin(pinFromRow(row));
-  if (!ok) {
-    pushToast(t('toast.pinsFull'));
-    return;
-  }
-  const run = (): void => void removePin(row.cm.id);
-  undoFn = { run, at: Date.now() };
-  pushToast(`${t('toast.pinned')} · ${t('toast.undo')} (z)`, { actionLabel: t('toast.undo'), onAction: run });
+  await pinItem(pinFromRow(row));
 }
 
 function setCompletion(cmid: number, done: boolean): void {
@@ -418,7 +395,7 @@ export async function toggleDone(row: RowModel): Promise<void> {
     return;
   }
   const run = (): void => void toggleDone({ ...row, manual: { done } });
-  undoFn = { run, at: Date.now() };
+  setUndo(run);
   pushToast(`${done ? t('toast.done') : t('toast.undone')} · ${t('toast.undo')} (z)`, { actionLabel: t('toast.undo'), onAction: run });
 }
 
