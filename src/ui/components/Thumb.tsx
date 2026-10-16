@@ -114,12 +114,14 @@ export function Thumb({ variant, number, format, seed, testId, size = 'row' }: T
   );
 }
 
-/** Date tile for deadline rows (page-designs §2): big day number, "OCT · THU", magenta when overdue or due within 48 h. */
-export function DateTile({ day, sub, overdue, soon, testId }: { day: string; sub: string; overdue?: boolean; soon?: boolean; testId?: string }) {
+/** Date tile for deadline rows (page-designs §2): mono month over a big two-digit day, then the weekday, or an
+ *  OVERDUE flag. Magenta when overdue or due within 48 h. */
+export function DateTile({ mon, day, sub, overdue, soon, testId }: { mon: string; day: string; sub: string; overdue?: boolean; soon?: boolean; testId?: string }) {
   return (
     <div class={`kex-thumb kex-thumb--date${overdue ? ' kex-thumb--overdue' : ''}${soon ? ' kex-thumb--soon' : ''}`} data-kex-test={testId} aria-hidden="true">
+      <span class="kex-thumb__mon kex-mono">{mon}</span>
       <span class="kex-thumb__day">{day}</span>
-      <span class="kex-thumb__mon kex-mono">{sub}</span>
+      <span class={`kex-thumb__sub kex-mono${overdue ? ' kex-thumb__sub--flag' : ''}`}>{sub}</span>
     </div>
   );
 }

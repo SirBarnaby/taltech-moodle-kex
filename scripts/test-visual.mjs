@@ -54,7 +54,7 @@ const ROUTES = [
   { group: 'grade-user', name: 'course-user', mode: 'skin', path: '/course/user.php?mode=grade&id=2&user=3', wait: 'table.user-grade' },
   { group: 'grade-user', name: 'report-user', mode: 'skin', path: '/grade/report/user/index.php?id=2', wait: 'table.user-grade' },
   { group: 'generic', name: 'calendar-month', mode: 'skin', path: '/calendar/view.php?view=month', wait: 'table.calendarmonth' },
-  { group: 'generic', name: 'calendar-upcoming', mode: 'skin', path: '/calendar/view.php?view=upcoming', wait: '.eventlist .event' },
+  { group: 'generic', name: 'calendar-upcoming', mode: 'skin', path: '/calendar/view.php?view=upcoming', wait: '.maincalendar' },
   { group: 'generic', name: 'messages', mode: 'skin', path: '/message/index.php?id=4', wait: '.message-app .message[data-region="message"]' },
   { group: 'generic', name: 'profile', mode: 'skin', path: '/user/profile.php', wait: '.profile_tree' },
   { group: 'generic', name: 'preferences', mode: 'skin', path: '/user/preferences.php', wait: '#page-user-preferences .card' },

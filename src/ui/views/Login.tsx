@@ -68,14 +68,14 @@ function Art() {
   );
 }
 
-function Brand({ src }: { src?: string }) {
-  return src ? (
-    <img class="kex-login__logo" src={src} alt="TalTech Moodle" />
-  ) : (
+/** Our own TAL TECH | moodle lockup (same as the sidebar's). The site logo is never used here: on a guest page it may
+ *  be a lazy or blocked image that renders as a broken-image icon with alt text. */
+function Brand() {
+  return (
     <span class="kex-login__wordmark" role="img" aria-label="TalTech Moodle">
-      <span class="kex-login__wm-a"><span>TAL</span><span>TECH</span></span>
-      <span class="kex-login__wm-div" />
-      <span class="kex-login__wm-b">moodle</span>
+      <span class="kex-login__wm-a" aria-hidden="true"><span>TAL</span><span>TECH</span></span>
+      <span class="kex-login__wm-div" aria-hidden="true" />
+      <span class="kex-login__wm-b" aria-hidden="true">moodle</span>
     </span>
   );
 }
@@ -142,7 +142,7 @@ export function LoginView({ model, loggedIn, continueHref }: LoginViewProps) {
       <Art />
       <section class="kex-login__panel" aria-labelledby="kex-login-title">
         <header class="kex-login__top">
-          <Brand src={model.brandSrc} />
+          <Brand />
           {model.langs.length > 1 && (
             <Segmented
               label={t('login.lang')}

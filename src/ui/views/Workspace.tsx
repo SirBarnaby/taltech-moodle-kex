@@ -102,7 +102,7 @@ function DeadlineRow({ item, index, now, selected, first }: { item: Extract<Feed
       enter={index}
       onSelect={selectFeed}
       ariaLabel={`${d.title}, ${dueSubtitle(d, now)}`}
-      thumb={<DateTile day={String(new Date(ms).getDate())} sub={d.overdue ? t('label.overdue') : `${mon} · ${wd}`} overdue={d.overdue} soon={soon} testId="date-tile" />}
+      thumb={<DateTile mon={mon} day={String(new Date(ms).getDate()).padStart(2, '0')} sub={d.overdue ? t('label.overdue') : wd} overdue={d.overdue} soon={soon} testId="date-tile" />}
       tone={d.overdue ? 'overdue' : 'normal'}
       label={`${d.overdue ? `${t('label.overdue')} · ` : ''}${dueWord(d)} / ${d.courseCode}`}
       title={d.title}

@@ -68,36 +68,38 @@
     gap: 16px;
     min-height: 64px;
   }
-  .kex-login__logo {
-    height: 64px;
-    width: auto;
-    max-width: 240px;
-    object-fit: contain;
-  }
+  /* The same lockup as the sidebar (sidebar.css .kex-sb__wordmark): TAL / TECH, a divider, "moodle". */
   .kex-login__wordmark {
     display: inline-flex;
     align-items: center;
-    gap: 14px;
     height: 64px;
     color: #fff;
   }
   .kex-login__wm-a {
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    width: 91px;
+    height: 52px;
     font-family: var(--kex-font-display);
-    font-weight: 800;
-    font-size: 26px;
-    line-height: 0.9;
-    letter-spacing: -0.04em;
+    font-weight: 900;
+    font-size: 30px;
+    line-height: 26px;
+    letter-spacing: -0.02em;
   }
   .kex-login__wm-div {
+    flex: none;
     width: 1px;
-    height: 40px;
+    height: 44px;
+    margin-left: 12px;
     background: var(--kex-sb-logo-divider);
   }
   .kex-login__wm-b {
-    font-size: 20px;
-    color: var(--kex-sb-text-2);
+    margin: 4px 0 0 13px;
+    font-size: 17px;
+    line-height: 24px;
+    font-weight: 300;
+    color: #ece9f6;
   }
   .kex-login__top .kex-segmented {
     background: rgba(255, 255, 255, 0.06);
@@ -503,15 +505,19 @@
   }
 }
 
-/* The cookie notice (moved to the body): a dark toast at the bottom. Its buttons keep working. */
+/* The cookie notice (moved to the body): a dark toast at the bottom right, over the sign-in panel so it never covers
+   the hero title. Moodle's script fills the container; an empty one (a static copy of the page) is not shown. */
+:root[data-kex-view="login"] body > .eupopup-container:not(:has(*)) {
+  display: none !important;
+}
 :root[data-kex-view="login"] body > .eupopup-container {
   position: fixed !important;
   z-index: 60;
-  left: 24px !important;
+  right: 24px !important;
   bottom: 24px !important;
-  right: auto !important;
+  left: auto !important;
   top: auto !important;
-  width: min(480px, calc(100vw - 48px)) !important;
+  width: min(420px, calc(100vw - 48px)) !important;
   padding: 16px 20px !important;
   border: 1px solid var(--kex-pop-border) !important;
   border-radius: var(--kex-r-xl) !important;

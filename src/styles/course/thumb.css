@@ -127,14 +127,14 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 1px;
     background: linear-gradient(160deg, #efeafe, #e3e0fa);
     color: var(--kex-violet);
   }
   .kex-thumb__day {
     font-family: var(--kex-font-display);
-    font-size: 44px;
-    line-height: 44px;
+    font-size: 40px;
+    line-height: 40px;
     font-weight: 700;
     letter-spacing: -0.03em;
     font-variant-numeric: tabular-nums;
@@ -146,6 +146,20 @@
     font-weight: 500;
     letter-spacing: 0.09em;
     color: var(--kex-mono);
+  }
+  .kex-thumb__sub {
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--kex-mono);
+  }
+  .kex-thumb__sub--flag {
+    padding: 0 6px;
+    border-radius: var(--kex-r-xs);
+    background: var(--kex-magenta);
+    color: #fff;
+    font-weight: 600;
   }
   .kex-thumb--overdue {
     background: linear-gradient(160deg, #fdeefb, #fbe5f5);
@@ -175,6 +189,9 @@
   :root[data-kex-theme="dark"] & .kex-thumb--overdue {
     background: linear-gradient(160deg, #2a1433, #21102b);
     border-color: #3d2048;
+  }
+  :root[data-kex-theme="dark"] & .kex-thumb__sub--flag {
+    color: #2a0a24;
   }
   :root[data-kex-theme="dark"] & .kex-thumb--glyph {
     color: #a99bff;

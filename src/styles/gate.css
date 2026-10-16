@@ -27,3 +27,7 @@
 :root[data-kex="app"] :is([data-flexitour], .flexitour) {
   display: none !important;
 }
+/* Moodle's stylesheet normally zeroes the body margin; do not depend on it. */
+:root[data-kex="app"] body {
+  margin: 0;
+}
