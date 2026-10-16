@@ -8,6 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const kind = process.argv[2] ?? 'prod';
 const variants = {
   prod: { flags: [], dir: 'firefox', file: 'kex.xpi' },
+  prodlab: { flags: ['--lab'], dir: 'firefox-prod-lab', file: 'kex-prod-lab.xpi' },
   dev: { flags: ['--dev'], dir: 'firefox-dev', file: 'kex-dev.xpi' },
   probe: { flags: ['--dev', '--mv3-probe'], dir: 'firefox-mv3-probe', file: 'kex-mv3-probe.xpi' },
   cssonly: { flags: ['--dev', '--css-only'], dir: 'firefox-dev-cssonly', file: 'kex-cssonly.xpi' },

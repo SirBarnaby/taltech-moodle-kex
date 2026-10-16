@@ -13,10 +13,15 @@ const arg = (name, def) => {
 const variant = arg('variant', 'dev');
 const only = arg('only', 'all');
 const want = (g) => only === 'all' || only === g;
+const NO_FLASH_PAGES = [
+  '/my/', '/my/courses.php', '/course/view.php?id=2', '/mod/forum/view.php?id=34', '/mod/resource/view.php?id=161',
+  '/mod/assign/view.php?id=154', '/grade/report/overview/index.php', '/message/output/popup/notifications.php',
+  '/user/profile.php', '/calendar/view.php?view=month', '/user/preferences.php',
+];
 
 const pack = (kind) => {
   execFileSync('node', ['scripts/pack.mjs', kind], { cwd: root, stdio: 'ignore' });
-  return path.join(root, 'dist/packages', { prod: 'kex.xpi', dev: 'kex-dev.xpi', probe: 'kex-mv3-probe.xpi', cssonly: 'kex-cssonly.xpi' }[kind]);
+  return path.join(root, 'dist/packages', { prod: 'kex.xpi', prodlab: 'kex-prod-lab.xpi', dev: 'kex-dev.xpi', probe: 'kex-mv3-probe.xpi', cssonly: 'kex-cssonly.xpi' }[kind]);
 };
 
 let failed = 0;
@@ -322,11 +327,6 @@ async function m3Checks(driver, r) {
 
 /** M6: no flash of Moodle's own chrome. The debug build samples every frame from body creation until KEX settles
  *  (src/content/probe.ts); the navbar must never be visible, and the first frame is either hidden by the gate or already KEX. */
-const NO_FLASH_PAGES = [
-  '/my/', '/my/courses.php', '/course/view.php?id=2', '/mod/forum/view.php?id=34', '/mod/resource/view.php?id=161',
-  '/mod/assign/view.php?id=154', '/grade/report/overview/index.php', '/message/output/popup/notifications.php',
-  '/user/profile.php', '/calendar/view.php?view=month', '/user/preferences.php',
-];
 async function m6Checks(driver, r) {
   for (const p of NO_FLASH_PAGES) {
     await r.check(`no flash: ${p}`, async () => {
@@ -351,13 +351,21 @@ async function m6Checks(driver, r) {
 async function prodSmoke() {
   const r = createReporter('firefox prod build');
   console.log('\n== prod build (kex.xpi) ==');
-  const driver = await openFirefox(pack('prod'));
+  // The shipping xpi may only touch moodle.taltech.ee; the same bundle plus the lab origin is what runs here.
+  const shipped = execFileSync('unzip', ['-p', pack('prod'), 'manifest.json'], { encoding: 'utf8' });
+  await r.check('kex.xpi manifest: only moodle.taltech.ee, no localhost, no debug id', async () => {
+    if (/localhost/.test(shipped)) throw new Error('localhost in the release manifest');
+    const m = JSON.parse(shipped);
+    if (m.browser_specific_settings.gecko.id !== 'taltech-moodle-kex@kex.local') throw new Error('unexpected id ' + m.browser_specific_settings.gecko.id);
+    return JSON.stringify([...m.permissions, ...m.content_scripts[0].matches]);
+  });
+  const driver = await openFirefox(pack('prodlab'));
   try {
     await login(driver);
     for (const p of ['/my/', '/course/view.php?id=2', '/mod/forum/view.php?id=34', '/grade/report/overview/index.php']) {
       await r.check(`prod: ${p} mounts the KEX shell`, async () => {
         await driver.get(`${LAB}${p}`);
-        await waitFor(driver, `['app','skin'].includes(document.documentElement.dataset.kex) && !!document.querySelector('#kex-root .kex-sb')`, 25000, 'shell');
+        await waitFor(driver, `['app','skin'].includes(document.documentElement.dataset.kex) && !!document.querySelector('#kex-root .kex-sidebar')`, 25000, 'shell');
         const dbg = await driver.executeScript(`return document.documentElement.dataset.kexTransport ?? null`);
         if (dbg !== null) throw new Error('debug attributes present in the release build');
         return 'ok';

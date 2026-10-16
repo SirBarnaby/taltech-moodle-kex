@@ -3,6 +3,7 @@
 //   node scripts/build.mjs --dev           -> dist/firefox-dev        (debug flags, localhost patterns)
 //   node scripts/build.mjs --dev --mv3-probe -> dist/firefox-mv3-probe (MV3 variant for the M0 matrix)
 //   node scripts/build.mjs --dev --css-only  -> dist/firefox-dev-cssonly (no JS: fail-open test)
+//   node scripts/build.mjs --lab           -> dist/firefox-prod-lab (release bundle + the lab origin; never shipped)
 //   add --watch to rebuild on change (dev only).
 import * as esbuild from 'esbuild';
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
@@ -16,8 +17,10 @@ const dev = args.has('--dev');
 const watch = args.has('--watch');
 const mv3 = args.has('--mv3-probe');
 const cssOnly = args.has('--css-only');
+// The release bundle (minified, no debug hooks) with the lab's origin added, so the real production code can be tested on http://localhost:8080.
+const lab = args.has('--lab');
 
-const outName = mv3 ? 'firefox-mv3-probe' : cssOnly ? 'firefox-dev-cssonly' : dev ? 'firefox-dev' : 'firefox';
+const outName = mv3 ? 'firefox-mv3-probe' : cssOnly ? 'firefox-dev-cssonly' : lab ? 'firefox-prod-lab' : dev ? 'firefox-dev' : 'firefox';
 const out = path.join(root, 'dist', outName);
 
 const FONT_FILES = [
@@ -37,7 +40,7 @@ const devOverlay = JSON.parse(await readFile(path.join(root, 'manifest', 'dev.js
 function makeManifest() {
   const m = structuredClone(base);
   m.version = pkg.version;
-  if (dev) {
+  if (dev || lab) {
     const overlay = devOverlay;
     m.name += overlay.name_suffix;
     m.browser_specific_settings.gecko.id = overlay.gecko_id;

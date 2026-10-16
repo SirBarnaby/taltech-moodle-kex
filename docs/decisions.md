@@ -344,3 +344,9 @@ can sit next to a release build.
   documents the unlisted-signing path.
 - Moodle Buddy coexistence was not tested: addons.mozilla.org is unreachable from the lab. Our content script touches only its own `data-kex` attribute, `#kex-root` and class names
   prefixed `kex-` (and, in skin mode, a few classes on Moodle nodes), which is the part to check on a real profile with both add-ons installed.
+
+### Testing the release bundle
+- The release manifest only matches moodle.taltech.ee, so the lab cannot run it. `node scripts/build.mjs --lab` (`pack.mjs prodlab`, `dist/packages/kex-prod-lab.xpi`) builds the same minified,
+  debug-free bundle with the lab origin added; it is never shipped. `smoke.mjs --only prod` checks that `kex.xpi` itself has no localhost and the real add-on id, then mounts the shell
+  on four page types with the lab variant and asserts that no debug attributes exist.
+- `npm run pack` -> `dist/packages/kex.xpi` (569 KB).
