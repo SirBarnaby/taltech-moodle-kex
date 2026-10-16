@@ -50,6 +50,7 @@ import { hideOffPill, showOffPill } from './offpill';
 import { parsePageInfo, type PageInfo } from './pageinfo';
 import { effectiveMode, resolveRoute, stripBase, type EffectiveRoute } from './router';
 import { scrapeLanguages } from './langs';
+import { mountGuestSkin, unmountGuestSkin } from './skinguest';
 import { clickedLink, isPlainClick, PageLoader, prefetchSafe, routeOfDoc, softTarget, type SoftTarget } from './softnav';
 import { clearSnapshot, hasSnapshot, paintSnapshot, removeSnapshot, saveSnapshot } from './snapshot';
 
@@ -162,7 +163,20 @@ class Controller {
         if (safeSessionStorage()?.getItem(offKey(eff.key)) === '1') return this.settleOff(s.showOffPill, 'manual');
         return await this.mountLoginView(eff, info);
       }
-      if (info.isGuest || !info.sesskey) return this.settleOff(false);
+      if (info.isGuest || !info.sesskey) {
+        // Signed-out pages: the skin plus a small guest header (login button, language menu); embedded layouts stay plain Moodle.
+        const guestRoot = await mountGuestSkin({ html: this.html, doc: document, wwwroot: info.wwwroot, route: eff, settings: s, onError: (e) => this.failOpen('guest', e) });
+        if (!guestRoot) return this.settleOff(false);
+        this.route = eff;
+        routeSig.value = eff;
+        pageInfo.value = info;
+        this.root = guestRoot;
+        removeSnapshot();
+        window.clearTimeout(this.failTimer);
+        this.mounted = true;
+        this.stops.push(() => unmountGuestSkin(this.html));
+        return;
+      }
       this.route = eff;
       routeSig.value = eff;
       pageInfo.value = info;
