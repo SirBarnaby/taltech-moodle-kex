@@ -182,6 +182,11 @@ if (!$DB->record_exists('label', ['course' => $itb->id])) {
 cli_writeln('ITB8833 house rules ok');
 
 // ---- SUB0001: mod_subsection -------------------------------------------------------
+// Moodle 4.5 ships mod_subsection disabled; with the module hidden students never see the subsection or what is inside it.
+if ((int)$DB->get_field('modules', 'visible', ['name' => 'subsection']) !== 1) {
+    $DB->set_field('modules', 'visible', 1, ['name' => 'subsection']);
+    core_plugin_manager::reset_caches();
+}
 $sub = $DB->get_record('course', ['shortname' => 'SUB0001']);
 if (!$sub) {
     $sub = $gen->create_course(['fullname' => 'Subsection demo course (SUB0001)', 'shortname' => 'SUB0001', 'idnumber' => 'SUB0001',
