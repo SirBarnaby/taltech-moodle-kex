@@ -459,3 +459,304 @@
 :root[data-kex="skin"] :is(.btn.hidden, .btn[hidden], .btn.d-none) {
   display: none !important;
 }
+
+/* =====================================================================================================================
+   Bootstrap 4 (Moodle 4.x, taltech4_boost) and Bootstrap 5 (Moodle 5): the surfaces, menus and controls that carry their own
+   light colours or their own blue. Every rule below works for both generations of markup (`data-toggle` / `data-bs-toggle`,
+   `.close` / `.btn-close`, `.custom-*` / `.form-*`, `.badge-*` / `.bg-*`, `.dropdown-menu-right` / `-end`).
+   ===================================================================================================================== */
+
+/* Secondary navigation (course "More" pages, activity tabs, admin tabs): no white card behind the tabs in either theme. */
+:root[data-kex="skin"] :is(.secondary-navigation, .secondary-navigation nav.moremenu, .secondary-navigation .more-nav, .secondary-navigation .nav-tabs, .secondary-navigation .navigation, .secondarynav-tabbar) {
+  background: transparent !important;
+  box-shadow: none;
+}
+:root[data-kex="skin"] .secondary-navigation .nav-link {
+  background: transparent;
+  box-shadow: none;
+}
+/* Moodle 4.x centres the tab row with side margins and paddings: tabs start at the content edge. */
+:root[data-kex="skin"] .secondary-navigation :is(nav.moremenu, .more-nav, .nav-tabs) {
+  margin-left: 0 !important;
+  margin-right: 0;
+  padding-left: 0;
+}
+:root[data-kex="skin"] .secondary-navigation :is(.nav-item.show > .nav-link, .nav-link.show, .nav-link:focus-visible) {
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] .secondary-navigation .dropdownmoremenu .dropdown-toggle::after {
+  margin-left: 6px;
+}
+/* The "More" menu opens as one of our popovers and keeps Moodle's own entries. */
+:root[data-kex="skin"] .moremenu .dropdown-menu {
+  min-width: 220px;
+  padding: 6px;
+}
+
+/* Tertiary navigation (the "Enrolled users" / "Gradebook setup" selector, the action bar above tables). */
+:root[data-kex="skin"] .tertiary-navigation {
+  padding: 0;
+  margin-bottom: 16px;
+}
+:root[data-kex="skin"] :is(.tertiary-navigation, #action_bar) :is(.btn:not([class*="btn-"]), .dropdown-toggle, [role="combobox"]) {
+  color: var(--kex-text);
+  font-family: var(--kex-font-display);
+  font-weight: 600;
+  background: transparent;
+}
+:root[data-kex="skin"] :is(.tertiary-navigation, #action_bar) .tertiary-navigation-selector .dropdown-toggle {
+  min-height: 40px;
+  border: 1px solid var(--kex-search-border);
+  border-radius: var(--kex-r-m);
+  padding: 8px 14px;
+}
+:root[data-kex="skin"] :is(.tertiary-navigation, #action_bar) .tertiary-navigation-selector .dropdown-toggle:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  background: var(--kex-hover);
+  border-color: var(--kex-outline);
+}
+:root[data-kex="skin"] .tertiary-navigation :is(.navitem, .navitem-divider) + .navitem-divider {
+  display: none;
+}
+
+/* A plain `.btn` (no variant) in a toolbar still reads on the surface. */
+:root[data-kex="skin"] .btn:not([class*="btn-"]) {
+  color: var(--kex-text-2);
+}
+
+/* Dropdown menus: items, headers, dividers and the active entry (Bootstrap paints it blue). */
+:root[data-kex="skin"] :is(.dropdown-item.active, .dropdown-item:active, .dropdown-item[aria-selected="true"], .dropdown-item[aria-current="true"]) {
+  background: var(--kex-pop-hover);
+  color: #fff;
+}
+:root[data-kex="skin"] :is(.dropdown-header, .dropdown-item-text, .dropdown-menu .text-muted, .dropdown-menu .small) {
+  color: var(--kex-sb-label, #a7a2c6) !important;
+}
+:root[data-kex="skin"] .dropdown-divider {
+  border-top-color: rgba(255, 255, 255, 0.12);
+  opacity: 1;
+}
+:root[data-kex="skin"] .dropdown-item:is(.disabled, :disabled) {
+  color: var(--kex-sb-label, #a7a2c6);
+  opacity: 0.6;
+}
+:root[data-kex="skin"] .dropdown-menu :is(.icon, .fa) {
+  color: currentColor;
+}
+:root[data-kex="skin"] .dropdown-menu .dropdown-item:focus-visible {
+  outline: 2px solid var(--kex-focus);
+  outline-offset: -2px;
+}
+:root[data-kex="skin"] .dropdown-menu .form-control {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+/* The toggle itself. */
+:root[data-kex="skin"] :is(.dropdown-toggle, [data-toggle="dropdown"], [data-bs-toggle="dropdown"]):is(.btn, .nav-link, a) {
+  cursor: pointer;
+}
+:root[data-kex="skin"] .btn:is(.show, [aria-expanded="true"]):not(.btn-primary) {
+  background: var(--kex-hover);
+  border-color: var(--kex-outline);
+  color: var(--kex-outline-text);
+}
+/* Moodle's action menu (the "⋮" and gear buttons in tables, cards and page headers). */
+:root[data-kex="skin"] .action-menu :is(.menubar, .dropdown) > .btn,
+:root[data-kex="skin"] .action-menu .dropdown-toggle.btn,
+:root[data-kex="skin"] .context-header-settings-menu .btn,
+:root[data-kex="skin"] .dropdown > .btn.btn-icon,
+:root[data-kex="skin"] .dropdown > .btn-icon {
+  min-height: 36px;
+  min-width: 36px;
+  padding: 4px 8px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .action-menu .dropdown-toggle.btn:is(:hover, :focus-visible, [aria-expanded="true"]),
+:root[data-kex="skin"] .context-header-settings-menu .btn:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  background: var(--kex-hover);
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] .action-menu .dropdown-toggle::after {
+  display: none;
+}
+:root[data-kex="skin"] .action-menu .menu-action-text,
+:root[data-kex="skin"] .action-menu .dropdown-item .menu-action-text {
+  color: inherit;
+}
+:root[data-kex="skin"] .action-menu .dropdown-item .icon {
+  margin-right: 8px;
+  width: 1em;
+}
+/* Popovers: the arrow's colours are Bootstrap's, so it goes (our popover is a floating card); the header keeps our surface. */
+:root[data-kex="skin"] .popover :is(.arrow, .popover-arrow) {
+  display: none;
+}
+:root[data-kex="skin"] .popover-header {
+  background: transparent;
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+:root[data-kex="skin"] .popover-body {
+  color: var(--kex-sb-text);
+}
+:root[data-kex="skin"] .popover a:not(.btn) {
+  color: #cfc4ff;
+}
+
+/* Tables: Bootstrap and Moodle paint the row itself (striped, odd/even, hover), which wins over our transparent cells. */
+:root[data-kex="skin"] :is(.table, .generaltable, table.flexible) :is(tbody, thead, tfoot) tr:not([class*="table-"]) {
+  background-color: transparent !important;
+}
+:root[data-kex="skin"] :is(.table, .generaltable, table.flexible) tbody tr:not([class*="table-"]):hover {
+  background-color: var(--kex-hover) !important;
+}
+:root[data-kex="skin"] :is(.table, .generaltable) :is(.lastrow, .emptyrow) > * {
+  background-color: transparent;
+}
+:root[data-kex="skin"] :is(.table-bordered, .generaltable) {
+  border-color: var(--kex-border);
+}
+:root[data-kex="skin"] .table-responsive,
+:root[data-kex="skin"] .no-overflow {
+  background: transparent;
+}
+/* The forum discussion list squeezes its narrow columns until the headings wrap letter by letter: `.no-overflow` lets text break
+   anywhere, which also drops the minimum width of a header cell to one letter. */
+:root[data-kex="skin"] :is(.table, .generaltable) thead th {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+:root[data-kex="skin"] :is(table.discussion-list, table.forumheaderlist) thead th {
+  white-space: nowrap;
+}
+
+/* Activity header (description, dates, completion) is a white strip in Moodle 4.x. */
+:root[data-kex="skin"] .activity-header {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+/* Modals and the legacy YUI dialogue (file picker, confirmations): close button, header, body and footer. */
+:root[data-kex="skin"] :is(.modal-header .close, .modal-header .btn-close, .moodle-dialogue-base .closebutton, .modal .close) {
+  color: var(--kex-text-2);
+  text-shadow: none;
+  opacity: 0.75;
+}
+:root[data-kex="skin"] :is(.modal-header .close, .modal .close):hover {
+  color: var(--kex-text);
+  opacity: 1;
+}
+:root[data-kex="skin"][data-kex-theme="dark"] .btn-close {
+  filter: invert(1) grayscale(1);
+}
+:root[data-kex="skin"] :is(.modal-body, .modal-footer, .modal-header) {
+  background: transparent;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .modal-backdrop.show {
+  opacity: 0.6;
+}
+:root[data-kex="skin"] .moodle-dialogue-base .moodle-dialogue-wrap {
+  background: var(--kex-bg);
+  color: var(--kex-text-2);
+  border: 1px solid var(--kex-search-border);
+  border-radius: var(--kex-r-xl);
+  box-shadow: var(--kex-shadow-palette);
+  overflow: hidden;
+}
+:root[data-kex="skin"] .moodle-dialogue-base :is(.moodle-dialogue-hd, .moodle-dialogue-bd, .moodle-dialogue-ft) {
+  background: transparent;
+  color: var(--kex-text-2);
+  border-color: var(--kex-border);
+}
+:root[data-kex="skin"] .moodle-dialogue-base .moodle-dialogue-hd {
+  font-family: var(--kex-font-display);
+  font-weight: 600;
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] .file-picker :is(.fp-content, .fp-repo-area, .fp-repo-items, .fp-navbar, .fp-toolbar, .fp-pathbar, .fp-content-center, .fp-list, .fp-tableview, .fp-iconview, .fp-treeview, .yui3-treeview-content) {
+  background: transparent;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .file-picker .fp-repo-area .fp-repo a {
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .file-picker .fp-repo-area .fp-repo.active a {
+  background: var(--kex-tint);
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] :is(.fp-filename, .fp-filename-field, .fp-thumbnail + .fp-filename) {
+  background: transparent;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .fp-iconview .fp-file:hover,
+:root[data-kex="skin"] .fp-iconview .fp-file.fp-hover {
+  background: var(--kex-hover);
+}
+
+/* Form controls of both generations: custom-select / custom-control / custom-switch (4.x) and form-select / form-check (5). */
+:root[data-kex="skin"] :is(.custom-control-input:checked ~ .custom-control-label::before, .custom-control-input:checked ~ .custom-control-label::after) {
+  background-color: var(--kex-violet);
+  border-color: var(--kex-violet);
+}
+:root[data-kex="skin"] .custom-control-label::before {
+  background-color: transparent;
+  border: 1.5px solid var(--kex-mono);
+}
+:root[data-kex="skin"] .custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+  background-color: var(--kex-violet);
+}
+:root[data-kex="skin"] .custom-control-input:focus-visible ~ .custom-control-label::before {
+  box-shadow: none;
+  outline: 2px solid var(--kex-focus);
+  outline-offset: 2px;
+}
+:root[data-kex="skin"] :is(.form-check-input, input[type="checkbox"], input[type="radio"]):focus-visible {
+  outline: 2px solid var(--kex-focus);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+:root[data-kex="skin"] :is(.input-group-text, .input-group-prepend .btn, .input-group-append .btn) {
+  background: var(--kex-hover);
+  border-color: var(--kex-search-border);
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] :is(input, select, textarea):disabled,
+:root[data-kex="skin"] :is(.form-control, .custom-select, .form-select)[readonly] {
+  background-color: var(--kex-hover);
+  color: var(--kex-text-3);
+}
+:root[data-kex="skin"] select option {
+  background: var(--kex-bg);
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] .form-control:focus-visible,
+:root[data-kex="skin"] select:focus-visible {
+  outline: 2px solid var(--kex-focus);
+}
+
+/* Badges of both generations (the 4.x `.badge-primary` family and the 5 `.bg-*` family) keep one pill look. */
+:root[data-kex="skin"] :is(.badge-primary, .badge-secondary, .badge-success, .badge-info, .badge-warning, .badge-danger, .badge-light, .badge-dark) {
+  background: transparent !important;
+  color: var(--kex-text-2) !important;
+}
+/* Nav pills (4.x tab groups, quiz navigation) are blue by default. */
+:root[data-kex="skin"] .nav-pills .nav-link {
+  color: var(--kex-text-2);
+  border-radius: var(--kex-r-s);
+}
+:root[data-kex="skin"] .nav-pills :is(.nav-link.active, .show > .nav-link) {
+  background: var(--kex-tint);
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] :is(.list-group-item.active, .page-item.active .page-link) {
+  background: var(--kex-tint);
+  border-color: var(--kex-tint-border);
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] :is(.btn.disabled, .btn:disabled) {
+  opacity: 0.5;
+}

@@ -83,3 +83,187 @@
     white-space: nowrap;
   }
 }
+
+/* ---- signed-out skin: the guest header (content/skinguest.ts) ---- */
+:root[data-kex="skin"][data-kex-guest] {
+  --kex-sb-w: 0px;
+}
+:root[data-kex="skin"][data-kex-guest] #page-wrapper {
+  padding-left: 0;
+}
+:root[data-kex="skin"][data-kex-guest] #page.drawers,
+:root[data-kex="skin"][data-kex-guest] #page {
+  max-width: 1280px;
+  margin: 0 auto !important;
+  padding-top: 8px;
+}
+/* Moodle's own login-layout pages (password reset, sign-up) keep their centred card under our header. */
+:root[data-kex="skin"][data-kex-guest] #page-wrapper > #page > #page-content {
+  padding-top: 8px;
+}
+#kex-root {
+  .kex-guest {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: var(--kex-z-header);
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    height: var(--kex-header-h);
+    padding: 0 clamp(16px, 2.2vw, 40px);
+    background: var(--kex-header-bg);
+    border-bottom: 1px solid var(--kex-border-strong);
+    -webkit-backdrop-filter: saturate(140%) blur(14px);
+    backdrop-filter: saturate(140%) blur(14px);
+  }
+  .kex-guest__brand {
+    display: inline-flex;
+    flex: none;
+    color: var(--kex-text);
+    text-decoration: none;
+  }
+  .kex-guest__wordmark {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    color: var(--kex-text);
+  }
+  .kex-guest__wm-a {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 66px;
+    font-family: var(--kex-font-display);
+    font-weight: 900;
+    font-size: 22px;
+    line-height: 19px;
+    letter-spacing: -0.02em;
+  }
+  .kex-guest__wm-div {
+    flex: none;
+    width: 1px;
+    height: 32px;
+    margin-left: 10px;
+    background: var(--kex-border-strong);
+  }
+  .kex-guest__wm-b {
+    margin: 3px 0 0 11px;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 300;
+    color: var(--kex-text-2);
+  }
+  .kex-guest__nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .kex-guest__nav a {
+    padding: 8px 12px;
+    border-radius: var(--kex-r-s);
+    color: var(--kex-text-2);
+    font-size: 15px;
+    text-decoration: none;
+    white-space: nowrap;
+    &:hover {
+      background: var(--kex-hover);
+      color: var(--kex-text);
+    }
+    &[aria-current] {
+      color: var(--kex-violet);
+      font-weight: 600;
+    }
+  }
+  .kex-guest__end {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+  }
+  .kex-guest__lang {
+    position: relative;
+  }
+  .kex-guest__langbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--kex-iconbtn-border);
+    border-radius: var(--kex-r-l);
+    background: var(--kex-iconbtn-bg);
+    color: var(--kex-iconbtn-fg);
+    font-family: var(--kex-font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    &:hover {
+      background: var(--kex-hover);
+    }
+  }
+  .kex-guest__menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: var(--kex-z-popover);
+    min-width: 180px;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    border: 1px solid var(--kex-pop-border);
+    border-radius: var(--kex-r-l);
+    background: var(--kex-pop-bg);
+    box-shadow: var(--kex-shadow-popover);
+    a {
+      display: block;
+      padding: 8px 12px;
+      border-radius: var(--kex-r-s);
+      color: var(--kex-sb-text);
+      font-size: 14px;
+      text-decoration: none;
+      &:hover,
+      &:focus-visible {
+        background: var(--kex-pop-hover);
+        color: #fff;
+      }
+      &[aria-current] {
+        font-weight: 600;
+      }
+    }
+  }
+  .kex-guest__login {
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 22px;
+    border: 1.5px solid var(--kex-primary);
+    border-radius: var(--kex-r-s);
+    background: var(--kex-primary);
+    color: var(--kex-on-primary);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 120ms var(--kex-ease);
+    &:hover {
+      background: var(--kex-primary-hover);
+      border-color: var(--kex-primary-hover);
+      color: var(--kex-on-primary);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kex-focus);
+      outline-offset: 2px;
+    }
+  }
+}
+@media (max-width: 640px) {
+  #kex-root .kex-guest {
+    gap: 12px;
+  }
+  #kex-root .kex-guest__nav,
+  #kex-root .kex-guest__wm-b,
+  #kex-root .kex-guest__wm-div {
+    display: none;
+  }
+}
