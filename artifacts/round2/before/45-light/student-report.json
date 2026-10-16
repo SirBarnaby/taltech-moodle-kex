@@ -1,0 +1,533 @@
+[
+ {
+  "name": "dashboard",
+  "body": "page-my-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/my/",
+  "theme": "light",
+  "title": "Töölaud | moodle"
+ },
+ {
+  "name": "mycourses",
+  "body": "page-my-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/my/courses.php",
+  "theme": "light",
+  "title": "Minu kursused | moodle"
+ },
+ {
+  "name": "profile",
+  "body": "page-user-profile",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/profile.php",
+  "theme": "light",
+  "title": "Marten Saluste: Public profile | moodle"
+ },
+ {
+  "name": "profile-view",
+  "body": "page-course-view-weeks",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/view.php?id=3&course=2",
+  "theme": "light",
+  "title": "Cloud Architectures and DevOps (2026 autumn) (ITI8801): Personal profile: Marten Saluste | moodle"
+ },
+ {
+  "name": "preferences",
+  "body": "page-user-preferences",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/preferences.php",
+  "theme": "light",
+  "title": "Eelistused | moodle"
+ },
+ {
+  "name": "pref-edit",
+  "body": "page-user-edit",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/edit.php",
+  "theme": "light",
+  "title": "moodle: Edit profile | moodle"
+ },
+ {
+  "name": "pref-password",
+  "body": "page-login-change_password",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/login/change_password.php",
+  "theme": "light",
+  "title": "Change password | moodle"
+ },
+ {
+  "name": "pref-language",
+  "body": "page-user-language",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/language.php",
+  "theme": "light",
+  "title": "moodle: Preferred language | moodle"
+ },
+ {
+  "name": "pref-forum",
+  "body": "page-user-forum",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/forum.php",
+  "theme": "light",
+  "title": "moodle: Forum preferences | moodle"
+ },
+ {
+  "name": "pref-editor",
+  "body": "page-user-editor",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/editor.php",
+  "theme": "light",
+  "title": "moodle: Editor preferences | moodle"
+ },
+ {
+  "name": "pref-course",
+  "body": "",
+  "kex": "off",
+  "lang": "",
+  "path": "/user/course.php",
+  "theme": "light",
+  "title": ""
+ },
+ {
+  "name": "pref-calendar",
+  "body": "",
+  "kex": "off",
+  "lang": "",
+  "path": "/calendar/preferences.php",
+  "theme": "light",
+  "title": ""
+ },
+ {
+  "name": "pref-notifications",
+  "body": "page-message-notificationpreferences",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/message/notificationpreferences.php",
+  "theme": "light",
+  "title": "Notification preferences | moodle"
+ },
+ {
+  "name": "pref-messaging",
+  "body": "page-message-edit",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/message/edit.php?id=3",
+  "theme": "light",
+  "title": "Message preferences | moodle"
+ },
+ {
+  "name": "pref-badges",
+  "body": "page-badges-preferences",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/badges/preferences.php",
+  "theme": "light",
+  "title": "Märgid: Eelistused | moodle"
+ },
+ {
+  "name": "pref-blog",
+  "body": "page-blog-preferences",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/blog/preferences.php",
+  "theme": "light",
+  "title": "Blogs : Eelistused | moodle"
+ },
+ {
+  "name": "pref-tokens",
+  "body": "page-user-managetoken",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/managetoken.php",
+  "theme": "light",
+  "title": "Security keys | moodle"
+ },
+ {
+  "name": "pref-portfolio",
+  "body": "page-user-portfolio",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/portfolio.php",
+  "theme": "light",
+  "title": "Manage your portfolios | moodle"
+ },
+ {
+  "name": "pref-datareq",
+  "body": "page-admin-tool-dataprivacy-mydatarequests",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/tool/dataprivacy/mydatarequests.php",
+  "theme": "light",
+  "title": "Data requests | moodle"
+ },
+ {
+  "name": "calendar-month",
+  "body": "page-calendar-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/calendar/view.php?view=month",
+  "theme": "light",
+  "title": "moodle: Calendar: Detailed month view: October 2026 | moodle"
+ },
+ {
+  "name": "calendar-upcoming",
+  "body": "page-calendar-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/calendar/view.php?view=upcoming",
+  "theme": "light",
+  "title": "moodle: Calendar: Upcoming events | moodle"
+ },
+ {
+  "name": "calendar-day",
+  "body": "page-calendar-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/calendar/view.php?view=day",
+  "theme": "light",
+  "title": "moodle: Calendar: Day view: Friday, 16. October 2026 | moodle"
+ },
+ {
+  "name": "calendar-new-event",
+  "body": "page-calendar-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/calendar/view.php?view=month",
+  "theme": "light",
+  "title": "moodle: Calendar: Detailed month view: October 2026 | moodle"
+ },
+ {
+  "name": "calendar-export",
+  "body": "page-calendar-export",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/calendar/export.php",
+  "theme": "light",
+  "title": "moodle: Calendar: Export | moodle"
+ },
+ {
+  "name": "privatefiles",
+  "body": "page-user-files",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/files.php",
+  "theme": "light",
+  "title": "Privaatsed failid | moodle"
+ },
+ {
+  "name": "privatefiles-picker",
+  "body": "page-user-files",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/files.php",
+  "theme": "light",
+  "title": "Privaatsed failid | moodle"
+ },
+ {
+  "name": "messages",
+  "body": "page-message-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/message/index.php",
+  "theme": "light",
+  "title": "Messages | moodle"
+ },
+ {
+  "name": "messages-drawer",
+  "body": "page-my-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/my/",
+  "theme": "light",
+  "title": "Töölaud | moodle"
+ },
+ {
+  "name": "notifications",
+  "body": "page-message-output-popup-notifications",
+  "kex": "app",
+  "lang": "et",
+  "path": "/message/output/popup/notifications.php",
+  "theme": "light",
+  "title": "Notifications | moodle"
+ },
+ {
+  "name": "notification-popover",
+  "body": "page-user-files",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/files.php",
+  "theme": "light",
+  "title": "Privaatsed failid | moodle"
+ },
+ {
+  "name": "grades-overview",
+  "body": "page-grade-report-overview-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/grade/report/overview/index.php",
+  "theme": "light",
+  "title": "Grades - Marten Saluste | moodle"
+ },
+ {
+  "name": "badges",
+  "body": "page-badges-mybadges",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/badges/mybadges.php",
+  "theme": "light",
+  "title": "Badges | moodle"
+ },
+ {
+  "name": "badge-view",
+  "body": "page-badges-mybadges",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/badges/mybadges.php",
+  "theme": "light",
+  "title": "Badges | moodle"
+ },
+ {
+  "name": "course",
+  "body": "page-course-view-weeks",
+  "kex": "app",
+  "lang": "et",
+  "path": "/course/view.php?id=2",
+  "theme": "light",
+  "title": "Course: Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle"
+ },
+ {
+  "name": "course-house-rules",
+  "body": "page-course-view-topics",
+  "kex": "app",
+  "lang": "et",
+  "path": "/course/view.php?id=6",
+  "theme": "light",
+  "title": "Course: E-riigi infotehnoloogilised lahendused / Digital state ICT solutions (2026 sügis/autumn) (ITB8833) | moodle"
+ },
+ {
+  "name": "course-subsection",
+  "body": "page-course-view-topics",
+  "kex": "app",
+  "lang": "et",
+  "path": "/course/view.php?id=8",
+  "theme": "light",
+  "title": "Course: Subsection demo course (SUB0001) | moodle"
+ },
+ {
+  "name": "course-section",
+  "body": "page-course-view-section-weeks",
+  "kex": "app",
+  "lang": "et",
+  "path": "/course/section.php?id=11",
+  "theme": "light",
+  "title": "Week: IoT architecture | Asjade internet tööstusele (2026 sügis) (EMT0140) | moodle"
+ },
+ {
+  "name": "participants",
+  "body": "page-course-view-participants",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/index.php?id=2",
+  "theme": "light",
+  "title": "ITI8801: Osalejad | moodle"
+ },
+ {
+  "name": "grades-user",
+  "body": "page-grade-report-user-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/grade/report/user/index.php?id=2",
+  "theme": "light",
+  "title": "User report | Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle"
+ },
+ {
+  "name": "competencies",
+  "body": "page-admin-tool-lp-coursecompetencies",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/tool/lp/coursecompetencies.php?courseid=2",
+  "theme": "light",
+  "title": "Course competencies | moodle"
+ },
+ {
+  "name": "badges-course",
+  "body": "page-badges-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/badges/index.php?type=2&id=2",
+  "theme": "light",
+  "title": "Badges | moodle"
+ },
+ {
+  "name": "course-more-menu",
+  "body": "page-course-view-participants",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/index.php?id=2",
+  "theme": "light",
+  "title": "ITI8801: Osalejad | moodle"
+ },
+ {
+  "name": "forum",
+  "body": "page-mod-forum-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/forum/view.php?id=33",
+  "theme": "light",
+  "title": "Announcements | moodle"
+ },
+ {
+  "name": "forum-discussion",
+  "body": "page-mod-forum-discuss",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/forum/discuss.php?d=1",
+  "theme": "light",
+  "title": "ITI8801: How do I expose a service from kind? | moodle"
+ },
+ {
+  "name": "forum-actionmenu",
+  "body": "page-mod-forum-discuss",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/forum/discuss.php?d=1",
+  "theme": "light",
+  "title": "ITI8801: How do I expose a service from kind? | moodle"
+ },
+ {
+  "name": "forum-reply",
+  "body": "page-mod-forum-discuss",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/forum/discuss.php?d=1",
+  "theme": "light",
+  "title": "ITI8801: How do I expose a service from kind? | moodle"
+ },
+ {
+  "name": "assign",
+  "body": "page-mod-assign-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/assign/view.php?id=4",
+  "theme": "light",
+  "title": "ITI8801: Lab 1: What is cloud? | moodle"
+ },
+ {
+  "name": "quiz",
+  "body": "page-mod-quiz-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/quiz/view.php?id=8",
+  "theme": "light",
+  "title": "ITI8801: Quiz 1: Cloud services | moodle"
+ },
+ {
+  "name": "page",
+  "body": "page-mod-page-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/page/view.php?id=3",
+  "theme": "light",
+  "title": "ITI8801: Lab notes 1 | moodle"
+ },
+ {
+  "name": "url",
+  "body": "page-mod-url-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/url/view.php?id=2",
+  "theme": "light",
+  "title": "ITI8801: Reading: What is cloud? | moodle"
+ },
+ {
+  "name": "folder",
+  "body": "page-mod-folder-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/folder/view.php?id=156",
+  "theme": "light",
+  "title": "IEE2630: Lecture handouts | moodle"
+ },
+ {
+  "name": "book",
+  "body": "page-mod-book-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/book/view.php?id=157",
+  "theme": "light",
+  "title": "1. Noise | Course notes | moodle"
+ },
+ {
+  "name": "choice",
+  "body": "page-mod-choice-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/choice/view.php?id=158",
+  "theme": "light",
+  "title": "Which lab slot suits you? | moodle"
+ },
+ {
+  "name": "glossary",
+  "body": "page-mod-glossary-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/glossary/view.php?id=175",
+  "theme": "light",
+  "title": "Terms glossary | moodle"
+ },
+ {
+  "name": "wiki",
+  "body": "page-mod-wiki-create",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/wiki/create.php?wid=1&group&uid=0&title=Front%20page%20for%20wiki%201",
+  "theme": "light",
+  "title": "Front page for wiki 1 | moodle"
+ },
+ {
+  "name": "feedback",
+  "body": "page-mod-feedback-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/feedback/view.php?id=177",
+  "theme": "light",
+  "title": "Course feedback | Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle"
+ },
+ {
+  "name": "resource",
+  "body": "",
+  "kex": null,
+  "lang": "en-US",
+  "path": "/pluginfile.php/15/mod_resource/content/0/lecture1.pdf",
+  "theme": null,
+  "title": "lecture1.pdf"
+ },
+ {
+  "name": "search",
+  "body": "page-search-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/search/index.php?q=cloud",
+  "theme": "light",
+  "title": "Global search | moodle"
+ },
+ {
+  "name": "user-menu-open",
+  "body": "page-user-profile",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/profile.php",
+  "theme": "light",
+  "title": "Marten Saluste: Public profile | moodle"
+ }
+]

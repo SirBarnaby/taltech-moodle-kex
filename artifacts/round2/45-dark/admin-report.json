@@ -1,0 +1,455 @@
+[
+ {
+  "name": "dashboard",
+  "body": "page-my-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/my/",
+  "theme": "dark",
+  "title": "T\u00f6\u00f6laud | moodle",
+  "audit": {}
+ },
+ {
+  "name": "mycourses",
+  "body": "page-my-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/my/courses.php",
+  "theme": "dark",
+  "title": "Minu kursused | moodle",
+  "audit": {}
+ },
+ {
+  "name": "profile",
+  "body": "page-user-profile",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/profile.php",
+  "theme": "dark",
+  "title": "Admin User: Public profile | moodle",
+  "audit": {}
+ },
+ {
+  "name": "course-settings",
+  "body": "page-course-edit",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/edit.php?id=2",
+  "theme": "dark",
+  "title": "Edit course settings | moodle",
+  "audit": {
+   "LIGHT-BG input#id_saveanddisplay.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "course-admin",
+  "body": "page-course-admin",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/admin.php?courseid=2",
+  "theme": "dark",
+  "title": "Course administration | moodle",
+  "audit": {}
+ },
+ {
+  "name": "course-editing",
+  "body": "page-course-view-weeks",
+  "kex": "app",
+  "lang": "et",
+  "path": "/course/view.php?id=2&edit=on",
+  "theme": "dark",
+  "title": "Error | moodle",
+  "audit": {}
+ },
+ {
+  "name": "course-settings-menu",
+  "body": "page-course-view-weeks",
+  "kex": "app",
+  "lang": "et",
+  "path": "/course/view.php?id=2",
+  "theme": "dark",
+  "title": "Course: Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle",
+  "audit": {}
+ },
+ {
+  "name": "participants-admin",
+  "body": "page-course-view-participants",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/index.php?id=2",
+  "theme": "dark",
+  "title": "ITI8801: Osalejad | moodle",
+  "audit": {
+   "LIGHT-BG button.btn.btn-primary": 1,
+   "LIGHT-BG input.btn.btn-primary": 2,
+   "LIGHT-BG span.userinitials.size-35": 2
+  }
+ },
+ {
+  "name": "enrolments",
+  "body": "page-enrol-instances",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/enrol/instances.php?id=2",
+  "theme": "dark",
+  "title": "Enrolment methods | moodle",
+  "audit": {}
+ },
+ {
+  "name": "gradebook-setup",
+  "body": "page-grade-edit-tree-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/grade/edit/tree/index.php?id=2",
+  "theme": "dark",
+  "title": "Gradebook setup | Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle",
+  "audit": {
+   "LIGHT-BG input.advanced.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "grader-report",
+  "body": "page-grade-report-grader-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/grade/report/grader/index.php?id=2",
+  "theme": "dark",
+  "title": "Grader report | Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle",
+  "audit": {
+   "LIGHT-BG button.btn.btn-primary": 1,
+   "LIGHT-BG span.userinitials.size-35": 1
+  }
+ },
+ {
+  "name": "questionbank",
+  "body": "page-question-edit",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/question/edit.php?courseid=2",
+  "theme": "dark",
+  "title": "Edit questions | moodle",
+  "audit": {
+   "LIGHT-BG button.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "logs-report",
+  "body": "page-report-log-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/report/log/index.php?id=2",
+  "theme": "dark",
+  "title": "ITI8801: Logs | moodle",
+  "audit": {
+   "LIGHT-BG input.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "reports",
+  "body": "page-course-admin",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/admin.php?courseid=2",
+  "theme": "dark",
+  "title": "Course administration | moodle",
+  "audit": {}
+ },
+ {
+  "name": "competencies-admin",
+  "body": "page-admin-tool-lp-coursecompetencies",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/tool/lp/coursecompetencies.php?courseid=2",
+  "theme": "dark",
+  "title": "Course competencies | moodle",
+  "audit": {}
+ },
+ {
+  "name": "backup",
+  "body": "page-backup-backup",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/backup/backup.php?id=2",
+  "theme": "dark",
+  "title": "Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle",
+  "audit": {
+   "LIGHT-BG input#id_oneclickbackup.btn.btn-primary": 1,
+   "LIGHT-BG input#id_submitbutton.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "restore",
+  "body": "page-backup-restorefile",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/backup/restorefile.php?contextid=14",
+  "theme": "dark",
+  "title": "Kursus: Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle",
+  "audit": {
+   "LIGHT-BG input#id_submitbutton.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "assign-edit",
+  "body": "page-mod-assign-mod",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/modedit.php?update=4",
+  "theme": "dark",
+  "title": "Edit Assignment: Lab 1: What is cloud? | ITI8801 | moodle",
+  "audit": {
+   "FONT(-apple-system) button.tox-statusbar__wordcount": 1,
+   "FONT(-apple-system) div.tox-statusbar__path-item": 1,
+   "FONT(-apple-system) span.tox-mbtn__select-label": 7,
+   "LIGHT-BG button.tox-mbtn.tox-mbtn--select": 7,
+   "LIGHT-BG button.tox-tbtn": 16,
+   "LIGHT-BG button.tox-tbtn.tox-tbtn--disabled": 3,
+   "LIGHT-BG div.tox-editor-header": 1,
+   "LIGHT-BG div.tox-menubar": 1,
+   "LIGHT-BG div.tox-statusbar": 1,
+   "LIGHT-BG div.tox-toolbar-overlord": 1,
+   "LIGHT-BG div.tox-toolbar__primary": 1,
+   "LIGHT-BG iframe#id_activityeditor_ifr.tox-edit-area__iframe": 1,
+   "LIGHT-BG input#id_submitbutton.btn.btn-primary": 1,
+   "LIGHT-BG input#id_submitbutton2.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "assign-grading",
+  "body": "page-mod-assign-grading",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/assign/view.php?id=4&action=grading",
+  "theme": "dark",
+  "title": "ITI8801: Lab 1: What is cloud? - Submissions | moodle",
+  "audit": {
+   "LIGHT-BG a.btn.btn-primary": 1,
+   "LIGHT-BG span.userinitials.size-35": 1
+  }
+ },
+ {
+  "name": "quiz-edit",
+  "body": "page-mod-quiz-edit",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/quiz/edit.php?cmid=8",
+  "theme": "dark",
+  "title": "Editing quiz: Quiz 1: Cloud services | moodle",
+  "audit": {}
+ },
+ {
+  "name": "forum-admin",
+  "body": "page-mod-forum-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/forum/view.php?id=33",
+  "theme": "dark",
+  "title": "Announcements | moodle",
+  "audit": {
+   "LIGHT-BG a.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "admin-home",
+  "body": "page-admin-search",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/search.php",
+  "theme": "dark",
+  "title": "Search | Administration | moodle",
+  "audit": {}
+ },
+ {
+  "name": "admin-notifications",
+  "body": "page-admin-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/index.php?cache=1",
+  "theme": "dark",
+  "title": "Teavitused | Administration | moodle",
+  "audit": {}
+ },
+ {
+  "name": "admin-users",
+  "body": "page-admin-user",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/user.php",
+  "theme": "dark",
+  "title": "Browse list of users | Accounts | Users | Administration | moodle",
+  "audit": {
+   "LIGHT-BG a.btn.btn-primary.ms-auto": 1,
+   "LIGHT-BG span.userinitials.size-35": 3
+  }
+ },
+ {
+  "name": "admin-roles",
+  "body": "page-admin-roles-manage",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/roles/manage.php",
+  "theme": "dark",
+  "title": "Define roles | Permissions | Users | Administration | moodle",
+  "audit": {}
+ },
+ {
+  "name": "admin-plugins",
+  "body": "page-admin-plugins",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/plugins.php",
+  "theme": "dark",
+  "title": "Plugins overview | Plugins | Administration | moodle",
+  "audit": {}
+ },
+ {
+  "name": "admin-themesettings",
+  "body": "page-admin-setting-themesettingtaltech4_boost",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/settings.php?section=themesettingtaltech4_boost",
+  "theme": "dark",
+  "title": "Error | moodle",
+  "audit": {
+   "LIGHT-BG button#single_button6ad20bba36f486.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "course-management",
+  "body": "page-course-management",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/management.php",
+  "theme": "dark",
+  "title": "Course and category management | moodle",
+  "audit": {}
+ },
+ {
+  "name": "site-front-edit",
+  "body": "page-site-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/?redirect=0",
+  "theme": "dark",
+  "title": "Avaleht | moodle",
+  "audit": {}
+ },
+ {
+  "name": "more-menu",
+  "body": "page-course-view-participants",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/index.php?id=2",
+  "theme": "dark",
+  "title": "ITI8801: Osalejad | moodle",
+  "audit": {
+   "LIGHT-BG button.btn.btn-primary": 1,
+   "LIGHT-BG input.btn.btn-primary": 2,
+   "LIGHT-BG span.userinitials.size-35": 2
+  }
+ },
+ {
+  "name": "tertiary-dropdown",
+  "body": "page-course-view-participants",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/index.php?id=2",
+  "theme": "dark",
+  "title": "ITI8801: Osalejad | moodle",
+  "audit": {
+   "LIGHT-BG button.btn.btn-primary": 1,
+   "LIGHT-BG input.btn.btn-primary": 2,
+   "LIGHT-BG span.userinitials.size-35": 2
+  }
+ },
+ {
+  "name": "enrol-modal",
+  "body": "page-course-view-participants",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/index.php?id=2",
+  "theme": "dark",
+  "title": "ITI8801: Osalejad | moodle",
+  "audit": {
+   "LIGHT-BG button.btn.btn-primary": 1,
+   "LIGHT-BG input.btn.btn-primary": 2,
+   "LIGHT-BG span.userinitials.size-35": 2
+  }
+ },
+ {
+  "name": "users-actionmenu",
+  "body": "page-admin-user",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/user.php",
+  "theme": "dark",
+  "title": "Browse list of users | Accounts | Users | Administration | moodle",
+  "audit": {
+   "LIGHT-BG a.btn.btn-primary.ms-auto": 1,
+   "LIGHT-BG input#id_submitbutton_64lSzU1cU8LPP1P.btn.btn-primary": 1,
+   "LIGHT-BG span.userinitials.size-35": 3
+  }
+ },
+ {
+  "name": "users-filters-modal",
+  "body": "page-admin-user",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/user.php",
+  "theme": "dark",
+  "title": "Browse list of users | Accounts | Users | Administration | moodle",
+  "audit": {
+   "LIGHT-BG a.btn.btn-primary.ms-auto": 1,
+   "LIGHT-BG span.userinitials.size-35": 3
+  }
+ },
+ {
+  "name": "gradebook-add-dropdown",
+  "body": "page-grade-edit-tree-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/grade/edit/tree/index.php?id=2",
+  "theme": "dark",
+  "title": "Gradebook setup | Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle",
+  "audit": {
+   "LIGHT-BG input.advanced.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "assign-grading-actionmenu",
+  "body": "page-mod-assign-grading",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/assign/view.php?id=4&action=grading",
+  "theme": "dark",
+  "title": "ITI8801: Lab 1: What is cloud? - Submissions | moodle",
+  "audit": {
+   "LIGHT-BG a.btn.btn-primary": 1,
+   "LIGHT-BG span.userinitials.size-35": 1
+  }
+ },
+ {
+  "name": "course-mgmt-actionmenu",
+  "body": "page-course-management",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/management.php",
+  "theme": "dark",
+  "title": "Course and category management | moodle",
+  "audit": {}
+ },
+ {
+  "name": "delete-modal",
+  "body": "page-course-view-participants",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/index.php?id=2",
+  "theme": "dark",
+  "title": "ITI8801: Osalejad | moodle",
+  "audit": {
+   "LIGHT-BG button.btn.btn-primary": 2,
+   "LIGHT-BG input.btn.btn-primary": 2,
+   "LIGHT-BG span.userinitials.size-35": 2
+  }
+ }
+]

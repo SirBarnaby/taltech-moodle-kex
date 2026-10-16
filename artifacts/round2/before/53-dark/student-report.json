@@ -1,0 +1,745 @@
+[
+ {
+  "name": "dashboard",
+  "body": "page-my-index",
+  "kex": "app",
+  "lang": "en",
+  "path": "/my/",
+  "theme": "dark",
+  "title": "Dashboard | moodle",
+  "audit": {}
+ },
+ {
+  "name": "mycourses",
+  "body": "page-my-index",
+  "kex": "app",
+  "lang": "en",
+  "path": "/my/courses.php",
+  "theme": "dark",
+  "title": "My courses | moodle",
+  "audit": {}
+ },
+ {
+  "name": "profile",
+  "body": "page-user-profile",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/profile.php",
+  "theme": "dark",
+  "title": "Marten Saluste: Public profile | moodle",
+  "audit": {}
+ },
+ {
+  "name": "profile-view",
+  "body": "page-course-view-weeks",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/view.php?id=3&course=2",
+  "theme": "dark",
+  "title": "Cloud Architectures and DevOps (2026 autumn) (ITI8801): Personal profile: Marten Saluste | moodle",
+  "audit": {
+   "FONT(Noto Sans) span.mds-nav-pill__label": 5,
+   "LIGHT-BG span.userinitials.size-100": 1
+  }
+ },
+ {
+  "name": "preferences",
+  "body": "page-user-preferences",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/preferences.php",
+  "theme": "dark",
+  "title": "Preferences | moodle",
+  "audit": {}
+ },
+ {
+  "name": "pref-edit",
+  "body": "page-user-edit",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/edit.php",
+  "theme": "dark",
+  "title": "moodle: Edit profile | moodle",
+  "audit": {
+   "LIGHT-BG input#id_submitbutton.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "pref-password",
+  "body": "page-login-change_password",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/login/change_password.php",
+  "theme": "dark",
+  "title": "Change password | moodle",
+  "audit": {
+   "LIGHT-BG input#id_submitbutton.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "pref-language",
+  "body": "page-user-language",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/language.php",
+  "theme": "dark",
+  "title": "moodle: Preferred language | moodle",
+  "audit": {
+   "LIGHT-BG input#id_submitbutton.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "pref-forum",
+  "body": "page-user-forum",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/forum.php",
+  "theme": "dark",
+  "title": "moodle: Forum preferences | moodle",
+  "audit": {
+   "LIGHT-BG input#id_submitbutton.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "pref-editor",
+  "body": "page-user-editor",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/editor.php",
+  "theme": "dark",
+  "title": "moodle: Editor preferences | moodle",
+  "audit": {
+   "LIGHT-BG input#id_submitbutton.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "pref-contentbank",
+  "body": "page-user-contentbank",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/contentbank.php",
+  "theme": "dark",
+  "title": "moodle: Content bank preferences | moodle",
+  "audit": {
+   "LIGHT-BG input#id_submitbutton.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "pref-calendar",
+  "body": "page-user-calendar",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/calendar.php",
+  "theme": "dark",
+  "title": "moodle: Calendar preferences | moodle",
+  "audit": {
+   "LIGHT-BG input#id_submitbutton.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "pref-notifications",
+  "body": "page-message-notificationpreferences",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/message/notificationpreferences.php",
+  "theme": "dark",
+  "title": "Notification preferences | moodle",
+  "audit": {
+   "LIGHT-BG input#message_provider_enrol_manual_expiry_notification_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_enrol_manual_expiry_notification_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_enrol_self_expiry_notification_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_enrol_self_expiry_notification_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_assign_assign_due_digest_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_assign_assign_due_digest_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_assign_assign_due_soon_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_assign_assign_due_soon_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_assign_assign_notification_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_assign_assign_notification_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_assign_assign_overdue_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_assign_assign_overdue_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_bigbluebuttonbn_instance_updated_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_bigbluebuttonbn_instance_updated_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_bigbluebuttonbn_recording_ready_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_bigbluebuttonbn_recording_ready_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_feedback_message_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_feedback_message_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_feedback_submission_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_feedback_submission_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_forum_digests_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_forum_digests_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_forum_posts_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_forum_posts_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_lesson_graded_essay_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_lesson_graded_essay_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_quiz_quiz_open_soon_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_mod_quiz_quiz_open_soon_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_asyncbackupnotification_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_asyncbackupnotification_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_badgecreatornotice_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_badgecreatornotice_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_badgerecipientnotice_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_badgerecipientnotice_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_competencyplancomment_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_competencyplancomment_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_competencyusercompcomment_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_competencyusercompcomment_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_coursecompleted_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_coursecompleted_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_coursecontentupdated_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_coursecontentupdated_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_enrolcoursewelcomemessage_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_enrolcoursewelcomemessage_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_gradenotifications_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_gradenotifications_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_insights_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_insights_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_messagecontactrequests_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_moodle_reportbuilderschedule_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_tool_dataprivacy_datarequestprocessingresults_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_tool_dataprivacy_datarequestprocessingresults_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_tool_messageinbound_invalidrecipienthandler_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_tool_messageinbound_invalidrecipienthandler_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_tool_messageinbound_messageprocessingerror_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_tool_messageinbound_messageprocessingerror_popup.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_tool_messageinbound_messageprocessingsuccess_email.form-check-input.notification_enabled": 1,
+   "LIGHT-BG input#message_provider_tool_messageinbound_messageprocessingsuccess_popup.form-check-input.notification_enabled": 1
+  }
+ },
+ {
+  "name": "pref-messaging",
+  "body": "page-message-edit",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/message/edit.php?id=3",
+  "theme": "dark",
+  "title": "Message preferences | moodle",
+  "audit": {
+   "LIGHT-BG input#email-5.form-check-input": 1,
+   "LIGHT-BG input#enter-to-send-6ad1fd82e12026ad1fd82c2f124.form-check-input": 1
+  }
+ },
+ {
+  "name": "pref-badges",
+  "body": "page-badges-preferences",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/badges/preferences.php",
+  "theme": "dark",
+  "title": "Badges: Preferences | moodle",
+  "audit": {
+   "LIGHT-BG input#id_submitbutton.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "pref-blog",
+  "body": "page-blog-preferences",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/blog/preferences.php",
+  "theme": "dark",
+  "title": "Error | moodle",
+  "audit": {
+   "LIGHT-BG button#single_button6ad1fd8cb00255.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "pref-tokens",
+  "body": "page-user-managetoken",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/managetoken.php",
+  "theme": "dark",
+  "title": "Security keys | moodle",
+  "audit": {}
+ },
+ {
+  "name": "pref-portfolio",
+  "body": "page-site-index",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/portfolio.php",
+  "theme": "dark",
+  "title": "Error | moodle",
+  "audit": {
+   "LIGHT-BG button#single_button6ad1fd964a7ce5.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "pref-datareq",
+  "body": "page-admin-tool-dataprivacy-mydatarequests",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/admin/tool/dataprivacy/mydatarequests.php",
+  "theme": "dark",
+  "title": "Data requests | moodle",
+  "audit": {
+   "LIGHT-BG a.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "calendar-month",
+  "body": "page-calendar-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/calendar/view.php?view=month",
+  "theme": "dark",
+  "title": "moodle: Calendar: Detailed month view: October 2026 | moodle",
+  "audit": {
+   "LIGHT-BG button.btn.btn-primary.float-sm-end.float-end": 1,
+   "LIGHT-BG span.day-number-circle": 1
+  }
+ },
+ {
+  "name": "calendar-upcoming",
+  "body": "page-calendar-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/calendar/view.php?view=upcoming",
+  "theme": "dark",
+  "title": "moodle: Calendar: Upcoming events | moodle",
+  "audit": {
+   "LIGHT-BG button.btn.btn-primary.float-sm-end.float-end": 1
+  }
+ },
+ {
+  "name": "calendar-day",
+  "body": "page-calendar-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/calendar/view.php?view=day",
+  "theme": "dark",
+  "title": "moodle: Calendar: Day view: Friday, 16 October 2026 | moodle",
+  "audit": {
+   "LIGHT-BG button.btn.btn-primary.float-sm-end.float-end": 1
+  }
+ },
+ {
+  "name": "calendar-new-event",
+  "body": "page-calendar-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/calendar/view.php?view=month",
+  "theme": "dark",
+  "title": "moodle: Calendar: Detailed month view: October 2026 | moodle",
+  "audit": {
+   "LIGHT-BG button#yui_3_18_1_1_1792146864325_12.btn.btn-primary.float-sm-end.float-end": 1,
+   "LIGHT-BG button.btn.btn-primary": 1,
+   "LIGHT-BG span.day-number-circle": 1
+  }
+ },
+ {
+  "name": "calendar-export",
+  "body": "page-calendar-export",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/calendar/export.php",
+  "theme": "dark",
+  "title": "moodle: Calendar: Export | moodle",
+  "audit": {
+   "LIGHT-BG input#id_export.btn.btn-primary": 1,
+   "LIGHT-BG input#id_generateurl.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "privatefiles",
+  "body": "page-user-files",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/files.php",
+  "theme": "dark",
+  "title": "Private files | moodle",
+  "audit": {
+   "LIGHT-BG input#id_submitbutton_9Q3tzSfp66nGArJ.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "privatefiles-picker",
+  "body": "page-user-files",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/files.php",
+  "theme": "dark",
+  "title": "Private files | moodle",
+  "audit": {
+   "BLUE-BG a.nav-link.active": 1,
+   "LIGHT-BG button.fp-upload-btn.btn-primary.btn": 1,
+   "LIGHT-BG div#moodle-dialogue-yui_3_18_1_1_1792146881812_300-wrap.moodle-dialogue-wrap.moodle-dialogue-content.yui3-widget-stdmod": 1,
+   "LIGHT-BG div#yui_3_18_1_1_1792146881812_699.fp-content.mb-1": 1,
+   "LIGHT-BG input#id_submitbutton_80V777zFiKcAVd3.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "messages",
+  "body": "page-message-index",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/message/index.php",
+  "theme": "dark",
+  "title": "Messages | moodle",
+  "audit": {}
+ },
+ {
+  "name": "messages-drawer",
+  "body": "page-my-index",
+  "kex": "app",
+  "lang": "en",
+  "path": "/my/",
+  "theme": "dark",
+  "title": "Dashboard | moodle",
+  "audit": {}
+ },
+ {
+  "name": "notifications",
+  "body": "page-message-output-popup-notifications",
+  "kex": "app",
+  "lang": "en",
+  "path": "/message/output/popup/notifications.php",
+  "theme": "dark",
+  "title": "Notifications | moodle",
+  "audit": {}
+ },
+ {
+  "name": "notification-popover",
+  "body": "page-user-files",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/files.php",
+  "theme": "dark",
+  "title": "Private files | moodle",
+  "audit": {
+   "LIGHT-BG input#id_submitbutton_KcPdfloqsUGQ3O3.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "grades-overview",
+  "body": "page-grade-report-overview-index",
+  "kex": "app",
+  "lang": "en",
+  "path": "/grade/report/overview/index.php",
+  "theme": "dark",
+  "title": "Grades - Marten Saluste | moodle",
+  "audit": {}
+ },
+ {
+  "name": "badges",
+  "body": "page-badges-mybadges",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/badges/mybadges.php",
+  "theme": "dark",
+  "title": "Badges | moodle",
+  "audit": {
+   "LIGHT-BG input#id_clearsearch.btn.btn-primary": 1,
+   "LIGHT-BG input#id_submitsearch.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "badge-view",
+  "body": "page-badges-mybadges",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/badges/mybadges.php",
+  "theme": "dark",
+  "title": "Badges | moodle",
+  "audit": {
+   "LIGHT-BG input#id_clearsearch.btn.btn-primary": 1,
+   "LIGHT-BG input#id_submitsearch.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "course",
+  "body": "page-course-view-weeks",
+  "kex": "app",
+  "lang": "en",
+  "path": "/course/view.php?id=2",
+  "theme": "dark",
+  "title": "Course: Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle",
+  "audit": {}
+ },
+ {
+  "name": "course-house-rules",
+  "body": "page-course-view-weeks",
+  "kex": "app",
+  "lang": "en",
+  "path": "/course/view.php?id=6",
+  "theme": "dark",
+  "title": "Course: E-riigi infotehnoloogilised lahendused / Digital state ICT solutions (2026 sügis/autumn) (ITB8833) | moodle",
+  "audit": {}
+ },
+ {
+  "name": "course-subsection",
+  "body": "page-site-index",
+  "kex": "app",
+  "lang": "en",
+  "path": "/course/view.php?id=8",
+  "theme": "dark",
+  "title": "Error | moodle",
+  "audit": {}
+ },
+ {
+  "name": "course-section",
+  "body": "page-course-view-section-weeks",
+  "kex": "app",
+  "lang": "en",
+  "path": "/course/section.php?id=11",
+  "theme": "dark",
+  "title": "Week: IoT architecture | Asjade internet tööstusele (2026 sügis) (EMT0140) | moodle",
+  "audit": {}
+ },
+ {
+  "name": "participants",
+  "body": "page-course-view-participants",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/index.php?id=2",
+  "theme": "dark",
+  "title": "ITI8801: Participants | moodle",
+  "audit": {
+   "FONT(Noto Sans) span.mds-nav-pill__label": 5,
+   "LIGHT-BG button.btn.btn-primary": 1,
+   "LIGHT-BG span.userinitials.size-35": 2
+  }
+ },
+ {
+  "name": "grades-user",
+  "body": "page-grade-report-user-index",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/grade/report/user/index.php?id=2",
+  "theme": "dark",
+  "title": "User report | Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle",
+  "audit": {
+   "FONT(Noto Sans) span.mds-nav-pill__label": 5,
+   "LIGHT-BG span.userinitials.size-50": 1
+  }
+ },
+ {
+  "name": "competencies",
+  "body": "page-admin-tool-lp-coursecompetencies",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/admin/tool/lp/coursecompetencies.php?courseid=2",
+  "theme": "dark",
+  "title": "Course competencies | moodle",
+  "audit": {
+   "FONT(Noto Sans) span.mds-nav-pill__label": 5
+  }
+ },
+ {
+  "name": "badges-course",
+  "body": "page-badges-index",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/badges/index.php?type=2&id=2",
+  "theme": "dark",
+  "title": "Badges | moodle",
+  "audit": {
+   "FONT(Noto Sans) span.mds-nav-pill__label": 5
+  }
+ },
+ {
+  "name": "course-more-menu",
+  "body": "page-course-view-participants",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/index.php?id=2",
+  "theme": "dark",
+  "title": "ITI8801: Participants | moodle",
+  "audit": {
+   "FONT(Noto Sans) span.mds-nav-pill__label": 5,
+   "LIGHT-BG button.btn.btn-primary": 1,
+   "LIGHT-BG span.userinitials.size-35": 2
+  }
+ },
+ {
+  "name": "forum",
+  "body": "page-mod-forum-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/forum/view.php?id=33",
+  "theme": "dark",
+  "title": "Announcements | moodle",
+  "audit": {}
+ },
+ {
+  "name": "forum-discussion",
+  "body": "page-mod-forum-discuss",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/forum/discuss.php?d=1",
+  "theme": "dark",
+  "title": "ITI8801: How do I expose a service from kind? | moodle",
+  "audit": {}
+ },
+ {
+  "name": "forum-actionmenu",
+  "body": "page-mod-forum-discuss",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/forum/discuss.php?d=1",
+  "theme": "dark",
+  "title": "ITI8801: How do I expose a service from kind? | moodle",
+  "audit": {}
+ },
+ {
+  "name": "forum-reply",
+  "body": "page-mod-forum-post",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/forum/post.php?reply=1",
+  "theme": "dark",
+  "title": "ITI8801: How do I expose a service from kind?: How do I expose a service from kind? | moodle",
+  "audit": {
+   "BLUE-BG input#id_submitbutton.btn.btn-primary": 1,
+   "BLUE-BORDER input#id_submitbutton.btn.btn-primary": 1,
+   "LIGHT-BG a.btn.btn-icon.me-3.icons-collapse-expand": 2,
+   "LIGHT-BG input#id_cancel.btn.btn-secondary": 1
+  }
+ },
+ {
+  "name": "assign",
+  "body": "page-mod-assign-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/assign/view.php?id=4",
+  "theme": "dark",
+  "title": "ITI8801: Lab 1: What is cloud? | moodle",
+  "audit": {
+   "LIGHT-BG button#single_button6ad1fe36b5b526.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "quiz",
+  "body": "page-mod-quiz-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/quiz/view.php?id=8",
+  "theme": "dark",
+  "title": "ITI8801: Quiz 1: Cloud services | moodle",
+  "audit": {}
+ },
+ {
+  "name": "page",
+  "body": "page-mod-page-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/page/view.php?id=3",
+  "theme": "dark",
+  "title": "ITI8801: Lab notes 1 | moodle",
+  "audit": {}
+ },
+ {
+  "name": "url",
+  "body": "page-mod-url-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/url/view.php?id=2",
+  "theme": "dark",
+  "title": "ITI8801: Reading: What is cloud? | moodle",
+  "audit": {}
+ },
+ {
+  "name": "folder",
+  "body": "page-mod-folder-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/folder/view.php?id=158",
+  "theme": "dark",
+  "title": "IEE2630 | Lecture handouts | moodle",
+  "audit": {
+   "LIGHT-BG button#single_button6ad1fe4a6cb0b6.btn.btn-secondary": 1
+  }
+ },
+ {
+  "name": "book",
+  "body": "page-mod-book-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/book/view.php?id=159",
+  "theme": "dark",
+  "title": "1. Noise | Course notes | moodle",
+  "audit": {
+   "FONT(Noto Sans) span.mds-nav-pill__label": 2
+  }
+ },
+ {
+  "name": "choice",
+  "body": "page-mod-choice-view",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/choice/view.php?id=160",
+  "theme": "dark",
+  "title": "Which lab slot suits you? | moodle",
+  "audit": {
+   "LIGHT-BG input.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "glossary",
+  "body": "page-site-index",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/glossary/view.php?id=",
+  "theme": "dark",
+  "title": "Error | moodle",
+  "audit": {
+   "LIGHT-BG button#single_button6ad1fe590fee45.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "wiki",
+  "body": "page-site-index",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/wiki/view.php?id=",
+  "theme": "dark",
+  "title": "Error | moodle",
+  "audit": {
+   "LIGHT-BG button#single_button6ad1fe5dc4efe5.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "feedback",
+  "body": "page-site-index",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/mod/feedback/view.php?id=",
+  "theme": "dark",
+  "title": "Error | moodle",
+  "audit": {
+   "LIGHT-BG button#single_button6ad1fe62814835.btn.btn-primary": 1
+  }
+ },
+ {
+  "name": "resource",
+  "body": "",
+  "kex": null,
+  "lang": "en-US",
+  "path": "/pluginfile.php/16/mod_resource/content/0/lecture1.pdf",
+  "theme": null,
+  "title": "lecture1.pdf",
+  "audit": {
+   "FONT(Sans) span#numPages.toolbarLabel": 1
+  }
+ },
+ {
+  "name": "search",
+  "body": "page-search-index",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/search/index.php?q=cloud",
+  "theme": "dark",
+  "title": "Global search | moodle",
+  "audit": {}
+ },
+ {
+  "name": "user-menu-open",
+  "body": "page-user-profile",
+  "kex": "skin",
+  "lang": "en",
+  "path": "/user/profile.php",
+  "theme": "dark",
+  "title": "Marten Saluste: Public profile | moodle",
+  "audit": {}
+ }
+]

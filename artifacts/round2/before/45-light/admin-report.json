@@ -1,0 +1,263 @@
+[
+ {
+  "name": "dashboard",
+  "body": "page-my-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/my/",
+  "theme": "light",
+  "title": "Töölaud | moodle"
+ },
+ {
+  "name": "mycourses",
+  "body": "page-my-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/my/courses.php",
+  "theme": "light",
+  "title": "Minu kursused | moodle"
+ },
+ {
+  "name": "profile",
+  "body": "page-user-profile",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/profile.php",
+  "theme": "light",
+  "title": "Admin User: Public profile | moodle"
+ },
+ {
+  "name": "course-settings",
+  "body": "page-course-edit",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/edit.php?id=2",
+  "theme": "light",
+  "title": "Edit course settings | moodle"
+ },
+ {
+  "name": "course-admin",
+  "body": "page-course-admin",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/admin.php?courseid=2",
+  "theme": "light",
+  "title": "Course administration | moodle"
+ },
+ {
+  "name": "course-editing",
+  "body": "page-course-view-weeks",
+  "kex": "app",
+  "lang": "et",
+  "path": "/course/view.php?id=2&edit=on",
+  "theme": "light",
+  "title": "Error | moodle"
+ },
+ {
+  "name": "course-settings-menu",
+  "body": "page-course-view-weeks",
+  "kex": "app",
+  "lang": "et",
+  "path": "/course/view.php?id=2",
+  "theme": "light",
+  "title": "Course: Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle"
+ },
+ {
+  "name": "participants-admin",
+  "body": "page-course-view-participants",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/user/index.php?id=2",
+  "theme": "light",
+  "title": "ITI8801: Osalejad | moodle"
+ },
+ {
+  "name": "enrolments",
+  "body": "page-enrol-instances",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/enrol/instances.php?id=2",
+  "theme": "light",
+  "title": "Enrolment methods | moodle"
+ },
+ {
+  "name": "gradebook-setup",
+  "body": "page-grade-edit-tree-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/grade/edit/tree/index.php?id=2",
+  "theme": "light",
+  "title": "Gradebook setup | Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle"
+ },
+ {
+  "name": "grader-report",
+  "body": "page-grade-report-grader-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/grade/report/grader/index.php?id=2",
+  "theme": "light",
+  "title": "Grader report | Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle"
+ },
+ {
+  "name": "questionbank",
+  "body": "page-question-edit",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/question/edit.php?courseid=2",
+  "theme": "light",
+  "title": "Edit questions | moodle"
+ },
+ {
+  "name": "logs-report",
+  "body": "page-report-log-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/report/log/index.php?id=2",
+  "theme": "light",
+  "title": "ITI8801: Logs | moodle"
+ },
+ {
+  "name": "reports",
+  "body": "page-course-admin",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/admin.php?courseid=2",
+  "theme": "light",
+  "title": "Course administration | moodle"
+ },
+ {
+  "name": "competencies-admin",
+  "body": "page-admin-tool-lp-coursecompetencies",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/tool/lp/coursecompetencies.php?courseid=2",
+  "theme": "light",
+  "title": "Course competencies | moodle"
+ },
+ {
+  "name": "backup",
+  "body": "page-backup-backup",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/backup/backup.php?id=2",
+  "theme": "light",
+  "title": "Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle"
+ },
+ {
+  "name": "restore",
+  "body": "page-backup-restorefile",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/backup/restorefile.php?contextid=14",
+  "theme": "light",
+  "title": "Kursus: Cloud Architectures and DevOps (2026 autumn) (ITI8801) | moodle"
+ },
+ {
+  "name": "assign-edit",
+  "body": "page-mod-assign-mod",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/modedit.php?update=4",
+  "theme": "light",
+  "title": "Edit Assignment: Lab 1: What is cloud? | ITI8801 | moodle"
+ },
+ {
+  "name": "assign-grading",
+  "body": "page-mod-assign-grading",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/assign/view.php?id=4&action=grading",
+  "theme": "light",
+  "title": "ITI8801: Lab 1: What is cloud? - Submissions | moodle"
+ },
+ {
+  "name": "quiz-edit",
+  "body": "page-mod-quiz-edit",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/quiz/edit.php?cmid=8",
+  "theme": "light",
+  "title": "Editing quiz: Quiz 1: Cloud services | moodle"
+ },
+ {
+  "name": "forum-admin",
+  "body": "page-mod-forum-view",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/mod/forum/view.php?id=33",
+  "theme": "light",
+  "title": "Announcements | moodle"
+ },
+ {
+  "name": "admin-home",
+  "body": "page-admin-search",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/search.php",
+  "theme": "light",
+  "title": "Search | Administration | moodle"
+ },
+ {
+  "name": "admin-notifications",
+  "body": "page-admin-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/index.php?cache=1",
+  "theme": "light",
+  "title": "Teavitused | Administration | moodle"
+ },
+ {
+  "name": "admin-users",
+  "body": "page-admin-user",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/user.php",
+  "theme": "light",
+  "title": "Browse list of users | Accounts | Users | Administration | moodle"
+ },
+ {
+  "name": "admin-roles",
+  "body": "page-admin-roles-manage",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/roles/manage.php",
+  "theme": "light",
+  "title": "Define roles | Permissions | Users | Administration | moodle"
+ },
+ {
+  "name": "admin-plugins",
+  "body": "page-admin-plugins",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/plugins.php",
+  "theme": "light",
+  "title": "Plugins overview | Plugins | Administration | moodle"
+ },
+ {
+  "name": "admin-themesettings",
+  "body": "page-admin-setting-themesettingtaltech4_boost",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/admin/settings.php?section=themesettingtaltech4_boost",
+  "theme": "light",
+  "title": "Error | moodle"
+ },
+ {
+  "name": "course-management",
+  "body": "page-course-management",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/management.php",
+  "theme": "light",
+  "title": "Course and category management | moodle"
+ },
+ {
+  "name": "site-front-edit",
+  "body": "page-site-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/?redirect=0",
+  "theme": "light",
+  "title": "Avaleht | moodle"
+ }
+]

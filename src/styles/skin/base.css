@@ -612,8 +612,15 @@
 :root[data-kex="skin"] :is(.table, .generaltable, table.flexible) tbody tr:not([class*="table-"]):hover {
   background-color: var(--kex-hover) !important;
 }
-:root[data-kex="skin"] :is(.table, .generaltable) :is(.lastrow, .emptyrow) > * {
+:root[data-kex="skin"] :is(.table, .generaltable) :is(.lastrow, .emptyrow, .unselectedrow, .selectedrow) > * {
   background-color: transparent;
+}
+/* Moodle's table cells (`td.cell`: assignment grading, gradebook, admin tables) carry their own white fill. */
+:root[data-kex="skin"] :is(.table, .generaltable, table.flexible) :is(td, th).cell:not([class*="table-"]) {
+  background-color: transparent !important;
+}
+:root[data-kex="skin"] :is(.table, .generaltable, table.flexible) tbody tr:hover > :is(td, th).cell:not([class*="table-"]) {
+  background-color: var(--kex-hover) !important;
 }
 :root[data-kex="skin"] :is(.table-bordered, .generaltable) {
   border-color: var(--kex-border);
@@ -759,4 +766,47 @@
 }
 :root[data-kex="skin"] :is(.btn.disabled, .btn:disabled) {
   opacity: 0.5;
+}
+
+/* Gradebook setup tree (Grades > Gradebook setup): a white card, heavy black row rules and levelled cell fills. */
+:root[data-kex="skin"] :is(.gradetree-wrapper, table.gradetree, #grade_edit_tree_table) {
+  background: transparent;
+  border-color: var(--kex-border);
+}
+:root[data-kex="skin"] :is(table.gradetree, #grade_edit_tree_table) :is(tr, th, td, .cell) {
+  background-color: transparent !important;
+  border-color: var(--kex-border) !important;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] :is(table.gradetree, #grade_edit_tree_table) tr.category > :is(th, td) {
+  background-color: var(--kex-hover) !important;
+}
+:root[data-kex="skin"] :is(table.gradetree, #grade_edit_tree_table) :is(a, .gradeitemheader, .gradeitemheader a) {
+  color: var(--kex-violet);
+}
+
+/* The assignment grading table's status chip is a light block in Moodle. */
+:root[data-kex="skin"] div.submissionstatus {
+  background-color: var(--kex-hover);
+  color: var(--kex-text-2);
+  border-radius: var(--kex-r-xs);
+}
+
+/* Grader report (sticky headers need an opaque fill: the page colour), backup settings rows and quiz slot rows. */
+:root[data-kex="skin"] :is(#user-grades, table.gradereport-grader-table, .gradeparent table) :is(tr, th, td) {
+  background-color: var(--kex-bg) !important;
+  border-color: var(--kex-border) !important;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] :is(#user-grades, table.gradereport-grader-table) :is(th, td).gradecell {
+  background-color: transparent !important;
+}
+:root[data-kex="skin"] :is(#user-grades, table.gradereport-grader-table) tbody tr:hover :is(th, td) {
+  background-color: var(--kex-hover) !important;
+}
+:root[data-kex="skin"] :is(.root_setting, .grouped_settings, .backup_setting, .backup-settings .fitem, .fitem.root_setting) {
+  background-color: transparent !important;
+}
+:root[data-kex="skin"] :is(ul.slots li.section .content, ul.slots .slot .content, .mod-quiz-edit-content .section .content, #page-mod-quiz-edit #region-main div.content) {
+  background-color: transparent !important;
 }

@@ -1,0 +1,92 @@
+[
+ {
+  "name": "front",
+  "body": "page-site-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/",
+  "theme": "light",
+  "title": "Avaleht | moodle",
+  "audit": {}
+ },
+ {
+  "name": "login",
+  "body": "page-login-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/login/index.php",
+  "theme": "light",
+  "title": "Log in to the site | moodle",
+  "audit": {}
+ },
+ {
+  "name": "login-forgot",
+  "body": "page-login-forgot_password",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/login/forgot_password.php",
+  "theme": "light",
+  "title": "Forgotten password | moodle",
+  "audit": {}
+ },
+ {
+  "name": "courses-index",
+  "body": "page-course-index-category",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/course/index.php",
+  "theme": "light",
+  "title": "Course categories | moodle",
+  "audit": {}
+ },
+ {
+  "name": "course-guest",
+  "body": "page-login-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/login/index.php",
+  "theme": "light",
+  "title": "Log in to the site | moodle",
+  "audit": {}
+ },
+ {
+  "name": "course-info",
+  "body": "page-login-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/login/index.php",
+  "theme": "light",
+  "title": "Log in to the site | moodle",
+  "audit": {}
+ },
+ {
+  "name": "enrol-redirect",
+  "body": "page-login-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/login/index.php",
+  "theme": "light",
+  "title": "Log in to the site | moodle",
+  "audit": {}
+ },
+ {
+  "name": "forum-redirect",
+  "body": "page-login-index",
+  "kex": "app",
+  "lang": "et",
+  "path": "/login/index.php",
+  "theme": "light",
+  "title": "Log in to the site | moodle",
+  "audit": {}
+ },
+ {
+  "name": "front-user-menu",
+  "body": "page-site-index",
+  "kex": "skin",
+  "lang": "et",
+  "path": "/",
+  "theme": "light",
+  "title": "Avaleht | moodle",
+  "audit": {}
+ }
+]
