@@ -21,7 +21,7 @@ function move(delta: 1 | -1): void {
   const list = visibleGrades.value;
   if (!list.length) return;
   const i = list.findIndex((r) => r.courseId === grSel.value);
-  const next = list[Math.max(0, Math.min(list.length - 1, i < 0 ? 0 : i + delta))];
+  const next = list[Math.max(0, Math.min(list.length - 1, (i < 0 ? 0 : i) + delta))];
   if (!next) return;
   grSel.value = next.courseId;
   requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-gr="${next.courseId}"]`)?.focus());

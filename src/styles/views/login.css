@@ -335,6 +335,34 @@
   .kex-login__form-host form#login .login-input-icon {
     display: none;
   }
+  /* Moodle 5 "show password" toggle: inside the field at the right edge. */
+  .kex-login__form-host form#login .toggle-sensitive-wrapper {
+    position: relative;
+    display: block;
+  }
+  .kex-login__form-host form#login .toggle-sensitive-wrapper .form-control {
+    padding-right: 48px;
+  }
+  .kex-login__form-host form#login .toggle-sensitive-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 0 var(--kex-r-m) var(--kex-r-m) 0;
+    background: transparent;
+    color: var(--kex-sb-text-2);
+    &:hover {
+      color: #fff;
+      background: transparent;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kex-sb-focus);
+      outline-offset: -2px;
+    }
+  }
   .kex-login__form-host form#login :is(button[type="submit"], .btn-primary) {
     width: 100%;
     height: 48px;

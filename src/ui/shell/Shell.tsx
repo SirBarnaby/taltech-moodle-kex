@@ -3,7 +3,9 @@ import { useEffect } from 'preact/hooks';
 import { t } from '../../i18n';
 import { hash, headerCompact, helpOpen, paletteOpen, route, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
 import { CourseView } from '../views/Course';
+import { GradesOverviewView } from '../views/GradesOverview';
 import { MyCoursesView } from '../views/MyCourses';
+import { NotificationsView } from '../views/Notifications';
 import { SkinChrome } from '../views/SkinChrome';
 import { chromeKeys } from '../../state/skin';
 import { PinnedView } from '../views/Pinned';
@@ -91,6 +93,8 @@ function View() {
   if (r.key === 'course' || r.key === 'section') return <CourseView />;
   if (r.key === 'workspace') return hash.value === '#pinned' ? <PinnedView /> : <WorkspaceView />;
   if (r.key === 'mycourses') return <MyCoursesView />;
+  if (r.key === 'grades') return <GradesOverviewView />;
+  if (r.key === 'notifications') return <NotificationsView />;
   return null;
 }
 

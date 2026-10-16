@@ -1,10 +1,15 @@
 import { chromium } from 'playwright';
 import { installKex, login, LAB, iter3Seed } from '../test/harness/kex.ts';
-const [,, theme, outdir, ...paths] = process.argv;
+// usage: node scripts/_shots.mjs <theme> <outdir> [--guest] [--w=1585] paths...
+const args = process.argv.slice(2);
+const theme = args.shift(); const outdir = args.shift();
+const guest = args.includes('--guest');
+const wArg = args.find(a=>a.startsWith('--w='));
+const paths = args.filter(a=>!a.startsWith('--'));
 const full = process.env.FULL ? true : false;
 const b = await chromium.launch();
-const ctx = await b.newContext({ viewport:{width:1585,height:992} });
-await login(ctx);
+const ctx = await b.newContext({ viewport:{width: wArg ? Number(wArg.slice(4)) : 1585,height:992} });
+if (!guest) await login(ctx);
 const { mkdirSync } = await import('node:fs'); mkdirSync(outdir, {recursive:true});
 for (const path of paths) {
   const p = await ctx.newPage();

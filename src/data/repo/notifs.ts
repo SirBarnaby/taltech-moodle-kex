@@ -92,6 +92,34 @@ export function notifsStore(): Store<Notif[]> {
   return store;
 }
 
+/** Older notifications loaded by the Notifications page ("Load older"), after the cached first 20. */
+export const moreNotifs = signal<Notif[]>([]);
+/** The server has no more (a page came back short). */
+export const moreDone = signal(false);
+export const moreBusy = signal(false);
+const PAGE = 20;
+
+export async function loadMoreNotifs(): Promise<void> {
+  if (moreBusy.peek() || moreDone.peek()) return;
+  moreBusy.value = true;
+  try {
+    const first = notifsStore().value.peek()?.length ?? 0;
+    const offset = first + moreNotifs.peek().length;
+    const res = await ws.call<RawResponse>('message_popup_get_popup_notifications', { useridto: userId, newestfirst: true, limit: PAGE, offset });
+    const got = mapNotifs(res.notifications ?? []);
+    const seen = new Set([...(notifsStore().value.peek() ?? []), ...moreNotifs.peek()].map((n) => n.id));
+    moreNotifs.value = [...moreNotifs.peek(), ...got.filter((n) => !seen.has(n.id))];
+    if (got.length < PAGE) moreDone.value = true;
+  } finally {
+    moreBusy.value = false;
+  }
+}
+
+export function resetMoreNotifs(): void {
+  moreNotifs.value = [];
+  moreDone.value = false;
+}
+
 /** Local flag: marking is in flight (the views disable nothing; it only drives a `data-busy` attribute in tests). */
 export const notifBusy = signal(false);
 
@@ -103,10 +131,12 @@ function setUnread(n: number): void {
 
 export async function markRead(id: number): Promise<void> {
   const list = notifsStore().value.value ?? [];
-  const n = list.find((x) => x.id === id);
+  const extra = moreNotifs.value;
+  const n = list.find((x) => x.id === id) ?? extra.find((x) => x.id === id);
   if (!n || n.read) return;
   const next = list.map((x) => (x.id === id ? { ...x, read: true } : x));
   notifsStore().value.value = next;
+  moreNotifs.value = extra.map((x) => (x.id === id ? { ...x, read: true } : x));
   setUnread((countsStore().value.value?.notifs ?? 0) - 1);
   notifBusy.value = true;
   try {
@@ -114,6 +144,7 @@ export async function markRead(id: number): Promise<void> {
     void cache.write('notifs', next);
   } catch (e) {
     notifsStore().value.value = list;
+    moreNotifs.value = extra;
     void countsStore().refresh(true);
     throw e;
   } finally {
@@ -123,8 +154,10 @@ export async function markRead(id: number): Promise<void> {
 
 export async function markAllRead(): Promise<void> {
   const list = notifsStore().value.value ?? [];
+  const extra = moreNotifs.value;
   const next = list.map((x) => ({ ...x, read: true }));
   notifsStore().value.value = next;
+  moreNotifs.value = extra.map((x) => ({ ...x, read: true }));
   setUnread(0);
   notifBusy.value = true;
   try {
@@ -132,6 +165,7 @@ export async function markAllRead(): Promise<void> {
     void cache.write('notifs', next);
   } catch (e) {
     notifsStore().value.value = list;
+    moreNotifs.value = extra;
     void countsStore().refresh(true);
     throw e;
   } finally {

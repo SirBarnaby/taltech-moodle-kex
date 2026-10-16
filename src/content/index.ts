@@ -2,7 +2,11 @@ import { effect } from '@preact/signals';
 import { cache } from '../data/cache';
 import { createCoursesStore, loadCustomField } from '../data/repo/courses';
 import { cachedUser, fetchUser, storeUser } from '../data/repo/user';
+import { scrapeGradeOverview } from '../data/scrape/grades';
 import { scrapeMyoverview } from '../data/scrape/myoverview';
+import { gradeRows } from '../state/grades';
+import { gradesBindings } from '../actions/grades';
+import { notificationsBindings } from '../actions/notifications';
 import { scrapeSummaries } from '../data/scrape/summaries';
 import { scrapeTiles } from '../data/scrape/tiles';
 import { setTileList } from '../actions/course';
@@ -282,6 +286,16 @@ class Controller {
         },
       );
     }
+    if (eff.effective === 'app' && (eff.key === 'grades' || eff.key === 'notifications')) {
+      this.html.dataset.kexView = eff.key;
+      keyManager.setScope('workspace', true);
+      const off = keyManager.register(eff.key === 'grades' ? gradesBindings() : notificationsBindings());
+      this.stops.push(() => {
+        off();
+        keyManager.setScope('workspace', false);
+        delete this.html.dataset.kexView;
+      });
+    }
     if (eff.effective === 'skin' && (chromeKeys.has(eff.key) || eff.key === 'quiz-focus')) {
       const focus = eff.key === 'quiz-focus';
       // Skin+ pages: our band replaces Moodle's #page-header; a quiz attempt is focus mode (rail sidebar, only Ctrl+K and Alt+Shift+O).
@@ -357,6 +371,7 @@ class Controller {
     const logo = qs<HTMLImageElement>(document, SEL.logo);
     logoSrc.value = logo?.getAttribute('src') ?? undefined;
     if (eff.key === 'workspace' || eff.key === 'mycourses') void scrapeMyoverview(document);
+    if (eff.key === 'grades') gradeRows.value = scrapeGradeOverview(document);
     if (eff.key === 'course' || eff.key === 'section') {
       const tiles = scrapeTiles(document);
       if (tiles.length) setTileList(tiles);
