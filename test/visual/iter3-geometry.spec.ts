@@ -26,14 +26,16 @@ const TARGETS: Target[] = [
   { id: 'sb-active-course', x: 0, y: 487, w: 246, h: 68, tolH: 4 },
   { id: 'pinned', x: 274, y: 347, w: 1202, h: 74 },
   { id: 'pinned-edit', x: 1500, y: 347, w: 52, h: 16, tolW: 4, tolH: 4 },
-  { id: 'tab-underline', x: 1276, y: 493, w: 98, h: 3, tolX: 6, tolW: 6 },
+  // The underline now sits under the active entry of the course's own navigation ("Course"), not under a content tab.
+  { id: 'tab-underline', x: 1013, y: 493, w: 72, h: 3, tolX: 6, tolW: 6 },
   { id: 'topics-row-1', x: 274, y: 546, w: 328, h: 52 },
   { id: 'topics-row-6', x: 274, y: 806, w: 328, h: 53 },
   { id: 'detail-title', x: 665, y: 536, tolY: 5 },
-  { id: 'row-1-thumb', x: 665, y: 631, w: 134, h: 92 },
-  { id: 'row-1-button', x: 1410, y: 655, w: 148, h: 44 },
-  { id: 'row-2-button', x: 1410, y: 772, w: 148, h: 44, tolY: 6 },
-  { id: 'row-3-thumb', x: 665, y: 869, w: 134, h: 92, tolY: 8 },
+  // Rows start 24 px higher than in the mock: the invented subtitle line under the topic title is gone.
+  { id: 'row-1-thumb', x: 665, y: 607, w: 134, h: 92 },
+  { id: 'row-1-button', x: 1410, y: 631, w: 148, h: 44 },
+  { id: 'row-2-button', x: 1410, y: 752, w: 148, h: 44, tolY: 6 },
+  { id: 'row-3-thumb', x: 665, y: 847, w: 134, h: 92, tolY: 8 },
 ];
 
 test.describe('iteration3 geometry', () => {
@@ -77,7 +79,7 @@ test.describe('iteration3 geometry', () => {
     await page.goto(`/course/view.php?id=${COURSE_ITI}#topic-6`);
     await waitForCourse(page);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
-    await expect(page.locator('[data-kex-test="topics-row-6"]')).toHaveAttribute('aria-current', 'true');
+    await expect(page.locator('[data-kex-topic="6"]')).toHaveAttribute('aria-current', 'true');
     await expect(page.locator('[data-kex-test="detail-kicker"]')).toHaveText('TOPIC 06');
     await expect(page.locator('[data-kex-test="detail-count"]')).toHaveText('3 RESOURCES');
   });

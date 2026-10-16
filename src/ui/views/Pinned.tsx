@@ -2,7 +2,9 @@ import { GripVertical, Pencil, X } from 'lucide-preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { go, homeUrl } from '../../actions/navigate';
 import { dragPin, exportPins, importPins, pinEdit, pinRenaming, reorderPin, unpinItem } from '../../actions/pins';
-import { monoLabel } from '../../data/classify';
+import { eyebrow } from '../../data/topics';
+import { cmDetails } from '../../data/repo/cmdetails';
+import { typeNameFor } from '../../data/repo/modnames';
 import { displayName } from '../../data/repo/courses';
 import { groupPins, pinsStore } from '../../data/repo/pins';
 import { prefetchStates } from '../../data/repo/prefetch';
@@ -176,7 +178,7 @@ export function PinnedView() {
                           <Thumb variant={thumbVariant(p.kind, p.format)} format={p.format} seed={p.cmid} />
                         </div>
                       }
-                      label={unavailable ? t('pinned.unavailable') : monoLabel(p.kind, p.format)}
+                      label={unavailable ? t('pinned.unavailable') : eyebrow(typeNameFor(p.modname, cmDetails.value.get(p.cmid)))}
                       title={renaming === p.cmid ? <RenameInput pin={p} /> : p.title}
                       titleHref={renaming === p.cmid || unavailable ? undefined : p.url}
                       onTitle={() => go(p.url)}

@@ -245,7 +245,7 @@ process.exit(failed ? 1 : 0);
 
 async function m2Checks(driver, r) {
   await driver.get(`${LAB}/course/view.php?id=2#topic-6`);
-  await waitFor(driver, `document.querySelector('[data-kex-test=course] [data-kex-test=topics-row-6][aria-current=true]') && document.querySelectorAll('[data-kex-row]').length === 3`, 30000, 'course page');
+  await waitFor(driver, `document.querySelector('[data-kex-test=course] [data-kex-topic="6"][aria-current=true]') && document.querySelectorAll('[data-kex-row]').length === 3`, 30000, 'course page');
   const text = (sel) => driver.executeScript(`return (document.querySelector(${JSON.stringify(sel)})||{}).textContent`);
   await r.check('course: hero title read once by assistive tech', async () => {
     const t = await driver.executeScript(`return [...document.querySelectorAll('[data-kex-test=hero-title] .kex-sr')].map(e => e.textContent)`);
@@ -264,12 +264,15 @@ async function m2Checks(driver, r) {
     await waitFor(driver, `location.hash === '#topic-5' && document.querySelector('[data-kex-test=detail-kicker]').textContent.trim() === 'TOPIC 05'`, 8000, 'topic 05');
     return 'ok';
   });
-  await r.check('course: tab 3 (Labs) filters rows, 1 restores', async () => {
+  await r.check('course: secondary navigation shows participants and grades; 1/2/3 do not filter', async () => {
+    const keys = await driver.executeScript(`return [...document.querySelectorAll('[data-kex-test=course-nav] a')].map(a => a.dataset.key)`);
+    if (!keys.includes('participants') || !keys.includes('grades')) throw new Error(JSON.stringify(keys));
+    const before = await driver.executeScript(`return document.querySelectorAll('[data-kex-row]').length`);
     await driver.actions().sendKeys('3').perform();
-    await waitFor(driver, `document.querySelectorAll('[data-kex-row]').length === 3`, 8000, 'labs filter');
-    await driver.actions().sendKeys('1').perform();
-    await waitFor(driver, `document.querySelectorAll('[data-kex-row]').length === 5`, 8000, 'all rows');
-    return 'ok';
+    await sleep(400);
+    const after = await driver.executeScript(`return document.querySelectorAll('[data-kex-row]').length`);
+    if (before !== after) throw new Error(`${before} -> ${after}`);
+    return keys.join(',');
   });
   await r.check('course: Space opens the preview sheet, Esc closes it', async () => {
     await driver.executeScript(`document.querySelector('[data-kex-row]').focus()`);

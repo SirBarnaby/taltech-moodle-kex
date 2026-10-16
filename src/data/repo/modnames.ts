@@ -45,3 +45,23 @@ export async function loadModNames(modnames: readonly string[]): Promise<void> {
     log.warn('modnames', e);
   }
 }
+
+const requested = new Set<string>();
+let hydrated = false;
+
+/**
+ * Moodle's name for a module type for views that only know the plugin name (Pinned, Workspace, activity pages):
+ * scraped type text when the cm's details are known, else core_get_strings (requested once, lazily), else the plugin name.
+ */
+export function typeNameFor(modname: string, details?: { typeName?: string }): string {
+  if (!hydrated) {
+    hydrated = true;
+    queueMicrotask(hydrateModNames);
+  }
+  const known = details?.typeName ?? modTypeNames.value.get(modname);
+  if (!known && modname && !requested.has(modname)) {
+    requested.add(modname);
+    void loadModNames([modname]);
+  }
+  return known ?? humanModname(modname);
+}

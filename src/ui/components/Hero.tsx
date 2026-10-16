@@ -20,7 +20,7 @@ export interface HeroLink {
 
 interface HeroProps {
   /** Mono eyebrow ("WORKSPACE / THU 16 OCT"). Course heroes do not show it: the breadcrumb already names the course. */
-  label: string;
+  label?: string;
   /** Title lines (the second one is painted with the gradient). */
   lines: [string, string?];
   links: HeroLink[];
@@ -102,7 +102,7 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
   }, [seed, intensity, school]);
 
   const text = lines[1] ? `${lines[0]}\n${lines[1]}` : lines[0];
-  const aria = courseId ? lines.filter(Boolean).join(' ') : label;
+  const aria = courseId ? lines.filter(Boolean).join(' ') : (label ?? '');
   return (
     <section class={`kex-hero${cls ? ` ${cls}` : ''}`} ref={root} data-kex-test="hero" data-mode={mode} data-school={school === 'default' ? undefined : school}>
       <canvas class="kex-hero__canvas" ref={canvas} aria-hidden="true" />

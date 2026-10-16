@@ -3,14 +3,14 @@ import { classifyFormat, classifyKind } from '../data/classify';
 import { cmDetails, setManualDone } from '../data/repo/cmdetails';
 import { countsStore } from '../data/repo/counts';
 import { eventsStore } from '../data/repo/events';
-import { humanModname, modTypeNames } from '../data/repo/modnames';
+import { typeNameFor } from '../data/repo/modnames';
 import { markAllRead, markRead, notifsStore } from '../data/repo/notifs';
 import { isPinned, readPins } from '../data/repo/pins';
 import { recentStore, type RecentItem } from '../data/repo/recent';
 import type { DueItem, Pin } from '../data/model';
 import type { FeedItem } from '../data/feed';
-import { monoLabel, verbFor } from '../data/classify';
-import type { RowModel } from '../data/topics';
+import { verbFor } from '../data/classify';
+import { eyebrow, type RowModel } from '../data/topics';
 import { ws } from '../data/ws';
 import { t } from '../i18n';
 import { hash, search, settings } from '../state';
@@ -116,12 +116,13 @@ export function rowFromPin(p: Pin): RowModel {
 }
 
 function rowFrom(c: { cmid: number; courseId: number; title: string; modname: string; url: string }, kind: RowModel['kind'], format: RowModel['format']): RowModel {
+  const typeName = typeNameFor(c.modname, cmDetails.value.get(c.cmid));
   return {
     cm: {
       id: c.cmid, courseId: c.courseId, sectionId: 0, sectionNumber: 0, name: c.title, modname: c.modname, url: c.url,
       uservisible: true, restricted: false, tracked: false,
     },
-    kind, format, title: c.title, label: monoLabel(kind, format), verb: verbFor(kind), locked: false, incomplete: false, typeName: modTypeNames.value.get(c.modname) ?? humanModname(c.modname), provisional: false,
+    kind, format, title: c.title, label: eyebrow(typeName), verb: verbFor(kind), locked: false, incomplete: false, typeName, provisional: false,
   };
 }
 

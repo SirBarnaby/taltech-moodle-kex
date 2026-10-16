@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { courseCode, closePreview, initCourse, openCm, previewCm, retryCourse, setTopic, togglePin, toggleDone } from '../../actions/course';
-import { seasonLabel, splitTitle } from '../../data/names';
+import { splitTitle } from '../../data/names';
 import { pinsStore, isPinned } from '../../data/repo/pins';
 import { pad2, primaryIndex, resourceCount, type RowModel } from '../../data/topics';
 import { t } from '../../i18n';
@@ -86,8 +86,6 @@ export function CourseView() {
   const code = course?.code ?? courseCode();
   const rawName = course?.name ?? info?.heading ?? '';
   const lines = splitTitle(rawName);
-  const sem = course?.semester;
-  const label = [code, sem ? `${seasonLabel(sem.season)} ${sem.year}` : ''].filter(Boolean).join(' / ');
 
   const detailTitle = topic ? topicDisplayTitle(topic) : '';
   const compactLabel = detailTitle && topic ? { chip: topic.isIntro ? code : `${t('course.topic')} ${topic.number}`, text: detailTitle } : undefined;
@@ -162,7 +160,6 @@ export function CourseView() {
     <main class="kex-main kex-course" id="kex-main" data-kex-test="course" data-kex-course={id ?? ''}>
       <Hero
         key={id ?? 0}
-        label={label}
         lines={lines.length ? lines : [rawName]}
         links={[]}
         seed={id ?? 0}

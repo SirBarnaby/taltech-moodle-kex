@@ -16,7 +16,7 @@ import { ws } from '../data/ws';
 import { t } from '../i18n';
 import { log } from '../lib/log';
 import {
-  hooks, pageInfo, settings, sidebarCourses,
+  hooks, livePageDoc, pageInfo, settings, sidebarCourses,
 } from '../state';
 import {
   courseError, courseEvents, courseState, courseStatus, fetchedSummaries, focusZone, previewCmId, rows, secondaryNav, selectedCmId, summaries, tileImages, topicNumber, topics,
@@ -188,11 +188,11 @@ function scrapePage(id: number): void {
   }
   if (courseId !== id) return;
   try {
-    const found = scrapeTiles(document);
+    const found = scrapeTiles(livePageDoc());
     if (found.length) setTileList(found);
-    const sums = scrapeSummaries(document);
+    const sums = scrapeSummaries(livePageDoc());
     if (sums.size) summaries.value = new Map([...summaries.value, ...sums]);
-    const nav = scrapeSecondaryNav(document);
+    const nav = scrapeSecondaryNav(livePageDoc());
     if (nav.length) {
       secondaryNav.value = nav;
       void cache.write(`snav:${id}`, nav);
@@ -204,7 +204,7 @@ function scrapePage(id: number): void {
   idle(() => {
     if (courseId !== id) return;
     try {
-      seedDetails(id, parseCmItems(document));
+      seedDetails(id, parseCmItems(livePageDoc()));
     } catch (e) {
       log.warn('seedDetails', e);
     }

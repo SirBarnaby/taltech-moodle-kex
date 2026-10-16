@@ -6,7 +6,10 @@ import {
   setWsCourse, toggleDoneById,
 } from '../../actions/workspace';
 import { go, homeUrl, PAGES } from '../../actions/navigate';
-import { classifyFormat, monoLabel } from '../../data/classify';
+import { classifyFormat } from '../../data/classify';
+import { cmDetails } from '../../data/repo/cmdetails';
+import { typeNameFor } from '../../data/repo/modnames';
+import { eyebrow } from '../../data/topics';
 import type { DueItem } from '../../data/model';
 import { type FeedItem, nearestCourse, nextByCourse, weekSummary, type FeedTab } from '../../data/feed';
 import { countsStore } from '../../data/repo/counts';
@@ -138,7 +141,7 @@ function ContinueRow({ item, index, now, selected }: { item: Extract<FeedItem, {
       onSelect={selectFeed}
       ariaLabel={r.title}
       thumb={<Thumb variant={thumbVariant(kind, format)} format={format} seed={r.cmid} />}
-      label={`${monoLabel(kind, format)} · ${r.courseCode}`}
+      label={`${eyebrow(typeNameFor(r.modname, cmDetails.value.get(r.cmid)))} · ${r.courseCode}`}
       title={r.title}
       titleHref={r.url}
       onTitle={() => openFeedItem(item)}

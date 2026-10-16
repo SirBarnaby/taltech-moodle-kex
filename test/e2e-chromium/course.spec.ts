@@ -73,56 +73,34 @@ test.describe('topics', () => {
   });
 });
 
-test.describe('tabs', () => {
+test.describe('secondary navigation and Moodle\'s own words', () => {
   test.use({ seed: iter3Seed() });
 
-  test('1/2/3 filter the rows of the lab course', async ({ page }) => {
+  test('the course\'s own navigation (participants, grades, ...) is shown with Moodle\'s labels and URLs; no content tabs', async ({ page }) => {
+    await page.goto(`${COURSE}#topic-1`);
+    await waitForCourse(page);
+    const nav = page.locator('[data-kex-test="course-nav"]');
+    await expect(nav).toBeVisible();
+    const links = await nav.locator('a').evaluateAll((els) => els.map((a) => ({ key: a.getAttribute('data-key'), text: a.textContent?.trim(), href: (a as HTMLAnchorElement).href, current: a.getAttribute('aria-current') })));
+    expect(links.map((l) => l.key)).toEqual(expect.arrayContaining(['coursehome', 'participants', 'grades']));
+    expect(links.find((l) => l.key === 'coursehome')?.current).toBe('page');
+    expect(links.find((l) => l.key === 'participants')?.href).toContain(`/user/index.php?id=${COURSE_ITI}`);
+    expect(links.find((l) => l.key === 'grades')?.href).toContain(`/grade/report/index.php?id=${COURSE_ITI}`);
+    await expect(page.locator('#kex-main [role="tab"]')).toHaveCount(0);
+  });
+
+  test('1/2/3 no longer filter; every eyebrow is Moodle\'s module name, not an invented kind word', async ({ page }) => {
     await page.goto(`${COURSE}#topic-1`);
     await waitForCourse(page);
     const rows = page.locator('[data-kex-row]');
     await expect(rows).toHaveCount(4);
     await page.locator('[data-kex-topic="1"]').focus();
-
-    await page.keyboard.press('2');
-    await expect(rows).toHaveCount(2);
-    await expect(page.locator('[data-kex-tab="lectures"], [data-tab="lectures"]')).toHaveAttribute('aria-selected', 'true');
-    const lectureLabels = await rows.evaluateAll((els) => els.map((e) => e.querySelector('.kex-row__label')?.textContent ?? ''));
-    expect(lectureLabels.every((l) => /^(LECTURE|READING|RECORDING|MATERIAL)/.test(l))).toBe(true);
-
-    await page.keyboard.press('3');
-    await expect(rows).toHaveCount(2);
-    const labLabels = await rows.evaluateAll((els) => els.map((e) => e.querySelector('.kex-row__label')?.textContent ?? ''));
-    expect(labLabels.every((l) => /^(PRACTICAL|ASSIGNMENT|QUIZ)/.test(l))).toBe(true);
-
-    await page.keyboard.press('1');
-    await expect(rows).toHaveCount(4);
-  });
-
-  test('topics without a match are dimmed', async ({ page }) => {
-    // The lab has no such topic, so the course state is trimmed: topic 1 keeps only its lecture and its reading.
-    await page.route('**/lib/ajax/service.php*', async (route) => {
-      const res = await route.fetch();
-      const text = await res.text();
-      if (!text.includes('cmlist')) return route.fulfill({ response: res, body: text });
-      const calls = JSON.parse(text) as { data?: unknown }[];
-      for (const call of calls) {
-        if (typeof call.data !== 'string' || !call.data.includes('cmlist')) continue;
-        const state = JSON.parse(call.data) as { section: { number: number; cmlist: string[] }[] };
-        const s1 = state.section.find((s) => s.number === 1);
-        if (s1) s1.cmlist = s1.cmlist.slice(0, 2);
-        call.data = JSON.stringify(state);
-      }
-      return route.fulfill({ response: res, body: JSON.stringify(calls) });
-    });
-    await page.goto(`${COURSE}#topic-2`);
-    await waitForCourse(page);
-    await page.keyboard.press('3');
-    const dimmed = page.locator('[data-kex-topic].kex-topic--dim');
-    await expect(dimmed).toHaveCount(1);
-    await expect(dimmed).toHaveAttribute('data-kex-topic', '1');
-    await page.keyboard.press('1');
-    await expect(dimmed).toHaveCount(0);
-    await page.unrouteAll({ behavior: 'ignoreErrors' });
+    for (const k of ['2', '3', '1']) {
+      await page.keyboard.press(k);
+      await expect(rows).toHaveCount(4);
+    }
+    const labels = await rows.evaluateAll((els) => els.map((e) => e.querySelector('.kex-row__label')?.textContent ?? ''));
+    expect(labels.every((l) => l.length > 0 && !/^(LECTURE|PRACTICAL|RECORDING|READING|MATERIAL)\b/.test(l))).toBe(true);
   });
 });
 

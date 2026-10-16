@@ -2,7 +2,8 @@ import { ArrowLeft, ArrowRight, CircleCheck, Copy, Download, ExternalLink, FileT
 import { useEffect } from 'preact/hooks';
 import { copyUrlTarget, downloadUrl, loadNeighbourState, pinFromPage, pinPage, toggleDonePage, openNewTab } from '../../actions/skin';
 import { go, homeUrl } from '../../actions/navigate';
-import { classifyFormat, classifyKind, monoLabel } from '../../data/classify';
+import { eyebrow } from '../../data/topics';
+import { typeNameFor } from '../../data/repo/modnames';
 import { cmDetails } from '../../data/repo/cmdetails';
 import { isPinned, pinsStore } from '../../data/repo/pins';
 import { placedLabel } from '../../data/neighbours';
@@ -25,19 +26,15 @@ function courseCode(): string {
   return /\b[A-Z]{3}\d{4}\b/.exec(crumb?.text ?? '')?.[0] ?? '';
 }
 
-/** `CODE / TOPIC 05 / LECTURE · PDF` for activities; the page area for the rest. */
+/** `CODE / TOPIC 05 / FILE` (Moodle's module name) for activities; the page area for the rest. */
 export function chromeLabel(): string {
   const info = pageInfo.value;
-  const sp = skinPage.value;
   const r = route.value;
   const code = courseCode();
   if (isActivity.value && info?.cmId) {
     const modname = r?.mod ?? '';
-    const kind = classifyKind({ modname, name: sp?.title ?? '' });
-    const format = cmDetails.value.get(info.cmId)?.format ?? classifyFormat({ modname, name: sp?.title ?? '' }, kind);
     const n = neighbours.value?.current.section.number;
-    const [k, f] = monoLabel(kind, format).split(' / ');
-    const word = f && f !== k ? `${k} · ${f}` : k;
+    const word = eyebrow(typeNameFor(modname, cmDetails.value.get(info.cmId)));
     return [code, n ? `${t('course.topic')} ${pad2(n)}` : '', word].filter(Boolean).join(' / ');
   }
   return pageLabel(code);
