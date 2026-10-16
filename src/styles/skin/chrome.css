@@ -1,0 +1,80 @@
+/* Skin+ chrome (page-designs §0): the band replaces #page-header; the previous/next bar; quiz focus mode. */
+
+/* The band sits in #kex-root above #page-wrapper, so the wrapper gives up its header padding. */
+:root[data-kex="skin"][data-kex-chrome] #page-wrapper {
+  padding-top: 0;
+}
+:root[data-kex="skin"][data-kex-chrome] #page-header {
+  display: none !important;
+}
+:root[data-kex="skin"][data-kex-chrome] #page.drawers,
+:root[data-kex="skin"][data-kex-chrome] #page {
+  padding-top: 28px;
+}
+
+#kex-root {
+  .kex-chrome {
+    margin-left: var(--kex-sb-w);
+    padding-top: var(--kex-header-h);
+    background: var(--kex-bg);
+    transition: margin-left 200ms var(--kex-ease);
+  }
+  .kex-chrome .kex-band__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .kex-chrome .kex-band__text {
+    max-width: 64%;
+  }
+}
+
+/* ---- previous / next bar ---- */
+:root[data-kex="skin"][data-kex-chrome="activity"] #page-wrapper {
+  padding-bottom: 56px;
+}
+#kex-root {
+  .kex-pn {
+    position: fixed;
+    z-index: calc(var(--kex-z-header) - 1);
+    left: var(--kex-sb-w);
+    right: 0;
+    bottom: 0;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 0 var(--kex-pad);
+    background: var(--kex-bg);
+    border-top: 1px solid var(--kex-border);
+    transition: left 200ms var(--kex-ease);
+  }
+  .kex-pn__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    max-width: 48%;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: var(--kex-r-s);
+    font-size: 15px;
+    color: var(--kex-text-2);
+    &:hover {
+      background: var(--kex-hover);
+      color: var(--kex-violet);
+    }
+    svg {
+      flex: none;
+      color: var(--kex-violet-2);
+    }
+    .kex-kbd {
+      flex: none;
+    }
+  }
+  .kex-pn__text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
