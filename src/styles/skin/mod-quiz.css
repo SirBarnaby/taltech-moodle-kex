@@ -12,7 +12,7 @@
   font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--kex-mono-soft);
+  color: var(--kex-mono);
 }
 :root[data-kex="skin"] .quizattemptsummary,
 :root[data-kex="skin"] table.quizattemptsummary {
@@ -64,7 +64,7 @@
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--kex-mono-soft);
+  color: var(--kex-mono);
 }
 :root[data-kex="skin"] .que .info h3.no .qno {
   display: block;
@@ -150,7 +150,7 @@
 :root[data-kex="skin"] .que .answernumber {
   font-family: var(--kex-font-mono);
   font-size: 13px;
-  color: var(--kex-mono-soft);
+  color: var(--kex-mono);
 }
 :root[data-kex="skin"] .que .prompt {
   font-size: 13px;
@@ -211,7 +211,7 @@
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--kex-mono-soft);
+  color: var(--kex-mono);
 }
 :root[data-kex="skin"] table.quizreviewsummary td {
   padding: 12px 20px;
@@ -313,7 +313,7 @@
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--kex-mono-soft);
+  color: var(--kex-mono);
 }
 :root[data-kex="skin"] .qn_buttons {
   display: flex;

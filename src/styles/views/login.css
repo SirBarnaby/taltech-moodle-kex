@@ -1,0 +1,513 @@
+/* Login (page-designs §1): full-height canvas on the left, the sign-in panel (sidebar gradient) on the right. */
+#kex-root {
+  .kex-login {
+    display: grid;
+    grid-template-columns: 58fr 42fr;
+    min-height: 100vh;
+    background: var(--kex-sb-bg);
+    color: var(--kex-sb-text);
+  }
+  .kex-login__art {
+    position: relative;
+    overflow: hidden;
+    background: var(--kex-hero-bg);
+    color: var(--kex-hero-text);
+    isolation: isolate;
+  }
+  .kex-login__art[data-mode="fallback"] {
+    background: var(--kex-hero-fallback);
+  }
+  .kex-login__art[data-mode="fallback"] .kex-hero__canvas {
+    display: none;
+  }
+  .kex-login__art .kex-cross--a {
+    left: calc(46.75% - 12.5px);
+    top: 56px;
+  }
+  .kex-login__art .kex-cross--b {
+    left: calc(82% - 12.5px);
+    bottom: 40px;
+  }
+  .kex-login__art-text {
+    position: absolute;
+    z-index: 2;
+    left: 56px;
+    right: 56px;
+    bottom: 56px;
+  }
+  .kex-login__label {
+    margin: 0 0 14px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: #c6c1d9;
+  }
+  .kex-login__title {
+    display: block;
+    font-family: var(--kex-font-hero);
+    font-size: clamp(56px, 5.55vw, 104px);
+    line-height: 1;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--kex-hero-text);
+  }
+
+  /* ---- panel ---- */
+  .kex-login__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 36px clamp(32px, 4.4vw, 80px) 32px;
+    min-width: 0;
+  }
+  .kex-login__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 64px;
+  }
+  .kex-login__logo {
+    height: 64px;
+    width: auto;
+    max-width: 240px;
+    object-fit: contain;
+  }
+  .kex-login__wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    height: 64px;
+    color: #fff;
+  }
+  .kex-login__wm-a {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--kex-font-display);
+    font-weight: 800;
+    font-size: 26px;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+  }
+  .kex-login__wm-div {
+    width: 1px;
+    height: 40px;
+    background: var(--kex-sb-logo-divider);
+  }
+  .kex-login__wm-b {
+    font-size: 20px;
+    color: var(--kex-sb-text-2);
+  }
+  .kex-login__top .kex-segmented {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--kex-sb-divider);
+  }
+  .kex-login__top .kex-segmented__opt {
+    color: var(--kex-sb-text-2);
+    font-family: var(--kex-font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+  .kex-login__top .kex-segmented__opt[aria-checked="true"] {
+    background: #f7f6fa;
+    color: #201055;
+  }
+  .kex-login__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 520px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 32px 0;
+  }
+  .kex-login__kicker {
+    margin: 0 0 10px;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--kex-sb-label);
+  }
+  .kex-login__welcome {
+    margin: 0 0 32px;
+    font-family: var(--kex-font-hero);
+    font-size: 44px;
+    line-height: 1.1;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+  .kex-login__alert {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: -8px 0 20px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--kex-magenta);
+    border-radius: var(--kex-r-xs);
+    background: rgba(255, 110, 211, 0.1);
+    color: var(--kex-sb-text);
+    font-size: 15px;
+  }
+  .kex-login__alert strong {
+    font-family: var(--kex-font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ff8fdc;
+  }
+  .kex-login__idps {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .kex-login__idp {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 52px;
+    padding: 0 14px;
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    border-radius: var(--kex-r-s);
+    background: transparent;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 120ms var(--kex-ease), border-color 120ms var(--kex-ease);
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #fff;
+      color: #fff;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kex-sb-focus);
+      outline-offset: 2px;
+    }
+    .kex-kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+      color: inherit;
+    }
+  }
+  .kex-login__idp--primary {
+    background: #f7f6fa;
+    border-color: #f7f6fa;
+    color: #201055;
+    &:hover {
+      background: #fff;
+      color: #201055;
+    }
+    .kex-kbd {
+      background: rgba(32, 16, 85, 0.08);
+      border-color: rgba(32, 16, 85, 0.2);
+    }
+  }
+  .kex-login__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    margin: 22px 0 0;
+    padding: 6px 4px;
+    color: var(--kex-sb-text-2);
+    font-size: 15px;
+    &:hover {
+      color: #fff;
+    }
+    .kex-kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+      color: inherit;
+    }
+  }
+  .kex-login__chev {
+    transition: transform 160ms var(--kex-ease);
+  }
+  .kex-login__chev--open {
+    transform: rotate(180deg);
+  }
+  .kex-login__form {
+    margin-top: 14px;
+  }
+  .kex-login__form[hidden] {
+    display: none;
+  }
+  .kex-login__signed p {
+    margin: 0 0 20px;
+    color: var(--kex-sb-text-2);
+    font-size: 17px;
+  }
+  .kex-login__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 52px;
+    padding: 0 22px;
+    border-radius: var(--kex-r-s);
+    font-size: 17px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .kex-login__btn--primary {
+    background: #f7f6fa;
+    color: #201055;
+    &:hover {
+      background: #fff;
+      color: #201055;
+    }
+  }
+  .kex-login__foot {
+    display: flex;
+    justify-content: flex-start;
+    min-height: 32px;
+  }
+  .kex-login__helpbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 4px;
+    color: var(--kex-sb-label);
+    font-size: 14px;
+    text-decoration: none;
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  /* Moodle's own form, restyled dark. Nothing about its fields, names or token changes. */
+  .kex-login__form-host form#login {
+    display: block;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    color: var(--kex-sb-text);
+  }
+  .kex-login__form-host form#login :is(h1, h2, h3, h4, h5, .h5) {
+    margin: 0 0 12px;
+    font-family: var(--kex-font-ui);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: var(--kex-sb-label);
+  }
+  .kex-login__form-host form#login :is(label, .form-label):not(.sr-only):not(.visually-hidden) {
+    display: block;
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--kex-sb-text-2);
+  }
+  .kex-login__form-host form#login :is(.form-group, .mb-3) {
+    margin-bottom: 14px;
+  }
+  .kex-login__form-host form#login :is(input[type="text"], input[type="password"], input[type="email"], .form-control) {
+    width: 100%;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid #3a2e62;
+    border-radius: var(--kex-r-m);
+    background: #1b1334;
+    color: #f2f1f8;
+    font-size: 16px;
+    box-shadow: none;
+    &::placeholder {
+      color: #8f89b3;
+    }
+    &:focus {
+      border-color: var(--kex-sb-focus);
+      outline: 2px solid var(--kex-sb-focus);
+      outline-offset: 0;
+      background: #1b1334;
+    }
+  }
+  .kex-login__form-host form#login .login-input-wrapper {
+    position: relative;
+  }
+  .kex-login__form-host form#login .login-input-icon {
+    display: none;
+  }
+  .kex-login__form-host form#login :is(button[type="submit"], .btn-primary) {
+    width: 100%;
+    height: 48px;
+    border: 1.5px solid #f7f6fa;
+    border-radius: var(--kex-r-s);
+    background: #f7f6fa;
+    color: #201055;
+    font-size: 17px;
+    font-weight: 600;
+    &:hover {
+      background: #fff;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kex-sb-focus);
+      outline-offset: 2px;
+    }
+  }
+  .kex-login__form-host form#login a {
+    color: var(--kex-sb-text-2);
+    text-decoration-color: rgba(255, 255, 255, 0.4);
+  }
+  .kex-login__form-host form#login .text-end {
+    text-align: left !important;
+    font-size: 14px;
+  }
+  .kex-login__form-host form#login .sr-only,
+  .kex-login__form-host form#login .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* TalTech's FAQ as a dark sheet over the panel */
+  .kex-login__sheet {
+    position: absolute;
+    z-index: 5;
+    inset: 12px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--kex-pop-border);
+    border-radius: var(--kex-r-xl);
+    background: var(--kex-pop-bg);
+    box-shadow: var(--kex-shadow-popover);
+    overflow: hidden;
+  }
+  .kex-login__sheet[hidden] {
+    display: none;
+  }
+  .kex-login__sheet-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--kex-r-s);
+    color: var(--kex-sb-text-2);
+    &:hover {
+      background: var(--kex-pop-hover);
+    }
+  }
+  .kex-login__sheet-body {
+    flex: 1;
+    overflow: auto;
+    padding: 20px 24px;
+  }
+  .kex-login__sheet-body #faq-container {
+    position: static;
+    display: block;
+    width: auto;
+    max-width: none;
+    height: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--kex-sb-text-2);
+    box-shadow: none;
+    transform: none;
+    opacity: 1;
+    visibility: visible;
+  }
+  .kex-login__sheet-body #faq-title {
+    margin: 0 0 16px;
+    font-family: var(--kex-font-hero);
+    font-size: 28px;
+    font-weight: 300;
+    color: #fff;
+  }
+  .kex-login__sheet-body #faq-close {
+    display: none;
+  }
+  .kex-login__sheet-body :is(.card, .card-header, .card-body) {
+    border: 0;
+    background: transparent;
+    color: inherit;
+  }
+  .kex-login__sheet-body .card {
+    border-bottom: 1px solid var(--kex-pop-border);
+    border-radius: 0;
+  }
+  .kex-login__sheet-body .btn-link {
+    color: #fff;
+    text-align: left;
+    white-space: normal;
+  }
+  .kex-login__sheet-body :is(h5, .h5) {
+    font-family: var(--kex-font-ui);
+    font-size: 16px;
+    color: #fff;
+  }
+  .kex-login__sheet-body a {
+    color: var(--kex-sb-focus);
+  }
+  .kex-login__sheet-body .collapse:not(.show) {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .kex-login {
+      grid-template-columns: 1fr;
+      grid-template-rows: 200px 1fr;
+    }
+    .kex-login__art-text {
+      left: 28px;
+      bottom: 24px;
+    }
+    .kex-login__title {
+      font-size: 48px;
+    }
+    .kex-login__panel {
+      padding: 24px 24px 24px;
+    }
+  }
+}
+
+/* The cookie notice (moved to the body): a dark toast at the bottom. Its buttons keep working. */
+:root[data-kex-view="login"] body > .eupopup-container {
+  position: fixed !important;
+  z-index: 60;
+  left: 24px !important;
+  bottom: 24px !important;
+  right: auto !important;
+  top: auto !important;
+  width: min(480px, calc(100vw - 48px)) !important;
+  padding: 16px 20px !important;
+  border: 1px solid var(--kex-pop-border) !important;
+  border-radius: var(--kex-r-xl) !important;
+  background: var(--kex-pop-bg) !important;
+  color: var(--kex-sb-text) !important;
+  box-shadow: var(--kex-shadow-popover) !important;
+  font-family: var(--kex-font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+}
+:root[data-kex-view="login"] body > .eupopup-container a {
+  color: var(--kex-sb-focus) !important;
+}
+:root[data-kex-view="login"] body > .eupopup-container :is(.eupopup-button, .btn) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: var(--kex-r-s);
+  background: #f7f6fa !important;
+  color: #201055 !important;
+  font-weight: 600;
+  text-decoration: none;
+}
+:root[data-kex-view="login"] body > .eupopup-container .eupopup-closebutton {
+  color: var(--kex-sb-text-2) !important;
+}

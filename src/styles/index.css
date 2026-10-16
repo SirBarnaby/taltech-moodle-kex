@@ -17,6 +17,7 @@
 @import "./views/workspace.css";
 @import "./views/pinned.css";
 @import "./views/mycourses.css";
+@import "./views/login.css";
 @import "./offpill.css";
 @import "./skin/base.css";
 @import "./skin/chrome.css";
@@ -26,3 +27,4 @@
 @import "./skin/mod-forum.css";
 @import "./skin/mod-quiz.css";
 @import "./skin/mod-resource.css";
+@import "./skin/errors.css";

@@ -233,7 +233,7 @@
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--kex-mono-soft);
+  color: var(--kex-mono);
   border-bottom-color: var(--kex-border) !important;
 }
 :root[data-kex="skin"] :is(.table, .generaltable) tbody tr:hover > * {
@@ -411,10 +411,34 @@
 }
 
 /* Dark theme: Moodle's loading skeletons, forum activity details and submit-icon buttons keep light fills otherwise. */
-:root[data-kex="skin"][data-kex-theme="dark"] :is(.bg-pulse-grey, .activity-details, .btn-submit.search-icon) {
+:root[data-kex="skin"][data-kex-theme="dark"] :is(.bg-pulse-grey, .btn-submit.search-icon) {
   background-color: var(--kex-hover) !important;
   color: var(--kex-text-2);
 }
 :root[data-kex="skin"][data-kex-theme="dark"] .bg-pulse-grey {
   background-color: var(--kex-tint) !important;
+}
+
+/* Moodle 5.3 renders the secondary navigation with React ("mds-nav-pill"); give it the same tab look as 4.5. */
+:root[data-kex="skin"] .secondarynav-tabbar {
+  background: transparent;
+}
+:root[data-kex="skin"] .mds-nav-pill {
+  background: transparent;
+  color: var(--kex-text-3);
+  border-radius: 8px;
+}
+:root[data-kex="skin"] .mds-nav-pill:is(:hover, :focus-visible) {
+  background: var(--kex-hover);
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] .mds-nav-pill--selected,
+:root[data-kex="skin"] .mds-nav-pill--selected .mds-nav-pill__label {
+  background: var(--kex-tint);
+  color: var(--kex-violet);
+}
+
+/* Inline code: Bootstrap's pink is too dim on the dark surface. */
+:root[data-kex="skin"][data-kex-theme="dark"] code {
+  color: #ff8fc2;
 }

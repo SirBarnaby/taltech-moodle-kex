@@ -126,7 +126,7 @@
   font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--kex-mono-soft);
+  color: var(--kex-mono);
 }
 :root[data-kex="skin"] .no-overflow img {
   max-width: 100%;

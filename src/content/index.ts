@@ -7,7 +7,7 @@ import { scrapeSummaries } from '../data/scrape/summaries';
 import { scrapeTiles } from '../data/scrape/tiles';
 import { setTileList } from '../actions/course';
 import { courseBindings, previewBindings } from '../actions/coursekeys';
-import { activityBindings, focusBindings } from '../actions/skinkeys';
+import { activityBindings, attachEditorFrameKeys, focusBindings } from '../actions/skinkeys';
 import { watchSkinPage } from '../actions/skin';
 import { chromeKeys } from '../state/skin';
 import { mycoursesBindings, pinnedBindings, workspaceBindings, workspacePreviewBindings } from '../actions/wskeys';
@@ -27,7 +27,8 @@ import {
   readBootMirror, toBootMirror, watchSettings, writeBootMirror, loadSettings, DEFAULT_SETTINGS, type Settings,
 } from '../lib/settings';
 import { applyShellAttrs, shellAttrs } from '../lib/theme';
-import { mountShell, unmountShell } from '../ui/mount';
+import { mountLogin, mountShell, unmountShell } from '../ui/mount';
+import { scrapeLogin } from '../data/scrape/login';
 import {
   coursesLoading, coursesRaw, hash as hashSig, hooks, logoSrc, pageInfo, resolvedMotion, resolvedTheme, route as routeSig, settings, sidebarCourses, sidebarMode,
   systemDark, ttLinks, user, userMenuItems, viewportWidth,
@@ -120,10 +121,19 @@ class Controller {
 
       const info = parsePageInfo({ doc: document, pathname: location.pathname, search: location.search });
       this.info = info;
-      if (info.isGuest || !info.sesskey) return this.settleOff(false);
 
       const base = resolveRoute({ path: stripBase(location.pathname, info.wwwroot), bodyId: body.id, bodyClasses: Array.from(body.classList) });
       const eff = effectiveMode(base, s.routeModes);
+      if (base.key === 'login') {
+        // The login page is a guest page: it has its own, shell-less view.
+        this.route = eff;
+        routeSig.value = eff;
+        pageInfo.value = info;
+        if (eff.effective === 'off') return this.settleOff(false, 'setting');
+        if (safeSessionStorage()?.getItem(offKey(eff.key)) === '1') return this.settleOff(s.showOffPill, 'manual');
+        return await this.mountLoginView(eff, info);
+      }
+      if (info.isGuest || !info.sesskey) return this.settleOff(false);
       this.route = eff;
       routeSig.value = eff;
       pageInfo.value = info;
@@ -155,6 +165,31 @@ class Controller {
         onAlways: reason === 'manual' ? () => this.alwaysOff() : undefined,
       });
     }
+  }
+
+  /** Login: wait for the finished page, then replace it with our view (Moodle's form and FAQ move into it). */
+  private async mountLoginView(eff: EffectiveRoute, info: PageInfo): Promise<void> {
+    await this.dcl;
+    this.syncAttrs();
+    const root = document.createElement('div');
+    root.id = 'kex-root';
+    root.lang = settings.value.uiLanguage;
+    document.body.insertBefore(root, document.body.firstChild);
+    this.root = root;
+    this.html.dataset.kexView = 'login';
+    const model = scrapeLogin(document);
+    // The cookie notice lives in #page-wrapper, which app mode hides: it becomes a toast on the body.
+    const notice = document.querySelector<HTMLElement>('.eupopup-container');
+    if (notice) document.body.appendChild(notice);
+    mountLogin(root, { model, loggedIn: !info.isGuest, continueHref: `${info.wwwroot}/my/` }, (e) => this.failOpen('login', e));
+    window.clearTimeout(this.failTimer);
+    this.mounted = true;
+    this.html.dataset.kexShell = 'ready';
+    setMode('app');
+    this.stops.push(() => {
+      delete this.html.dataset.kexView;
+    });
+    void eff;
   }
 
   private async mount(eff: EffectiveRoute): Promise<void> {
@@ -255,6 +290,7 @@ class Controller {
       const off = keyManager.register(focus ? focusBindings() : activityBindings());
       keyManager.setScope('activity', !focus && eff.key === 'activity');
       if (focus) keyManager.suspend(true);
+      else this.stops.push(attachEditorFrameKeys());
       this.stops.push(() => {
         off();
         keyManager.setScope('activity', false);

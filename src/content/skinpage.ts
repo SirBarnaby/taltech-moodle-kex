@@ -64,8 +64,12 @@ export function parseError(doc: Document): { code: string; message: string } | u
   const box = doc.querySelector('.errorbox, #notice, .box.errorbox, [data-rel="fatalerror"]');
   const maintenance = body?.classList.contains('pagelayout-maintenance');
   if (!box && !maintenance) return undefined;
-  const message = cleanText(box?.querySelector('.alert-danger, p, .errormessage') ?? box) || cleanText(doc.querySelector('#region-main h1, h1'));
-  const code = cleanText(box?.querySelector('.errorcode, .moreinfo, [data-errorcode]')) || (maintenance ? 'MAINTENANCE' : 'ERROR');
+  const msgEl = box?.querySelector('.errormessage') ?? box?.querySelector('p:not(.errorcode)') ?? box?.querySelector('.alert-danger');
+  const message = cleanText(msgEl ?? box).replace(/\s*More information about this error\s*$/i, '') || cleanText(doc.querySelector('#region-main h1, h1'));
+  // Moodle links "More information about this error" to docs.moodle.org/<ver>/error/<component>/<code>.
+  const href = box?.querySelector('.errorcode a, a[href*="/error/"]')?.getAttribute('href') ?? '';
+  const fromLink = /\/error\/[^/]+\/([^/?#]+)/.exec(href)?.[1];
+  const code = (fromLink ?? cleanText(box?.querySelector('[data-errorcode]'))) || (maintenance ? 'MAINTENANCE' : 'ERROR');
   return { code: code.slice(0, 48), message };
 }
 

@@ -1,0 +1,81 @@
+/* Grades overview (page-designs §8). */
+#kex-root {
+  .kex-grbar {
+    margin-top: 0;
+    align-items: flex-end;
+  }
+  .kex-grrows {
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .kex-gr {
+    position: relative;
+    height: 56px;
+    border-bottom: 1px solid var(--kex-border);
+    transition: background 120ms var(--kex-ease);
+    &:hover,
+    &:focus-within {
+      background: var(--kex-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kex-focus);
+      outline-offset: -2px;
+      border-radius: var(--kex-r-s);
+    }
+  }
+  .kex-gr__main {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr) 140px 24px;
+    align-items: center;
+    column-gap: 20px;
+    height: 100%;
+    padding: 0 10px 0 8px;
+    color: var(--kex-text);
+    text-decoration: none;
+    &:hover .kex-gr__name {
+      color: var(--kex-violet);
+    }
+    &:hover .kex-gr__arrow {
+      transform: translateX(3px);
+      color: var(--kex-violet);
+    }
+  }
+  .kex-gr__code {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--kex-mono);
+  }
+  .kex-gr__name {
+    font-size: 17px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 120ms var(--kex-ease);
+  }
+  .kex-gr__grade {
+    text-align: right;
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--kex-text);
+  }
+  .kex-gr--none .kex-gr__grade {
+    font-weight: 400;
+    color: var(--kex-text-3);
+  }
+  .kex-gr__arrow {
+    color: var(--kex-text-3);
+    transition: transform 160ms var(--kex-ease), color 120ms var(--kex-ease);
+  }
+}
+@media (max-width: 760px) {
+  #kex-root .kex-gr__main {
+    grid-template-columns: 72px minmax(0, 1fr) 76px;
+  }
+  #kex-root .kex-gr__arrow {
+    display: none;
+  }
+}

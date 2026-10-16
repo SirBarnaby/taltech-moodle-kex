@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+import { login, LAB } from '../test/harness/kex.ts';
+const [,, path, sel, out] = process.argv;
+const b = await chromium.launch();
+const ctx = await b.newContext();
+await login(ctx);
+const p = await ctx.newPage();
+await p.goto(LAB+path);
+const h = await p.evaluate((s)=>document.querySelector(s)?.outerHTML ?? 'NONE', sel);
+const fs = await import('node:fs'); fs.writeFileSync(out, h);
+console.log(h.length);
+await b.close();

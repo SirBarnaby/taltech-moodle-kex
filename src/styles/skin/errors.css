@@ -1,0 +1,62 @@
+/* Errors, notices and maintenance (page-designs §17) and the generic fallback (§18). */
+
+/* the Moodle message under the band is the detail text */
+:root[data-kex="skin"] :is(.errorbox, #notice, .box.errorbox) {
+  max-width: 1100px;
+  margin: 0 0 20px;
+  padding: 18px 22px;
+  border: 0;
+  border-left: 3px solid var(--kex-magenta);
+  border-radius: var(--kex-r-xs);
+  background: color-mix(in srgb, var(--kex-magenta) 8%, var(--kex-bg));
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .errorcode,
+:root[data-kex="skin"] .errorbox .moreinfo {
+  margin: 12px 0 0;
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+:root[data-kex="skin"] .errorcode a {
+  color: var(--kex-mono);
+}
+:root[data-kex="skin"] .continuebutton,
+:root[data-kex="skin"] #notice + .continuebutton {
+  text-align: left;
+  margin: 8px 0 24px;
+}
+:root[data-kex="skin"] .box.generalbox.info,
+:root[data-kex="skin"] .box.py-3.generalbox:has(> .singlebutton) {
+  max-width: 1100px;
+}
+:root[data-kex="skin"] .box.errorbox + .continuebutton {
+  margin-top: 0;
+}
+/* confirmation pages ("Are you sure you want to ...") */
+:root[data-kex="skin"] #region-main .box.generalbox.boxaligncenter.modal-dialog,
+:root[data-kex="skin"] #region-main .confirmation-dialogue {
+  max-width: 760px;
+  margin-left: 0;
+}
+:root[data-kex="skin"] .confirmation-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+/* generic fallback: page content simply sits in the shell at a readable width */
+:root[data-kex="skin"][data-kex-chrome="generic"] #region-main {
+  max-width: 1280px;
+}
+:root[data-kex="skin"][data-kex-chrome] #region-main .generaltable {
+  width: 100%;
+}
+:root[data-kex="skin"][data-kex-chrome] #region-main img {
+  max-width: 100%;
+  height: auto;
+}
+:root[data-kex="skin"] .no-overflow,
+:root[data-kex="skin"] .table-responsive {
+  scrollbar-width: thin;
+}

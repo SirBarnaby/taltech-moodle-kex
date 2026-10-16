@@ -82,7 +82,7 @@
   font-family: var(--kex-font-mono);
   font-size: 12px;
   letter-spacing: 0.02em;
-  color: var(--kex-mono-soft);
+  color: var(--kex-mono);
 }
 :root[data-kex="skin"] table.discussion-list .author-info a {
   text-decoration: none;
@@ -146,7 +146,7 @@
   font-family: var(--kex-font-mono);
   font-size: 12px;
   letter-spacing: 0.02em;
-  color: var(--kex-mono-soft);
+  color: var(--kex-mono);
 }
 :root[data-kex="skin"] :is(article.forum-post-container, [data-content="forum-post"]) :is(a[href*="/user/view.php"], a[href*="/user/profile.php"]) {
   font-weight: 600;

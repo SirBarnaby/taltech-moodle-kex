@@ -240,7 +240,7 @@ export function SkinChrome() {
       <div class="kex-chrome" data-kex-test="chrome" data-activity={activity ? 'true' : 'false'}>
         <Band
           label={label}
-          title={sp?.title ?? pageInfo.value?.heading ?? ''}
+          title={err ? err.message || sp?.title || '' : sp?.title ?? pageInfo.value?.heading ?? ''}
           size={activity ? 'activity' : 'page'}
           actions={err ? <ErrorActions /> : activity ? <ChromeActions /> : undefined}
           meta={activity ? <ChromeMeta /> : undefined}

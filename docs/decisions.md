@@ -202,3 +202,42 @@ can sit next to a release build.
   an "Õiguse alused" page in MMO5770 and "Kubernetes at the edge" in EMT0140. Lab 5 stays a draft (a realistic "not submitted yet").
   `tools/lab/m3_reset.php` makes every notification unread again; the updates spec runs it before and after.
 - `test/e2e-chromium/workspace.spec.ts` covers every M3 acceptance item; `test/unit/workspace.test.ts` the pure parts.
+
+## M4
+
+### Skin chrome and how pages are decorated
+- Skin routes `activity`, `grade-user` and `generic` get a `SkinChrome` band injected before `#page-content`; `#page-header` is hidden. The page
+  is read once by `parseSkinPage` (title, kicker, completion, dates, manual-completion button, resource target, error). The DOM is mutated only
+  by `decorateSkinPage` (wraps status texts into "pills", clones the book TOC, marks `.kex-bookgrid`); everything else is CSS under
+  `:root[data-kex="skin"]`. Moodle's forms, JS and links are never rebuilt.
+- Dates in the info card are shortened by `shortDate` (English and Estonian, 12 h -> 24 h). Unknown strings are left alone.
+- Prev/next bar and `[` / `]` use the course state order (`data/neighbours.ts`), including `format_tiles` sections; hidden and stealth cms are skipped.
+- URL activities show a card with the target host and "Open" (the redirect page is never auto-followed); file resources get a full-height viewer
+  with Download; embed/new-window resources fall back to the card.
+
+### Quiz focus mode
+- `quiz-focus` (attempt.php, summary.php) sets `data-kex-focus="true"`: the shell is hidden and key bindings are suspended (only Ctrl+Enter submit
+  and Alt+Shift+O stay). The navigation block is Moodle's own `#mod_quiz_navblock`; it lives in the blocks drawer, which Moodle clips when
+  closed (`clip-path`), so the drawer is forced open as a fixed right rail in focus mode and an absolute rail on review. The rail scrolls with the
+  page on review (Moodle's review layout has no fixed region).
+- The timer is a fixed pill (`#quiz-timer-wrapper`); `#quiz-timer` loses its border (it produced a red double frame).
+
+### Forms
+- Moodle forms are restyled only (`skin/forms.css`): 40 px controls, 2 px focus ring, mono caps labels for `fitemtitle`, filemanager and TinyMCE
+  frames. TinyMCE's interior stays light in dark mode (its iframe content is Moodle's; inverting it would change what the student submits).
+- `Ctrl+Enter` submits the main `form.mform` on activity pages (also from inside the TinyMCE iframe, which has its own document, via
+  `attachEditorFrameKeys`). It is active only on activity pages.
+
+### Errors and generic fallback
+- `parseError` detects `.errorbox`, `#notice`, maintenance and "Error" headings; the error code comes from the docs link (`/error/moodle/<code>`).
+  The band shows `ERROR / CODE` with Back, Workspace and Moodle's Continue. The generic fallback is the skin baseline plus the band, labelled by area.
+
+### Tests and checks
+- `test/e2e-chromium/activities.spec.ts`: the native flows (resource, url, page, assign upload + save, quiz start/answer/submit/review, forum reply),
+  Moodle console errors compared with KEX off, `Alt+Shift+O` on the quiz attempt, axe in both themes.
+- Axe is judged as "violations present with KEX on that are not present in plain Moodle on the same URL", so Moodle's own markup issues are not
+  charged to KEX. Fixes made for it: `mono` instead of `mono-soft` for small labels (4.36 -> 7+), pills mixed with `color-mix` against the surface,
+  `code` colour in dark, and the Moodle 5.3 React secondary nav (`mds-nav-pill`) which kept its light fills in dark.
+- `tools/lab/m4_seed.php` adds the book, folder, choice, resources, a quiz and forum posts; `tools/lab/m4_reset.php` resets the submission, the quiz
+  attempts and the e2e forum posts.
+- Selector coverage: `test/unit/skinpage.test.ts` runs the parsers over the capture pages (4.5 / BS4) and over lab-shaped markup (5.3 / BS5).
