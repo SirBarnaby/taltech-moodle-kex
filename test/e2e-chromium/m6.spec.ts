@@ -44,6 +44,7 @@ test.describe('keyboard-only walkthrough of the happy path', () => {
     await page.locator('[data-kex-topic].is-active, [data-kex-topic][aria-current="true"], [data-kex-topic]').first().focus();
     await page.keyboard.press('j');
     await page.keyboard.press('k');
+    await expect(page.locator('[data-kex-test="row-1"]')).toBeVisible(); // the topic switch re-renders the list: do not race it
     await page.keyboard.press('l'); // into the materials
     await page.keyboard.press('Space');
     await expect(page.locator('[data-kex-test="sheet"], .kex-sheet').first()).toBeVisible();
@@ -252,7 +253,7 @@ test.describe('performance', () => {
     test.setTimeout(90_000);
     await page.goto('/course/view.php?id=2#topic-6');
     await page.waitForSelector('.kex-hero__canvas[data-fx="running"]', { timeout: 20_000 }).catch(() => undefined);
-    await page.waitForTimeout(6000);
+    await page.waitForFunction(() => ((window as unknown as { __kexShaderMs?: number[] }).__kexShaderMs?.length ?? 0) >= 3, null, { timeout: 40_000 }).catch(() => undefined);
     const ms = await page.evaluate(() => (window as unknown as { __kexShaderMs?: number[] }).__kexShaderMs ?? []);
     const sorted = [...ms].sort((a, b) => a - b);
     const median = sorted[Math.floor(sorted.length / 2)] ?? -1;

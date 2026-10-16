@@ -293,3 +293,54 @@ can sit next to a release build.
   to `artifacts/pages/`; it also checks the `data-kex` mode of each route. Plain `npm run test:visual` still runs the geometry specs.
 - `tools/lab/m5_seed.php` awards two site badges (it generates the badge images with GD).
 - `test/unit/pages.test.ts` includes a selector report: every capture resolves to a route and a skin route yields a band title.
+
+## M5 verification and visual review
+
+- **Login wordmark.** The login panel always draws our own TAL TECH | moodle wordmark (inline, 900 weight, same proportions as the sidebar). Moodle's `<img>` logo is no
+  longer used: on the lab it 404s and on the real site we cannot rely on it. The empty dark strip under the brand was the cookie toast container (`.eupopup-container`)
+  with no content; it is hidden while empty, and the toast, when present, floats bottom-right.
+- **Date tiles.** Deadline tiles are `DateTile` (mono month over a 40 px day, then a weekday or `OVERDUE` line). Overdue is carried by colour and the word, never by colour alone.
+- **Screenshot review** (every route, light and dark, against iteration3): fixed the quiz summary and choice controls (drawn radios and checkboxes with a visible dark border,
+  flag toggle inverted properly), the quiz summary buttons, the forum discussion list columns, calendar pills (grid `minmax(0,1fr)` so long titles ellipsize), grade chevrons,
+  the dark message bubble, icon-only `.btn`s, the file manager, the empty activity header, the 15 px content offset next to the nav block, and a single global focus ring.
+- `scripts/test-visual.mjs` now waits for the React secondary nav (Moodle 5.x mounts it late), otherwise it screenshots an empty nav.
+- Web-ext lint: 0 errors, 3 warnings. All three are Preact's own `innerHTML` assignment in the bundled library (`dangerouslySetInnerHTML` support and `_hydrate`);
+  our code uses `replaceChildren`. Justified, not suppressible without patching the library.
+
+## M6
+
+### No flash
+- `src/content/probe.ts` (debug builds only) samples the first frames and writes `sessionStorage['kex.firstFrame']`: body visibility at the first frame, whether Moodle's navbar was
+  ever visible, and the number of frames until the shell settled. `smoke.mjs --only m6` asserts, on 11 routes in real Firefox, that the navbar is never seen and that the first
+  frame is either hidden or already KEX. Pass.
+- `?kex=off` was referenced by the course view's "Open in plain Moodle" link but not implemented. It now settles the page to the off mode with the pill; `turnOn()` clears the
+  one-shot so the pill's "Turn KEX on" works afterwards.
+
+### Reduced motion
+- The `prefers-reduced-motion` and `data-kex-motion="reduced"` rules had not covered pseudo-elements (`:where()` cannot contain them), the skin pages or the off pill. They now list
+  `*`, `*::before`, `*::after` explicitly for `#kex-root`, `:root[data-kex="skin"]` and `.kex-offpill`. Skin `[class*="kex-"]` animations run once. Verified on five pages: no running
+  animation or transition longer than 1 ms, the shader static.
+
+### Forced colors
+- Checked in Chromium with `forcedColors: 'active'` (workspace, course, forum, grades, notifications, login); screenshots in `artifacts/m6/forced-colors-*.png`. Text and the sidebar
+  stay readable and focus uses `Highlight`. Fix: `.kex-btn` had no border (a filled button is only a coloured box and vanished into the page); it now gets a 1 px (2 px for
+  filled) `ButtonText` border in forced colors. Remaining cosmetic: the sidebar's decorative icons render in GrayText, and text over the hero art sits on Canvas backplates (the browser's choice).
+
+### Performance
+- **Shader compile is asynchronous.** `RibbonsRenderer` compiles and links without reading the status, polls `COMPLETION_STATUS_KHR` when `KHR_parallel_shader_compile` exists (Firefox, Chrome on a
+  GPU) and otherwise links from `requestIdleCallback`. The hero shows its CSS fallback (`data-fx="fallback"`) until the program is ready, then `onReady` re-evaluates the mode. The offscreen
+  video-thumbnail renderer awaits `ready()` (before this it would have cached a blank image) and renders one thumbnail per task.
+- **What the test measures.** `m6.spec.ts` records `longtask` entries with KEX on and with a plain Moodle tab. SwiftShader (software GL, no parallel compile) spends 0.2-2 s linking and
+  running the shader the first time; a debug build records those spans (`window.__kexShaderCompileMs`) and the test subtracts them, because they are the driver and not our code.
+  The gate is relative: no task over 400 ms and less than 600 ms of long-task time beyond plain Moodle (Moodle's own cron shares the CPU in the lab, which makes 50 ms thresholds flaky).
+  Shader frame cost on SwiftShader at 1585x992 is under 5 ms per frame. That is an upper bound for a GPU; real numbers need real hardware.
+- **Bundle size.** The production build now minifies whitespace and syntax (not identifiers, so the code stays reviewable by AMO): `content.js` 353 KB (109 KB gzip), `kex.css` 148 KiB
+  (26 KB gzip), options 74 KB, popup 62 KB. The architecture budget of 300 KB was written for unminified `content.js`, which is about 500 KB; it was exceeded by the app views (Course,
+  Workspace, Grades, Notifications, Login), the Moodle skin DOM code and Preact. Accepted: it is parsed once per page from the extension package, not downloaded.
+- Console-parity test (`activities.spec.ts`) filters the "Page unloaded." and "Failed to fetch" messages that a navigation mid-request produces, waits 1.5 s, and has a 120 s timeout.
+
+### Packaging, coexistence
+- `npm run pack` makes `dist/packages/kex.xpi` (production build). `npm run sign` needs the owner's own AMO keys (`WEB_EXT_API_KEY`, `WEB_EXT_API_SECRET`) and cannot be run in the lab; the README
+  documents the unlisted-signing path.
+- Moodle Buddy coexistence was not tested: addons.mozilla.org is unreachable from the lab. Our content script touches only its own `data-kex` attribute, `#kex-root` and class names
+  prefixed `kex-` (and, in skin mode, a few classes on Moodle nodes), which is the part to check on a real profile with both add-ons installed.

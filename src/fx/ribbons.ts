@@ -195,7 +195,7 @@ export class RibbonsRenderer {
       this.drawn++;
       const w = window as unknown as { __kexShaderCompileMs?: number[] };
       (w.__kexShaderCompileMs ??= []).push(performance.now() - t);
-    } else if (DEBUG && ++this.drawn % 20 === 0) {
+    } else if (DEBUG && ++this.drawn % 5 === 0) {
       // Debug builds time a draw including gl.finish(): the frame cost in the architecture §22 budget (software GL in CI is far slower than a real GPU).
       const t = performance.now();
       gl.drawArrays(gl.TRIANGLES, 0, 3);
