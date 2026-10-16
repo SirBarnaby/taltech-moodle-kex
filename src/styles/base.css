@@ -106,15 +106,46 @@
   }
 }
 
+/* Reduced motion (system setting or KEX's own "Reduce" choice). Pseudo-elements are listed explicitly: they are not valid inside :where(). */
 @media (prefers-reduced-motion: reduce) {
-  #kex-root :where(*, *::before, *::after) {
+  #kex-root *,
+  #kex-root *::before,
+  #kex-root *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Skin pages (Moodle's own markup, our chrome) and the off pill sit outside #kex-root. */
+  :root[data-kex="skin"] *,
+  :root[data-kex="skin"] *::before,
+  :root[data-kex="skin"] *::after,
+  .kex-offpill *,
+  .kex-offpill *::before,
+  .kex-offpill *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  :root[data-kex="skin"] [class*="kex-"],
+  :root[data-kex="skin"] [class*="kex-"] * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
-:root[data-kex-motion="reduced"] #kex-root :where(*, *::before, *::after) {
+:root[data-kex-motion="reduced"] #kex-root *,
+:root[data-kex-motion="reduced"] #kex-root *::before,
+:root[data-kex-motion="reduced"] #kex-root *::after {
   animation-duration: 0.01ms !important;
   transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+:root[data-kex-motion="reduced"][data-kex="skin"] *,
+:root[data-kex-motion="reduced"][data-kex="skin"] *::before,
+:root[data-kex-motion="reduced"][data-kex="skin"] *::after,
+:root[data-kex-motion="reduced"] .kex-offpill *,
+:root[data-kex-motion="reduced"] .kex-offpill *::before,
+:root[data-kex-motion="reduced"] .kex-offpill *::after {
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 @media (forced-colors: active) {
@@ -129,5 +160,12 @@
   }
   #kex-root .kex-switch {
     border: 1px solid CanvasText;
+  }
+  /* A filled button is only a coloured box: the system drops the fill, so it needs an edge. */
+  #kex-root .kex-btn {
+    border: 1px solid ButtonText;
+  }
+  #kex-root .kex-btn--filled {
+    border: 2px solid ButtonText;
   }
 }

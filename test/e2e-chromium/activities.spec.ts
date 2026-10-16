@@ -29,11 +29,14 @@ function watch(page: Page): Seen {
   page.on('pageerror', (e) => {
     const msg = e.message.slice(0, 160);
     (/kex|content\.js/i.test(e.stack ?? '') ? seen.kex : seen.errors).push(`pageerror: ${msg}`);
+    if (process.env.KEX_DEBUG_PARITY) console.log('PAGEERROR', page.url(), msg);
   });
   page.on('console', (m) => {
     const text = m.text();
+    if (process.env.KEX_DEBUG_PARITY && m.type() === 'error') console.log('CONSOLE', page.url(), text.slice(0, 160), m.location().url);
     if (/\[KEX\]/.test(text) && (m.type() === 'error' || m.type() === 'warning')) seen.kex.push(text.slice(0, 200));
-    else if (m.type() === 'error') seen.errors.push(`console: ${text.replace(/https?:\/\/\S+/g, '<url>').slice(0, 160)}`);
+    // "Page unloaded." / "Failed to fetch" are Moodle logging its own AJAX calls cut off by our next navigation: timing noise, on or off.
+    else if (m.type() === 'error' && !/^(Page unloaded\.|TypeError: Failed to fetch)$/.test(text)) seen.errors.push(`console: ${text.replace(/https?:\/\/\S+/g, '<url>').slice(0, 160)}`);
   });
   return seen;
 }
@@ -205,16 +208,18 @@ test.describe('console parity', () => {
     '/mod/forum/view.php?id=34', `/mod/forum/discuss.php?d=${FORUM_DISCUSS}`, '/mod/folder/view.php?id=158', '/mod/book/view.php?id=159', '/mod/choice/view.php?id=160',
   ];
   test('KEX adds no console errors and removes none', async ({ page, context }) => {
+    test.setTimeout(120_000);
     const on = watch(page);
     const plain = await context.newPage();
     const off = watch(plain);
     for (const p of PAGES) {
       await page.goto(p);
       await ready(page);
-      await page.waitForTimeout(500);
+      // Navigating away while an AJAX call is in flight makes Moodle log "Page unloaded.": let both pages go quiet first.
+      await page.waitForTimeout(1500);
       await plain.goto(p);
       await plain.waitForLoadState('load');
-      await plain.waitForTimeout(500);
+      await plain.waitForTimeout(1500);
     }
     expect(on.kex, 'errors logged by KEX').toEqual([]);
     expect([...new Set(on.errors)].sort(), 'Moodle errors with KEX on equal those with KEX off').toEqual([...new Set(off.errors)].sort());

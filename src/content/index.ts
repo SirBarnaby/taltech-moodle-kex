@@ -27,6 +27,7 @@ import { SEL } from '../data/selectors';
 import { lang } from '../i18n';
 import { qs, safeSessionStorage } from '../lib/dom';
 import { DEBUG, recordError } from '../lib/log';
+import { startFirstFrameProbe } from './probe';
 import {
   readBootMirror, toBootMirror, watchSettings, writeBootMirror, loadSettings, DEFAULT_SETTINGS, type Settings,
 } from '../lib/settings';
@@ -111,6 +112,7 @@ class Controller {
     try {
       this.applyAttrs(readBootMirror());
       setMode('boot');
+      if (DEBUG) startFirstFrameProbe(this.html);
       window.clearTimeout(this.failTimer);
       this.failTimer = window.setTimeout(() => this.failOpen('timeout'), FAILSAFE_MS);
 
@@ -128,6 +130,13 @@ class Controller {
 
       const base = resolveRoute({ path: stripBase(location.pathname, info.wwwroot), bodyId: body.id, bodyClasses: Array.from(body.classList) });
       const eff = effectiveMode(base, s.routeModes);
+      // `?kex=off` opens plain Moodle once (used by the "Open in Moodle" links); the pill brings KEX back.
+      if (this.honourOffParam && new URLSearchParams(location.search).get('kex') === 'off') {
+        this.route = eff;
+        routeSig.value = eff;
+        pageInfo.value = info;
+        return this.settleOff(s.showOffPill, 'route');
+      }
       if (base.key === 'login') {
         // The login page is a guest page: it has its own, shell-less view.
         this.route = eff;
@@ -454,7 +463,11 @@ class Controller {
     if (getMode() === 'off' && this.route) this.turnOn();
   }
 
+  /** The `?kex=off` link only applies until the user turns KEX on. */
+  private honourOffParam = true;
+
   private turnOn(): void {
+    this.honourOffParam = false;
     if (this.route) safeSessionStorage()?.removeItem(offKey(this.route.key));
     hideOffPill();
     // A route that the user set to "off" permanently comes back on through the settings.

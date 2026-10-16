@@ -1,5 +1,5 @@
 // Firefox smoke test for the real extension (M0 + M1).
-//   node test/e2e-firefox/smoke.mjs [--variant dev|probe] [--only m0|m1|m3|failopen|cssonly]
+//   node test/e2e-firefox/smoke.mjs [--variant dev|probe] [--only m0|m1|m2|m3|m6|failopen|cssonly|prod]
 // Builds + packs the variant, installs it on the Selenium grid and asserts the acceptance checks.
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
@@ -16,7 +16,7 @@ const want = (g) => only === 'all' || only === g;
 
 const pack = (kind) => {
   execFileSync('node', ['scripts/pack.mjs', kind], { cwd: root, stdio: 'ignore' });
-  return path.join(root, 'dist/packages', { dev: 'kex-dev.xpi', probe: 'kex-mv3-probe.xpi', cssonly: 'kex-cssonly.xpi' }[kind]);
+  return path.join(root, 'dist/packages', { prod: 'kex.xpi', dev: 'kex-dev.xpi', probe: 'kex-mv3-probe.xpi', cssonly: 'kex-cssonly.xpi' }[kind]);
 };
 
 let failed = 0;
@@ -61,6 +61,7 @@ async function m0AndM1(kind) {
     if (want('m1')) await m1Checks(driver, r);
     if (want('m2')) await m2Checks(driver, r);
     if (want('m3')) await m3Checks(driver, r);
+    if (want('m6')) await m6Checks(driver, r);
   } finally {
     await driver.quit();
   }
@@ -227,6 +228,7 @@ async function cssOnly() {
 }
 
 try {
+  if (only === 'prod') await prodSmoke();
   if (only === 'all' || only === 'm0' || only === 'm1') await m0AndM1(variant);
   if (variant === 'dev' && (only === 'all' || only === 'failopen')) await failOpen();
   if (variant === 'dev' && (only === 'all' || only === 'cssonly')) await cssOnly();
@@ -316,4 +318,53 @@ async function m3Checks(driver, r) {
     await driver.actions().sendKeys(Key.ESCAPE).perform();
     return 'ok';
   });
+}
+
+/** M6: no flash of Moodle's own chrome. The debug build samples every frame from body creation until KEX settles
+ *  (src/content/probe.ts); the navbar must never be visible, and the first frame is either hidden by the gate or already KEX. */
+const NO_FLASH_PAGES = [
+  '/my/', '/my/courses.php', '/course/view.php?id=2', '/mod/forum/view.php?id=34', '/mod/resource/view.php?id=161',
+  '/mod/assign/view.php?id=154', '/grade/report/overview/index.php', '/message/output/popup/notifications.php',
+  '/user/profile.php', '/calendar/view.php?view=month', '/user/preferences.php',
+];
+async function m6Checks(driver, r) {
+  for (const p of NO_FLASH_PAGES) {
+    await r.check(`no flash: ${p}`, async () => {
+      await driver.get(`${LAB}${p}`);
+      const ff = await waitFor(driver, `(() => { try { const v = JSON.parse(sessionStorage.getItem('kex.firstFrame') || 'null'); return v && v.settled !== 'boot' ? v : null; } catch { return null; } })()`, 20000, 'kex.firstFrame');
+      if (ff.navbarSeen) throw new Error(`Moodle navbar visible in a frame: ${JSON.stringify(ff)}`);
+      const shell = await driver.executeScript(`return !!document.querySelector('#kex-root')`);
+      if (ff.first.bodyVisibility !== 'hidden' && !shell) throw new Error(`first frame neither gated nor KEX: ${JSON.stringify(ff)}`);
+      return `first body ${ff.first.bodyVisibility}, ${ff.frames} frames, settled ${ff.settled}`;
+    });
+  }
+  await r.check('?kex=off shows plain Moodle and the pill brings KEX back', async () => {
+    await driver.get(`${LAB}/my/?kex=off`);
+    await waitFor(driver, `document.documentElement.dataset.kex === 'off' && !!document.querySelector('#kex-offpill')`, 15000, 'off + pill');
+    await driver.executeScript(`document.querySelector('#kex-offpill .kex-offpill__main').click()`);
+    await waitFor(driver, `document.documentElement.dataset.kex === 'app'`, 15000, 'app mode after turning on');
+    return 'ok';
+  });
+}
+
+/** The release build (kex.xpi, minified, no debug hooks) mounts the shell and survives a reload and a few page types. */
+async function prodSmoke() {
+  const r = createReporter('firefox prod build');
+  console.log('\n== prod build (kex.xpi) ==');
+  const driver = await openFirefox(pack('prod'));
+  try {
+    await login(driver);
+    for (const p of ['/my/', '/course/view.php?id=2', '/mod/forum/view.php?id=34', '/grade/report/overview/index.php']) {
+      await r.check(`prod: ${p} mounts the KEX shell`, async () => {
+        await driver.get(`${LAB}${p}`);
+        await waitFor(driver, `['app','skin'].includes(document.documentElement.dataset.kex) && !!document.querySelector('#kex-root .kex-sb')`, 25000, 'shell');
+        const dbg = await driver.executeScript(`return document.documentElement.dataset.kexTransport ?? null`);
+        if (dbg !== null) throw new Error('debug attributes present in the release build');
+        return 'ok';
+      });
+    }
+  } finally {
+    await driver.quit();
+  }
+  failed += r.summary();
 }

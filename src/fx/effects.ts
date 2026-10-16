@@ -55,6 +55,7 @@ class EffectsController {
         entry.forcedFallback = true;
         this.evaluate(entry);
       },
+      onReady: () => this.evaluate(entry),
     });
     renderer.onGiveUp = () => {
       entry.forcedFallback = false;
@@ -117,6 +118,13 @@ class EffectsController {
     const r = e.renderer;
     if (!r || e.forcedFallback || this.cfg.effects === 'off') {
       r?.stop();
+      this.mark(e, 'fallback');
+      this.setMode(e, 'fallback');
+      return;
+    }
+    if (r.isPending) {
+      // Still compiling: keep the CSS fallback showing; `onReady` runs this again.
+      r.stop();
       this.mark(e, 'fallback');
       this.setMode(e, 'fallback');
       return;

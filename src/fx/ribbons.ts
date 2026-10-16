@@ -1,4 +1,5 @@
 import FRAG from './ribbons.glsl';
+import { DEBUG } from '../lib/log';
 
 /** WebGL2 ribbons renderer (architecture §14, design-spec §9). One full-screen triangle, all work in the fragment shader. */
 
@@ -16,6 +17,8 @@ export interface RibbonsOptions {
   window?: [number, number, number, number];
   /** Called when the context is lost or cannot be created, so the caller can show the CSS fallback. */
   onFallback?: (reason: 'unsupported' | 'lost') => void;
+  /** Called once the shader program is compiled and linked (asynchronously after construction). */
+  onReady?: () => void;
 }
 
 export function webgl2Supported(): boolean {
@@ -40,8 +43,13 @@ export class RibbonsRenderer {
   private pointerTarget: [number, number] = [0, 0];
   private scale = 1;
   private frameTimes: number[] = [];
+  private drawn = 0;
   private last = 0;
   private lost = false;
+  private disposed = false;
+  private waiters: Array<(ok: boolean) => void> = [];
+  /** True from linkProgram until the driver has finished: nothing can be drawn yet. */
+  private pending = false;
   /** Called with `'static'` when adaptive quality gives up. */
   public onGiveUp?: () => void;
 
@@ -57,9 +65,26 @@ export class RibbonsRenderer {
     return !!this.gl && !this.lost;
   }
 
+  /** Resolves true once the program is linked (false when it could not be, or the context was lost). */
+  ready(): Promise<boolean> {
+    if (!this.gl || this.lost) return Promise.resolve(false);
+    if (!this.pending) return Promise.resolve(true);
+    return new Promise((res) => this.waiters.push(res));
+  }
+
+  private settle(ok: boolean): void {
+    this.waiters.splice(0).forEach((r) => r(ok));
+  }
+
+  /** The program is still compiling: the caller shows its fallback until `onReady`. */
+  get isPending(): boolean {
+    return this.pending;
+  }
+
   private onLost = (e: Event): void => {
     e.preventDefault();
     this.lost = true;
+    this.settle(false);
     this.stop();
     this.opts.onFallback?.('lost');
   };
@@ -70,15 +95,13 @@ export class RibbonsRenderer {
       this.opts.onFallback?.('unsupported');
       return;
     }
+    // Compile and link without asking for the result: reading COMPILE_STATUS / LINK_STATUS blocks the main thread until the driver is done
+    // (seconds on software GL). With KHR_parallel_shader_compile the page stays responsive and the hero shows its CSS fallback meanwhile.
     const compile = (type: number, src: string): WebGLShader | null => {
       const s = gl.createShader(type);
       if (!s) return null;
       gl.shaderSource(s, src);
       gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-        console.warn('[KEX] shader compile failed', gl.getShaderInfoLog(s));
-        return null;
-      }
       return s;
     };
     const vs = compile(gl.VERTEX_SHADER, VERT);
@@ -91,16 +114,45 @@ export class RibbonsRenderer {
     gl.attachShader(prog, vs);
     gl.attachShader(prog, fs);
     gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-      console.warn('[KEX] shader link failed', gl.getProgramInfoLog(prog));
-      this.opts.onFallback?.('unsupported');
-      return;
-    }
-    gl.useProgram(prog);
-    for (const n of ['uRes', 'uTime', 'uPointer', 'uIntensity', 'uLeftFade', 'uSeed', 'uWin']) this.loc[n] = gl.getUniformLocation(prog, n);
     this.gl = gl;
     this.prog = prog;
-    this.resize();
+    this.pending = true;
+    const ext = gl.getExtension('KHR_parallel_shader_compile');
+    const finish = (): void => {
+      if (this.disposed || this.lost) return;
+      if (ext && !gl.getProgramParameter(prog, ext.COMPLETION_STATUS_KHR)) {
+        setTimeout(finish, 16);
+        return;
+      }
+      const tLink = DEBUG ? performance.now() : 0;
+      const linked = gl.getProgramParameter(prog, gl.LINK_STATUS);
+      if (DEBUG) {
+        // The blocking part when the driver has no parallel compile (software GL): lets the perf test attribute the long task.
+        const w = window as unknown as { __kexShaderCompileMs?: number[] };
+        (w.__kexShaderCompileMs ??= []).push(performance.now() - tLink);
+      }
+      if (!linked) {
+        console.warn('[KEX] shader link failed', gl.getShaderInfoLog(fs), gl.getProgramInfoLog(prog));
+        this.pending = false;
+        this.gl = null;
+        this.prog = null;
+        this.settle(false);
+        this.opts.onFallback?.('unsupported');
+        return;
+      }
+      gl.deleteShader(vs);
+      gl.deleteShader(fs);
+      gl.useProgram(prog);
+      for (const n of ['uRes', 'uTime', 'uPointer', 'uIntensity', 'uLeftFade', 'uSeed', 'uWin']) this.loc[n] = gl.getUniformLocation(prog, n);
+      this.pending = false;
+      this.resize();
+      this.settle(true);
+      this.opts.onReady?.();
+    };
+    // Without the extension the blocking read happens after the first paint instead of inside the caller's task.
+    if (ext) setTimeout(finish, 0);
+    else if (typeof requestIdleCallback === 'function') requestIdleCallback(finish, { timeout: 1500 });
+    else setTimeout(finish, 50);
   }
 
   /** Match the canvas backing store to its CSS size (DPR capped at 1.5, times the adaptive scale). */
@@ -125,7 +177,7 @@ export class RibbonsRenderer {
 
   private draw(time: number): void {
     const gl = this.gl;
-    if (!gl || this.lost) return;
+    if (!gl || this.lost || this.pending) return;
     this.resize();
     gl.uniform2f(this.loc.uRes ?? null, this.canvas.width, this.canvas.height);
     gl.uniform1f(this.loc.uTime ?? null, time);
@@ -135,7 +187,24 @@ export class RibbonsRenderer {
     gl.uniform1f(this.loc.uSeed ?? null, (this.opts.seed ?? 0) * 0.37);
     const w = this.opts.window ?? [0, 0, 1339, 253];
     gl.uniform4f(this.loc.uWin ?? null, w[0], w[1], w[2], w[3]);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (DEBUG && this.drawn === 0) {
+      // Software GL compiles the shader to native code on the first draw: counted with the link time (see finish()).
+      const t = performance.now();
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.finish();
+      this.drawn++;
+      const w = window as unknown as { __kexShaderCompileMs?: number[] };
+      (w.__kexShaderCompileMs ??= []).push(performance.now() - t);
+    } else if (DEBUG && ++this.drawn % 20 === 0) {
+      // Debug builds time a draw including gl.finish(): the frame cost in the architecture §22 budget (software GL in CI is far slower than a real GPU).
+      const t = performance.now();
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.finish();
+      const w = window as unknown as { __kexShaderMs?: number[] };
+      (w.__kexShaderMs ??= []).push(performance.now() - t);
+    } else {
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
   }
 
   /** One frame at a fixed time (reduced motion, effects "static", tests). */
@@ -145,7 +214,7 @@ export class RibbonsRenderer {
   }
 
   start(): void {
-    if (this.running || !this.gl || this.lost) return;
+    if (this.running || !this.gl || this.lost || this.pending) return;
     this.running = true;
     this.t0 = performance.now() - this.tFrozen * 1000;
     this.last = 0;
@@ -196,6 +265,8 @@ export class RibbonsRenderer {
   }
 
   dispose(): void {
+    this.disposed = true;
+    this.settle(false);
     this.stop();
     this.canvas.removeEventListener('webglcontextlost', this.onLost);
     const gl = this.gl;

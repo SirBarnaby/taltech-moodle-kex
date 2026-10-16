@@ -133,7 +133,7 @@ export function LoginView({ model, loggedIn, continueHref }: LoginViewProps) {
 
   // Focus the first thing a keyboard user needs.
   useEffect(() => {
-    const el = document.querySelector<HTMLElement>(loggedIn ? '[data-kex-test="login-continue"]' : '[data-kex-test="login-idp"][data-primary="true"], #kex-root form#login input');
+    const el = document.querySelector<HTMLElement>(loggedIn ? '[data-kex-test="login-continue"]' : '[data-kex-test="login-idp"][data-primary="true"], #kex-root form#login input:not([type="hidden"]):not([disabled])');
     el?.focus({ preventScroll: true });
   }, [loggedIn]);
 

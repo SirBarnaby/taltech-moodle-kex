@@ -70,7 +70,9 @@ const common = {
   target: 'firefox140',
   jsx: 'automatic',
   jsxImportSource: 'preact',
-  minify: false,
+  // Release builds drop whitespace and dead syntax but keep identifiers readable (unlisted signing needs no source review).
+  minifyWhitespace: !dev,
+  minifySyntax: !dev,
   sourcemap: dev ? 'inline' : false,
   legalComments: 'none',
   logLevel: 'info',
