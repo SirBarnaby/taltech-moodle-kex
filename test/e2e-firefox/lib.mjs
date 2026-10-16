@@ -84,3 +84,24 @@ export function createReporter(name) {
     },
   };
 }
+
+/**
+ * Page-side audit for dark mode: large Moodle surfaces that still paint a light background (the white secondary-navigation card,
+ * white table rows, white activity headers). Our own shell, buttons, inputs, avatars and images are not Moodle's surfaces.
+ * Returns `tag.class` descriptions, deduplicated; empty means clean.
+ */
+export const LIGHT_SURFACES_JS = `
+  const out = new Set();
+  const lum = (c) => { const m = c.match(/rgba?\\(([^)]+)\\)/); if (!m) return null; const [r, g, b, a = 1] = m[1].split(/[ ,\\/]+/).filter(Boolean).map(Number); if (a < 0.5) return null; return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
+  for (const e of document.querySelectorAll('body *')) {
+    if (e.closest('#kex-root, .kex-offpill, script, style, svg, img, canvas, .btn, .userinitials, .badge, input, select, textarea, button, .progress, .fp-thumbnail, .moodle-dialogue-base .yui3-widget-mask')) continue;
+    const r = e.getBoundingClientRect();
+    if (r.width * r.height < 6000 || r.bottom < 0 || r.top > innerHeight) continue;
+    const c = getComputedStyle(e);
+    if (c.display === 'none' || c.visibility === 'hidden') continue;
+    const l = lum(c.backgroundColor);
+    if (l !== null && l > 0.8) out.add(e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + [...e.classList].slice(0, 3).map((x) => '.' + x).join(''));
+  }
+  return [...out];`;
+
+export const lightSurfaces = (driver) => driver.executeScript(LIGHT_SURFACES_JS);

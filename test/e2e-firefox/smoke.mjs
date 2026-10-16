@@ -1,9 +1,10 @@
 // Firefox smoke test for the real extension (M0 + M1).
-//   node test/e2e-firefox/smoke.mjs [--variant dev|probe] [--only m0|m1|m2|m3|m6|failopen|cssonly|prod]
+//   node test/e2e-firefox/smoke.mjs [--variant dev|probe] [--only m0|m1|m2|m3|m6|failopen|cssonly|prod|lab45]
+// `lab45` runs against the Moodle 4.5 lab (:8081, Bootstrap 4 markup, language et): guest header, skin surfaces in dark mode, House Rules, subsections.
 // Builds + packs the variant, installs it on the Selenium grid and asserts the acceptance checks.
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
-import { By, Key, LAB, createReporter, login, openFirefox, root, sleep, waitFor } from './lib.mjs';
+import { ADMIN, By, Key, LAB, LAB45, STUDENT, createReporter, lightSurfaces, login, openFirefox, root, sleep, waitFor } from './lib.mjs';
 
 const argv = process.argv.slice(2);
 const arg = (name, def) => {
@@ -232,7 +233,115 @@ async function cssOnly() {
   failed += r.summary();
 }
 
+/**
+ * The Moodle 4.5 lab (Bootstrap 4, like the real moodle.taltech.ee) with the Estonian pack: the signed-out header and login button,
+ * Moodle's own menus and navigation in dark mode, and the 4.5-only course shapes (a renamed section 0, mod_subsection).
+ */
+async function lab45() {
+  const r = createReporter('firefox Moodle 4.5 lab');
+  console.log('\n== Moodle 4.5 lab (Bootstrap 4, et) ==');
+  let driver = await openFirefox(pack('dev'), { scheme: 'dark', lang: 'et, en' });
+  const sql = (q) => execFileSync('docker', ['exec', 'moodle-lab-45-postgres-1', 'psql', '-U', 'moodle', '-d', 'moodle', '-Atc', q], { encoding: 'utf8' }).trim();
+  const cid = (code) => sql(`select id from mdl_course where shortname='${code}'`);
+  const forum = sql(`select cm.id from mdl_course_modules cm join mdl_modules m on m.id=cm.module where m.name='forum' and cm.visible=1 order by cm.id limit 1`);
+  try {
+    await r.check('guest front page: skin with the guest header, a styled login button, Moodle navbar hidden', async () => {
+      await driver.get(`${LAB45}/`);
+      await waitFor(driver, `document.documentElement.dataset.kexGuest === '1' && !!document.querySelector('[data-kex-test=guest-login]')`, 20000, 'guest header');
+      const d = await driver.executeScript(`
+        const a = document.querySelector('[data-kex-test=guest-login]'); const c = getComputedStyle(a); const b = a.getBoundingClientRect();
+        const nb = document.querySelector('nav.navbar.fixed-top');
+        return { mode: document.documentElement.dataset.kex, theme: document.documentElement.dataset.kexTheme, href: a.getAttribute('href'), text: a.textContent.trim(), bg: c.backgroundColor, h: Math.round(b.height), w: Math.round(b.width), nb: nb ? getComputedStyle(nb).display : 'absent', lang: document.documentElement.lang };`);
+      if (d.mode !== 'skin' || d.theme !== 'dark') throw new Error(JSON.stringify(d));
+      if (!/login\/index\.php/.test(d.href) || !d.text) throw new Error(`login link ${JSON.stringify(d)}`);
+      if (d.bg === 'rgba(0, 0, 0, 0)' || d.h < 36 || d.w < 80) throw new Error(`login button not styled ${JSON.stringify(d)}`);
+      if (d.nb !== 'none' && d.nb !== 'absent') throw new Error(`Moodle navbar still ${d.nb}`);
+      return JSON.stringify(d);
+    });
+    await r.check('guest header: the language menu lists Moodle\'s languages and the theme toggle flips the theme', async () => {
+      await driver.executeScript(`document.querySelector('[data-kex-test=guest-lang]').click()`);
+      const items = await waitFor(driver, `(() => { const l = [...document.querySelectorAll('.kex-guest__menu a')].map(a => a.textContent.trim()); return l.length >= 2 ? l : null; })()`, 5000, 'language menu');
+      await driver.executeScript(`document.querySelector('[data-kex-test=guest-theme]').click()`);
+      const t = await waitFor(driver, `document.documentElement.dataset.kexTheme === 'light' ? 'light' : null`, 5000, 'theme flip');
+      await driver.executeScript(`document.querySelector('[data-kex-test=guest-theme]').click()`);
+      return `${items.join(' / ')}; ${t}`;
+    });
+    await r.check('guest password-reset page keeps the guest header', async () => {
+      await driver.get(`${LAB45}/login/forgot_password.php`);
+      return waitFor(driver, `document.documentElement.dataset.kexGuest === '1' && !!document.querySelector('.kex-guest') ? 'ok' : null`, 20000, 'guest header');
+    });
+
+    await login(driver, STUDENT, LAB45);
+    await r.check('4.5: shell mounts, Moodle navbar hidden, page language et', async () => {
+      await waitFor(driver, `document.documentElement.dataset.kexShell === 'ready' && !!document.querySelector('[data-kex-test=sidebar]')`, 25000, 'shell');
+      const lang = await driver.executeScript(`return document.documentElement.lang`);
+      if (lang !== 'et') throw new Error(`lang ${lang}`);
+      return lang;
+    });
+
+    for (const p of [`/mod/forum/view.php?id=${forum}`, '/user/preferences.php', '/calendar/view.php?view=month']) {
+      await driver.get(`${LAB45}${p}`);
+      await waitFor(driver, `document.documentElement.dataset.kex === 'skin'`, 25000, 'skin');
+      await sleep(2000);
+      await r.check(`dark ${p}: no light Moodle surface`, async () => {
+        const bad = await lightSurfaces(driver);
+        if (bad.length) throw new Error(bad.join(', '));
+        return 'clean';
+      });
+    }
+
+    await driver.get(`${LAB45}/course/view.php?id=${cid('ITB8833')}`);
+    await r.check('ITB8833: section 0 renamed "House Rules" is the first topic', async () => {
+      await waitFor(driver, `!!document.querySelector('[data-kex-test=course]') && document.querySelectorAll('.kex-topiclist li, [data-kex-topic]').length > 1`, 30000, 'course view');
+      const d = await driver.executeScript(`return { has: document.querySelector('[data-kex-test=course]').textContent.includes('House Rules'), first: (document.querySelector('[data-kex-topic]') || {}).textContent }`);
+      if (!d.has) throw new Error(JSON.stringify(d));
+      return (d.first ?? '').trim().slice(0, 60);
+    });
+    await driver.get(`${LAB45}/course/view.php?id=${cid('SUB0001')}#topic-1`);
+    await r.check('SUB0001: the mod_subsection renders as a nested group card with its activities', async () => {
+      await waitFor(driver, `document.querySelectorAll('.kex-groupcard').length >= 1`, 30000, 'subsection card');
+      const n = await driver.executeScript(`return document.querySelectorAll('.kex-groupcard .kex-row, .kex-groupcard li').length`);
+      if (n < 1) throw new Error('subsection card without rows');
+      return `${n} rows`;
+    });
+    // The teacher-only controls (More menu, tertiary selector, Enrol users) need a second browser, signed in as the admin.
+    await driver.quit();
+    driver = await openFirefox(pack('dev'), { scheme: 'dark', lang: 'et, en' });
+    await login(driver, ADMIN, LAB45);
+    await driver.get(`${LAB45}/user/index.php?id=${cid('ITI8801')}`);
+    await waitFor(driver, `document.documentElement.dataset.kex === 'skin' && !!document.querySelector('.secondary-navigation')`, 25000, 'participants skin');
+    await sleep(2500);
+    await r.check('dark participants page: no light Moodle surface (secondary navigation, table rows)', async () => {
+      const bad = await lightSurfaces(driver);
+      if (bad.length) throw new Error(bad.join(', '));
+      return 'clean';
+    });
+    await r.check('secondary navigation: the More menu opens as a dark popover', async () => {
+      const opened = await driver.executeScript(`
+        const t = [...document.querySelectorAll('.secondary-navigation .dropdown-toggle')].find((e) => e.getBoundingClientRect().width > 0);
+        if (!t) return 'no toggle'; t.click(); return 'clicked';`);
+      if (opened !== 'clicked') throw new Error(opened);
+      const d = await waitFor(driver, `(() => { const m = document.querySelector('.secondary-navigation .dropdown-menu.show'); if (!m || !m.getBoundingClientRect().height) return null; const c = getComputedStyle(m); return { bg: c.backgroundColor, n: m.querySelectorAll('.dropdown-item').length, color: getComputedStyle(m.querySelector('.dropdown-item')).color }; })()`, 5000, 'open menu');
+      const lum = (c) => { const [r, g, b] = c.match(/\d+/g).map(Number); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
+      if (lum(d.bg) > 0.3 || lum(d.color) < 0.6 || d.n < 2) throw new Error(JSON.stringify(d));
+      return JSON.stringify(d);
+    });
+    await r.check('tertiary navigation selector ("Enrolled users") is readable on the dark surface', async () => {
+      const c = await driver.executeScript(`const t = document.querySelector('.tertiary-navigation .dropdown-toggle'); return t ? getComputedStyle(t).color : null`);
+      if (!c) throw new Error('no selector');
+      const [r, g, b] = c.match(/\d+/g).map(Number);
+      if ((0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.6) throw new Error(c);
+      return c;
+    });
+
+  } finally {
+    await driver.quit();
+  }
+  failed += r.summary();
+}
+
 try {
+  if (only === 'lab45' || only === 'all') await lab45();
   if (only === 'prod') await prodSmoke();
   if (only === 'all' || only === 'm0' || only === 'm1') await m0AndM1(variant);
   if (variant === 'dev' && (only === 'all' || only === 'failopen')) await failOpen();
