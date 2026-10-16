@@ -104,3 +104,18 @@ export function setManualDone(cmid: number, done: boolean): void {
   next.set(cmid, { ...d, manual: { done } });
   cmDetails.value = next;
 }
+
+/** Seed details parsed from the page's own markup (no request); never overwrites fresher details. */
+export function seedDetails(courseId: number, parsed: readonly { id: number; modname: string; details: CmDetails }[]): void {
+  const next = new Map(cmDetails.value);
+  const ids: number[] = [];
+  for (const p of parsed) {
+    if (p.modname === 'subsection') continue;
+    if (isFresh(next.get(p.id))) continue;
+    next.set(p.id, p.details);
+    ids.push(p.id);
+  }
+  if (!ids.length) return;
+  cmDetails.value = next;
+  persist(courseId, ids);
+}

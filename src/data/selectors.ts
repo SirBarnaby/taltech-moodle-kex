@@ -14,6 +14,7 @@ export const SEL = {
   cmDescription: ['.activity-altcontent .no-overflow, .activity-description .no-overflow, .contentafterlink'],
   cmAvailability: ['.availabilityinfo, [data-region="availabilityinfo"]'],
   cmResourceDetails: ['.resourcelinkdetails'],
+  secondaryNav: ['.secondary-navigation li[data-key]', 'nav.moremenu li[data-key]'],
   tile: ['ul.tiles li.tile[data-true-sectionid]'],
   sectionSummary: ['[data-for="sectioninfo"] .summarytext, .summarytext'],
   breadcrumb: ['#page-navbar ol.breadcrumb li'],

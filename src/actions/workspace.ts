@@ -3,6 +3,7 @@ import { classifyFormat, classifyKind } from '../data/classify';
 import { cmDetails, setManualDone } from '../data/repo/cmdetails';
 import { countsStore } from '../data/repo/counts';
 import { eventsStore } from '../data/repo/events';
+import { humanModname, modTypeNames } from '../data/repo/modnames';
 import { markAllRead, markRead, notifsStore } from '../data/repo/notifs';
 import { isPinned, readPins } from '../data/repo/pins';
 import { recentStore, type RecentItem } from '../data/repo/recent';
@@ -108,7 +109,7 @@ function rowFrom(c: { cmid: number; courseId: number; title: string; modname: st
       id: c.cmid, courseId: c.courseId, sectionId: 0, sectionNumber: 0, name: c.title, modname: c.modname, url: c.url,
       uservisible: true, restricted: false, tracked: false,
     },
-    kind, format, title: c.title, label: monoLabel(kind, format), verb: verbFor(kind), locked: false, incomplete: false, inTab: true, provisional: false,
+    kind, format, title: c.title, label: monoLabel(kind, format), verb: verbFor(kind), locked: false, incomplete: false, typeName: modTypeNames.value.get(c.modname) ?? humanModname(c.modname), provisional: false,
   };
 }
 

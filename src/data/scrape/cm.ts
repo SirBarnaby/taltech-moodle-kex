@@ -24,6 +24,22 @@ export function modnameOf(li: Element): string {
   return m?.[1] ?? '';
 }
 
+/** Words an icon alt appends to the module name ("Page icon", "Lehekülg ikoon"). */
+const ICON_WORD_RE = /\s+(?:icon|ikoon|ikon)$/i;
+
+/**
+ * Moodle's own, localised module name of a rendered activity: the `.accesshide` type text next to the name
+ * ("URL", "Fail"), else the module icon's alt (tiles format) without its trailing "icon" word.
+ */
+export function typeNameOf(li: Element): string | undefined {
+  const hidden = li.querySelector('.instancename .accesshide, .instancename .sr-only, .instancename .visually-hidden');
+  const fromHidden = (hidden?.textContent ?? '').replace(/\s+/g, ' ').trim();
+  if (fromHidden) return fromHidden;
+  const alt = (li.querySelector('img.activityicon')?.getAttribute('alt') ?? '').replace(/\s+/g, ' ').trim();
+  const fromAlt = alt.replace(ICON_WORD_RE, '').trim();
+  return fromAlt || undefined;
+}
+
 function datesOf(li: Element): { label: string; text: string }[] {
   const out: { label: string; text: string }[] = [];
   const items = qsa<HTMLElement>(li, SEL.cmDates);
@@ -58,6 +74,7 @@ export function parseCmItem(li: Element): ParsedCm | null {
   const details: CmDetails = {
     iconKey: icon,
     format,
+    typeName: typeNameOf(li),
     badge: badge || undefined,
     dates: datesOf(li),
     descriptionHtml: descEl ? sanitizeHtml(descEl.innerHTML) || undefined : undefined,

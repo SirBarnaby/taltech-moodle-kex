@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  classifyFormat, classifyKind, countsAsResource, firstSentence, inTab, iconFileType, kindWord, monoLabel, splitName, subtitleFor, topicSubtitle, verbFor,
+  classifyFormat, classifyKind, countsAsResource, firstSentence, iconFileType, kindWord, monoLabel, splitName, subtitleFor, topicSubtitle, verbFor,
 } from '../../src/data/classify';
 import type { Format, Kind } from '../../src/data/model';
 
@@ -105,15 +105,6 @@ describe('classify: helpers', () => {
     expect(iconFileType('http://x/theme/image.php/boost/core/1/f/pdf?filtericon=1')).toBe('pdf');
     expect(iconFileType('/f/powerpoint-24')).toBe('powerpoint');
     expect(iconFileType('url/monologo')).toBeUndefined();
-  });
-  it('maps kinds to tabs', () => {
-    expect(inTab('lecture', 'lectures')).toBe(true);
-    expect(inTab('recording', 'lectures')).toBe(true);
-    expect(inTab('practical', 'lectures')).toBe(false);
-    expect(inTab('assignment', 'labs')).toBe(true);
-    expect(inTab('quiz', 'labs')).toBe(true);
-    expect(inTab('discussion', 'labs')).toBe(false);
-    expect(inTab('discussion', 'all')).toBe(true);
   });
   it('builds the mono label', () => {
     expect(monoLabel('lecture', 'PDF')).toBe('LECTURE / PDF');

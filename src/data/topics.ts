@@ -1,9 +1,10 @@
-import { classifyFormat, classifyKind, countsAsResource, inTab, monoLabel, splitName, subtitleFor, topicSubtitle, verbFor, type TabKey, type Verb } from './classify';
+import { classifyFormat, classifyKind, countsAsResource, splitName, subtitleFor, topicSubtitle, verbFor, type Verb } from './classify';
 import type { Cm, CmDetails, Format, Kind, Section } from './model';
-import { cmsOfSection, topicSections, type CourseState, type SectionCm } from './repo/coursestate';
+import { cmsOfSection, itemsOfSection, topicNumberOfCm, topicSections, type CourseState, type SectionCm } from './repo/coursestate';
+import { humanModname } from './repo/modnames';
 import type { CmEvent } from './repo/courseevents';
 import { isRecentUi, type CourseUi } from './repo/ui';
-import { htmlToText } from '../lib/sanitize';
+import { htmlToText, sanitizeHtml } from '../lib/sanitize';
 
 /** View models for the course page: topics, rows, labels, the initial-topic rule (happy-path §3.3, §6). */
 
@@ -13,8 +14,10 @@ export interface RowModel {
   format: Format;
   title: string;
   subtitle?: string;
-  /** "LECTURE / PDF" */
+  /** Eyebrow: Moodle's own module name ("FILE"), plus the due text for assignments and quizzes. */
   label: string;
+  /** Moodle's localised module name ("File", "Fail"). */
+  typeName: string;
   verb: Verb;
   locked: boolean;
   availability?: string;
@@ -24,8 +27,6 @@ export interface RowModel {
   manual?: { done: boolean };
   /** Tracked and not complete. */
   incomplete: boolean;
-  /** Matches the active tab. */
-  inTab: boolean;
   /** Due/close text from the calendar event or the activity dates. */
   dueText?: string;
   overdue?: boolean;
@@ -44,8 +45,8 @@ export interface TopicModel {
   restricted: boolean;
   /** The title is only a date range (weeks format): the UI shows "Week N" and keeps the range as a caption. */
   isRange: boolean;
-  /** At least one row matches the active tab. */
-  matches: boolean;
+  /** Section 0, shown first under Moodle's own title for it. */
+  isIntro: boolean;
   tile?: string;
   cmIds: number[];
 }
@@ -60,100 +61,150 @@ export const isDateRange = (title: string): boolean => RANGE_RE.test(title);
 
 const DUE_LABEL_RE = /due|close|closes|deadline|tähtaeg|sulgub|esita/i;
 
-/** "Due Thu 15 Oct" from an event, formatted by the caller-provided formatter. */
+/** The due date of an event as "Thu 15 Oct", formatted by the caller; Moodle's own date label is preferred when the activity details are known. */
 export function dueTextFromEvent(e: CmEvent, fmt: (ts: number) => string): string {
-  if (e.overdue) return 'Overdue';
-  return `${e.modulename === 'quiz' ? 'Closes' : 'Due'} ${fmt(e.due)}`;
+  return fmt(e.due);
 }
 
 const SHORT_DATE_RE = /(\p{L}{2,})\.?,?\s+(\d{1,2})\.?\s+(\p{L}{3,})/u;
 const cap3 = (w: string): string => w.slice(0, 3).replace(/^./u, (c) => c.toUpperCase());
 
-/** "Due Thu 10 Sep" from Moodle's own date text ("Due: Thursday, 10 September 2026, 5:38 PM"); the raw text when it has another shape. */
+/** "Due Thu 10 Sep" from Moodle's own date line ("Due: Thursday, 10 September 2026, 5:38 PM"), keeping Moodle's label; the raw text when it has another shape. */
 export function dueTextFromDates(dates: CmDetails['dates'] | undefined): string | undefined {
   const d = dates?.find((x) => DUE_LABEL_RE.test(x.label));
   if (!d) return undefined;
+  const label = d.label.replace(/:\s*$/, '');
   const m = SHORT_DATE_RE.exec(d.text);
   if (!m) return d.text;
-  const word = /close|sulgub/i.test(d.label) ? 'Closes' : 'Due';
-  return `${word} ${cap3(m[1] ?? '')} ${m[2] ?? ''} ${cap3(m[3] ?? '')}`;
+  return [label, `${cap3(m[1] ?? '')} ${m[2] ?? ''} ${cap3(m[3] ?? '')}`].filter(Boolean).join(' ');
 }
 
-export function buildRows(
-  state: CourseState,
-  section: Section,
-  details: ReadonlyMap<number, CmDetails>,
-  events: ReadonlyMap<number, CmEvent>,
-  tab: TabKey,
-  fmtDue: (ts: number) => string,
-): RowModel[] {
+export interface RowContext {
+  state: CourseState;
+  details: ReadonlyMap<number, CmDetails>;
+  events: ReadonlyMap<number, CmEvent>;
+  fmtDue: (ts: number) => string;
+  /** Moodle's localised module names by modname (core_get_strings), used when a cm has no scraped type text. */
+  typeNames?: ReadonlyMap<string, string>;
+}
+
+/** "FILE" or "ASSIGNMENT / TÄHTAEG NE 15 OKT": Moodle's module name, plus the due text for deadlines. Nothing invented. */
+export function eyebrow(typeName: string, status?: string): string {
+  return (status ? `${typeName} / ${status}` : typeName).toUpperCase();
+}
+
+function rowFor(cm: SectionCm, sectionTitle: string, ctx: RowContext): RowModel {
+  const d = ctx.details.get(cm.id);
+  const input = { modname: cm.modname, name: cm.name, iconKey: d?.iconKey, sectionTitle };
+  const kind = classifyKind(input);
+  const format = d?.format ?? classifyFormat(input, kind);
+  const ev = ctx.events.get(cm.id);
+  const { title, prefix } = splitName(cm.name);
+  const dueText = dueTextFromDates(d?.dates) ?? (ev ? dueTextFromEvent(ev, ctx.fmtDue) : undefined);
+  const isDeadline = kind === 'assignment' || kind === 'quiz';
+  // The server state (get_state, revalidated on every load) wins over a cached rendering of the toggle.
+  const manual = d?.manual ? { done: cm.completion === undefined ? d.manual.done : cm.completion !== 0 } : undefined;
+  const incomplete = cm.tracked && (manual ? !manual.done : cm.completion === 0);
+  const typeName = d?.typeName ?? ctx.typeNames?.get(cm.modname) ?? humanModname(cm.modname);
+  return {
+    cm,
+    kind,
+    format,
+    title: kind === 'note' ? cm.name : title,
+    subtitle: kind === 'note' ? undefined : subtitleFor({
+      prefix,
+      dueText: isDeadline ? dueText : undefined,
+      resourceDetails: d?.resourceDetails,
+      descriptionText: d?.descriptionHtml ? htmlToText(d.descriptionHtml) : undefined,
+    }),
+    typeName,
+    label: eyebrow(typeName, isDeadline ? dueText : undefined),
+    verb: verbFor(kind, { assignOpen: !!ev && !ev.overdue && ev.actionable !== false }),
+    locked: cm.restricted && !cm.uservisible,
+    availability: d?.availability,
+    noteHtml: kind === 'note' ? d?.descriptionHtml : undefined,
+    manual,
+    incomplete,
+    dueText,
+    overdue: ev?.overdue,
+    due: ev?.due,
+    group: cm.group,
+    provisional: !d,
+  };
+}
+
+/** A subsection shown as a titled group card inside its parent topic. */
+export interface GroupModel {
+  section: Section;
+  title: string;
+  /** Sanitized Moodle HTML of the subsection's own summary. */
+  summaryHtml?: string;
+  tile?: string;
+  rows: RowModel[];
+  /** Tracked activities, and how many of them are complete. */
+  total: number;
+  done: number;
+}
+
+export type BlockModel = { type: 'row'; row: RowModel } | { type: 'group'; group: GroupModel };
+
+export interface SectionView {
+  /** What the detail pane renders, in order. */
+  blocks: BlockModel[];
+  /** Every row (subsection rows included) in display order, for keyboard navigation and prefetching. */
+  rows: RowModel[];
+}
+
+export interface ViewOptions {
+  /** Sanitized summary HTML by section id. */
+  summaries?: ReadonlyMap<number, string>;
+  tiles?: ReadonlyMap<number, string>;
+}
+
+export function buildSectionView(section: Section, ctx: RowContext, opts: ViewOptions = {}): SectionView {
+  const blocks: BlockModel[] = [];
   const rows: RowModel[] = [];
-  for (const cm of cmsOfSection(state, section)) {
-    const d = details.get(cm.id);
-    const input = { modname: cm.modname, name: cm.name, iconKey: d?.iconKey, sectionTitle: section.title };
-    const kind = classifyKind(input);
-    const format = d?.format ?? classifyFormat(input, kind);
-    const ev = events.get(cm.id);
-    const { title, prefix } = splitName(cm.name);
-    const dueText = ev ? dueTextFromEvent(ev, fmtDue) : dueTextFromDates(d?.dates);
-    const isDeadline = kind === 'assignment' || kind === 'quiz';
-    // The server state (get_state, revalidated on every load) wins over a cached rendering of the toggle.
-    const manual = d?.manual ? { done: cm.completion === undefined ? d.manual.done : cm.completion !== 0 } : undefined;
-    const incomplete = cm.tracked && (manual ? !manual.done : cm.completion === 0);
-    rows.push({
-      cm,
-      kind,
-      format,
-      title: kind === 'note' ? cm.name : title,
-      subtitle: kind === 'note' ? undefined : subtitleFor({
-        prefix,
-        dueText: isDeadline ? dueText : undefined,
-        resourceDetails: d?.resourceDetails,
-        descriptionText: d?.descriptionHtml ? htmlToText(d.descriptionHtml) : undefined,
-      }),
-      label: monoLabel(kind, format, isDeadline ? dueText : undefined),
-      verb: verbFor(kind, { assignOpen: !!ev && !ev.overdue && ev.actionable !== false }),
-      locked: cm.restricted && !cm.uservisible,
-      availability: d?.availability,
-      noteHtml: kind === 'note' ? d?.descriptionHtml : undefined,
-      manual,
-      incomplete,
-      inTab: inTab(kind, tab),
-      dueText,
-      overdue: ev?.overdue,
-      due: ev?.due,
-      group: cm.group,
-      provisional: !d,
+  for (const item of itemsOfSection(ctx.state, section)) {
+    if (item.type === 'cm') {
+      const row = rowFor(item.cm, section.title, ctx);
+      blocks.push({ type: 'row', row });
+      rows.push(row);
+      continue;
+    }
+    const groupRows = item.cms.map((cm) => rowFor(cm, item.section.title || item.cm.name, ctx));
+    const tracked = groupRows.filter((r) => r.kind !== 'note' && r.cm.tracked);
+    blocks.push({
+      type: 'group',
+      group: {
+        section: item.section,
+        title: item.section.title || item.cm.name,
+        summaryHtml: opts.summaries?.get(item.section.id) || (item.section.summaryHtml ? sanitizeHtml(item.section.summaryHtml) : undefined),
+        tile: opts.tiles?.get(item.section.id) ?? item.section.tileImage,
+        rows: groupRows,
+        total: tracked.length,
+        done: tracked.filter((r) => !r.incomplete).length,
+      },
     });
+    rows.push(...groupRows);
   }
-  return rows;
+  return { blocks, rows };
 }
 
-/** Notes never count; they are not shown in the Lectures/Labs tabs either. */
-export function visibleRows(rows: readonly RowModel[], tab: TabKey): RowModel[] {
-  return rows.filter((r) => (tab === 'all' ? true : r.kind !== 'note' && r.inTab));
+/** The flat rows of a section (subsections expanded in place). */
+export function buildRows(state: CourseState, section: Section, details: ReadonlyMap<number, CmDetails>, events: ReadonlyMap<number, CmEvent>, fmtDue: (ts: number) => string, typeNames?: ReadonlyMap<string, string>): RowModel[] {
+  return buildSectionView(section, { state, details, events, fmtDue, typeNames }).rows;
 }
 
-export function buildTopics(
-  state: CourseState,
-  details: ReadonlyMap<number, CmDetails>,
-  tab: TabKey,
-  tiles: ReadonlyMap<number, string>,
-): TopicModel[] {
+export function buildTopics(state: CourseState, tiles: ReadonlyMap<number, string>): TopicModel[] {
   return topicSections(state).map((section) => {
     const cms = cmsOfSection(state, section);
-    const matches = tab === 'all' || cms.some((cm) => {
-      const d = details.get(cm.id);
-      const kind = classifyKind({ modname: cm.modname, name: cm.name, iconKey: d?.iconKey, sectionTitle: section.title });
-      return kind !== 'note' && inTab(kind, tab);
-    });
     return {
       section,
       number: pad2(section.number),
       title: section.title || `Topic ${section.number}`,
       restricted: section.restricted && cms.length === 0,
-      isRange: isDateRange(section.title),
-      matches,
+      isRange: section.number > 0 && isDateRange(section.title),
+      isIntro: section.number === 0,
       tile: tiles.get(section.id) ?? section.tileImage,
       cmIds: cms.map((c) => c.id),
     };
@@ -203,7 +254,8 @@ export function initialTopic(i: InitialInput): number | undefined {
   if (current) return current.section.number;
   if (has(i.deadlineTopic)) return i.deadlineTopic;
   if (has(i.incompleteTopic)) return i.incompleteTopic;
-  return i.topics[0]?.section.number;
+  // Section 0 leads the list, but the course opens on its first numbered topic.
+  return (i.topics.find((t) => t.section.number > 0) ?? i.topics[0])?.section.number;
 }
 
 /** (d) the topic of the nearest not-yet-overdue event. */
@@ -211,7 +263,8 @@ export function deadlineTopic(state: CourseState, events: readonly CmEvent[], no
   const upcoming = events.filter((e) => !e.overdue && e.due >= now).sort((a, b) => a.due - b.due);
   for (const e of upcoming) {
     const cm = state.cms.find((c) => c.id === e.cmid);
-    if (cm && cm.sectionNumber > 0) return cm.sectionNumber;
+    const n = cm ? topicNumberOfCm(state, cm) : undefined;
+    if (n !== undefined) return n;
   }
   return undefined;
 }

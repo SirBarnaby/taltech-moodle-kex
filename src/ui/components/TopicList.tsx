@@ -28,7 +28,7 @@ export function TopicList({ topics, active, onSelect, onKeyDown }: TopicListProp
           return (
             <li key={tp.section.id}>
               <a
-                class={`kex-topic${isActive ? ' kex-topic--active' : ''}${tp.matches ? '' : ' kex-topic--dim'}${tp.restricted ? ' kex-topic--locked' : ''}`}
+                class={`kex-topic${isActive ? ' kex-topic--active' : ''}${tp.restricted ? ' kex-topic--locked' : ''}`}
                 href={`#topic-${tp.section.number}`}
                 data-kex-topic={tp.section.number}
                 data-kex-test={`topics-row-${i + 1}`}

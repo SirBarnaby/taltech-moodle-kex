@@ -184,6 +184,15 @@
     height: 51px;
     gap: 0;
   }
+  .kex-coursenav {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  a.kex-tab {
+    text-decoration: none;
+    white-space: nowrap;
+  }
   .kex-tab {
     position: relative;
     padding: 5px 23px 0;
@@ -325,10 +334,6 @@
     transform: translateX(-4px);
     transition: opacity 140ms var(--kex-ease), transform 140ms var(--kex-ease);
   }
-  .kex-topic--dim .kex-topic__num,
-  .kex-topic--dim .kex-topic__title {
-    opacity: 0.45;
-  }
   .kex-topic--locked .kex-topic__title {
     opacity: 0.6;
   }
@@ -415,34 +420,20 @@
     font-size: 14px;
     color: var(--kex-text-3);
   }
-  .kex-detail__tile {
-    flex: none;
+  .kex-detail__banner {
+    display: block;
+    width: 100%;
+    max-width: 960px;
+    height: auto;
+    max-height: 220px;
+    aspect-ratio: 16 / 5;
+    margin: 0 0 16px;
     border-radius: var(--kex-r-m);
     object-fit: cover;
-    width: 160px;
-    height: 100px;
-  }
-  .kex-about {
-    margin-top: 12px;
-    summary {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-      line-height: 18px;
-      color: var(--kex-actions);
-      cursor: pointer;
-      list-style: none;
-      &::-webkit-details-marker {
-        display: none;
-      }
-    }
-    &[open] summary svg {
-      transform: rotate(180deg);
-    }
+    background: var(--kex-border);
   }
   .kex-detail__summary {
-    max-width: 720px;
+    max-width: 960px;
     margin-top: 12px;
     font-size: 16px;
     line-height: 24px;
@@ -453,14 +444,25 @@
       text-underline-offset: 3px;
     }
     img {
-      max-height: 240px;
-      width: auto;
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 8px 0;
+      border-radius: var(--kex-r-s);
     }
     p {
       margin: 0 0 8px;
     }
+    ul,
+    ol {
+      margin: 0 0 8px;
+      padding-left: 22px;
+      list-style: revert;
+    }
+    li {
+      margin: 0 0 4px;
+    }
   }
-
   /* ---- rows ---- */
   .kex-rows {
     margin-top: 12px;
@@ -524,8 +526,10 @@
     line-height: 24px;
     color: var(--kex-text-3);
     img {
-      max-height: 120px;
-      width: auto;
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: var(--kex-r-s);
     }
     a {
       color: var(--kex-violet);
@@ -831,5 +835,71 @@
   .kex-pinned__box--edit {
     outline: 1px dashed var(--kex-accent);
     outline-offset: 3px;
+  }
+
+  /* ---- subsection group cards (Moodle 4.5 mod_subsection) ---- */
+  .kex-group {
+    list-style: none;
+    margin: 18px 0;
+  }
+  .kex-groupcard {
+    padding: 4px 24px 6px;
+    border: 1px solid var(--kex-border-card, var(--kex-border));
+    border-radius: var(--kex-r-m);
+  }
+  .kex-groupcard__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 0 4px;
+  }
+  .kex-groupcard__title {
+    margin: 0;
+    font-family: var(--kex-font-display);
+    font-size: 24px;
+    line-height: 30px;
+    font-weight: 560;
+    letter-spacing: -0.02em;
+    color: var(--kex-text);
+  }
+  .kex-groupcard__progress {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--kex-mono-strong);
+  }
+  .kex-groupcard__bar {
+    display: block;
+    width: 72px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--kex-border);
+    overflow: hidden;
+    > span {
+      display: block;
+      height: 100%;
+      background: var(--kex-accent);
+    }
+  }
+  .kex-groupcard__summary {
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+  .kex-groupcard__rows {
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+    .kex-row {
+      margin-left: -12px;
+      margin-right: -12px;
+    }
+    .kex-row::after {
+      left: 12px;
+      right: 12px;
+    }
   }
 }

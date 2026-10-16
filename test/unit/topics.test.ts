@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildRows, buildTopics, deadlineTopic, dueTextFromDates, incompleteTopic, initialTopic, isDateRange, pad2, parseTopicHash, primaryIndex, resourceCount, subtitleForRows, visibleRows } from '../../src/data/topics';
+import { buildRows, buildTopics, deadlineTopic, dueTextFromDates, incompleteTopic, initialTopic, isDateRange, pad2, parseTopicHash, primaryIndex, resourceCount, subtitleForRows } from '../../src/data/topics';
 import { cmsOfSection, normalizeState, topicSections } from '../../src/data/repo/coursestate';
 import { previewFromHtml, downloadUrl, domainOf } from '../../src/data/repo/preview';
 import { buildSlideUp, splitGraphemes, splitWords, staggerDelay } from '../../src/fx/slideup';
@@ -39,8 +39,8 @@ describe('normalizeState', () => {
     expect(state.cms.find((c) => c.id === 22)?.tracked).toBe(false);
     expect(state.sections.find((s) => s.number === 10)).toMatchObject({ component: 'mod_subsection', itemid: 300 });
   });
-  it('topics exclude section 0, hidden sections and delegated subsections', () => {
-    expect(topicSections(state).map((s) => s.number)).toEqual([1, 6, 7, 8]);
+  it('topics lead with section 0 (it holds an activity), then visible sections; hidden and delegated ones are out', () => {
+    expect(topicSections(state).map((s) => s.number)).toEqual([0, 1, 6, 7, 8]);
   });
   it('a subsection cm expands into its own cms, flagged with the group; invisible cms drop out', () => {
     const six = state.sections.find((s) => s.number === 6)!;
@@ -54,19 +54,25 @@ describe('normalizeState', () => {
 describe('topic model', () => {
   const fmt = (ts: number): string => `ts${ts}`;
   const six = state.sections.find((s) => s.number === 6)!;
-  const rows = buildRows(state, six, new Map(), new Map(), 'all', fmt);
+  const rows = buildRows(state, six, new Map(), new Map(), fmt);
   it('classifies rows, splits "Practice 6: …" and builds the mono label', () => {
     const byId = Object.fromEntries(rows.map((r) => [r.cm.id, r]));
     expect(byId[21]).toMatchObject({ kind: 'lecture', title: 'Kubernetes — lecture slides', provisional: true });
     expect(byId[153]).toMatchObject({ kind: 'practical', title: 'Deploy a service', subtitle: 'Practice 6' });
     expect(byId[22]?.kind).toBe('recording');
-    expect(byId[22]?.label).toBe('RECORDING / VIDEO');
-    expect(byId[21]?.label).toBe('LECTURE / FILE');
+    // The eyebrow is Moodle's module name (here the plugin-name fallback), never an invented kind word.
+    expect(byId[22]?.label).toBe('URL');
+    expect(byId[21]?.label).toBe('RESOURCE');
   });
-  it('tabs filter rows; primary button is the first incomplete tracked row', () => {
-    const labs = buildRows(state, six, new Map(), new Map(), 'labs', fmt);
-    expect(visibleRows(labs, 'labs').map((r) => r.cm.id)).toEqual([153]);
-    expect(visibleRows(rows, 'all')).toHaveLength(4);
+  it('the eyebrow uses Moodle\'s localised module name: scraped type text first, then core_get_strings', () => {
+    const d = new Map([[21, { iconKey: '', format: 'PDF', typeName: 'Fail', dates: [], at: 1 } as never]]);
+    const names = new Map([['url', 'Veebilink']]);
+    const r = buildRows(state, six, d, new Map(), fmt, names);
+    expect(r.find((x) => x.cm.id === 21)?.label).toBe('FAIL');
+    expect(r.find((x) => x.cm.id === 22)?.label).toBe('VEEBILINK');
+  });
+  it('primary button is the first incomplete tracked row', () => {
+    expect(rows).toHaveLength(4);
     expect(primaryIndex(rows)).toBe(0);
     expect(resourceCount(rows)).toBe(4);
   });
@@ -77,18 +83,17 @@ describe('topic model', () => {
     const st2 = normalizeState(2, { ...raw, cm: [...raw.cm, { id: 400, name: 'Lab 6: Report', module: 'assign', sectionid: 16, sectionnumber: 6, uservisible: true }], section: raw.section.map((s) => (s.number === 6 ? { ...s, cmlist: [...s.cmlist, '400'] } : s)) } as never);
     const sec = st2.sections.find((s) => s.number === 6)!;
     const ev = new Map<number, CmEvent>([[400, { cmid: 400, due: 1_800_000_000, overdue: false, modulename: 'assign', actionable: true } as CmEvent]]);
-    const row = buildRows(st2, sec, new Map(), ev, 'all', fmt).find((r) => r.cm.id === 400)!;
-    expect(row).toMatchObject({ kind: 'assignment', verb: 'submit', dueText: 'Due ts1800000000', subtitle: 'Lab 6' });
-    expect(row.label).toBe('ASSIGNMENT / DUE TS1800000000');
-    const late = buildRows(st2, sec, new Map(), new Map([[400, { cmid: 400, due: 5, overdue: true, modulename: 'assign' } as CmEvent]]), 'all', fmt).find((r) => r.cm.id === 400)!;
+    const row = buildRows(st2, sec, new Map(), ev, fmt).find((r) => r.cm.id === 400)!;
+    expect(row).toMatchObject({ kind: 'assignment', verb: 'submit', dueText: 'ts1800000000', subtitle: 'Lab 6' });
+    expect(row.label).toBe('ASSIGN / TS1800000000');
+    const late = buildRows(st2, sec, new Map(), new Map([[400, { cmid: 400, due: 5, overdue: true, modulename: 'assign' } as CmEvent]]), fmt).find((r) => r.cm.id === 400)!;
     expect(late).toMatchObject({ verb: 'open', overdue: true });
   });
-  it('topics: dimmed when nothing matches the tab, week ranges recognised', () => {
-    const tps = buildTopics(state, new Map(), 'labs', new Map());
-    expect(tps.find((t) => t.section.number === 6)?.matches).toBe(true);
-    expect(tps.find((t) => t.section.number === 7)?.matches).toBe(false);
+  it('topics: week ranges recognised, section 0 flagged as the intro', () => {
+    const tps = buildTopics(state, new Map());
     expect(tps.find((t) => t.section.number === 8)?.isRange).toBe(true);
-    expect(tps.find((t) => t.section.number === 6)).toMatchObject({ number: '06', isRange: false });
+    expect(tps.find((t) => t.section.number === 6)).toMatchObject({ number: '06', isRange: false, isIntro: false });
+    expect(tps[0]).toMatchObject({ number: '00', isIntro: true, title: 'General' });
   });
   it('isDateRange', () => {
     expect(isDateRange('12 October - 18 October')).toBe(true);
@@ -105,7 +110,7 @@ describe('topic model', () => {
 });
 
 describe('initial topic rules (happy-path §3.3)', () => {
-  const topics = buildTopics(state, new Map(), 'all', new Map());
+  const topics = buildTopics(state, new Map());
   const recent = Date.now();
   it('URL wins, then recent memory, then the current section, then deadline, incomplete, first', () => {
     expect(initialTopic({ topics, fromUrl: 7 })).toBe(7);
@@ -181,7 +186,7 @@ describe('due text from Moodle dates', () => {
     expect(dueTextFromDates([{ label: 'Closes:', text: 'Monday, 14 September 2026, 4:38 AM' }])).toBe('Closes Mon 14 Sep');
   });
   it('handles Estonian dates and unknown shapes', () => {
-    expect(dueTextFromDates([{ label: 'Tähtaeg:', text: 'neljapäev, 10. september 2026, 17:38' }])).toBe('Due Nel 10 Sep');
+    expect(dueTextFromDates([{ label: 'Tähtaeg:', text: 'neljapäev, 10. september 2026, 17:38' }])).toBe('Tähtaeg Nel 10 Sep');
     expect(dueTextFromDates([{ label: 'Due:', text: 'tomorrow' }])).toBe('tomorrow');
     expect(dueTextFromDates([{ label: 'Opened:', text: 'Monday, 1 June 2026' }])).toBeUndefined();
     expect(dueTextFromDates(undefined)).toBeUndefined();

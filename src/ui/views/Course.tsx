@@ -1,32 +1,25 @@
-import { ChevronDown } from 'lucide-preact';
 import { useEffect, useRef } from 'preact/hooks';
-import { courseCode, closePreview, initCourse, openCm, previewCm, retryCourse, setTab, setTopic, showInfo, togglePin, toggleDone } from '../../actions/course';
-import { go, homeUrl } from '../../actions/navigate';
-import { classifyKind, type TabKey } from '../../data/classify';
+import { courseCode, closePreview, initCourse, openCm, previewCm, retryCourse, setTopic, togglePin, toggleDone } from '../../actions/course';
 import { seasonLabel, splitTitle } from '../../data/names';
 import { pinsStore, isPinned } from '../../data/repo/pins';
-import { cmsOfSection, section0 } from '../../data/repo/coursestate';
-import { primaryIndex, resourceCount, subtitleForRows, type RowModel } from '../../data/topics';
-import { RECORDING_RE } from '../../data/classify';
+import { pad2, primaryIndex, resourceCount, type RowModel } from '../../data/topics';
 import { t } from '../../i18n';
 import { sanitizeHtml } from '../../lib/sanitize';
 import { activeCourseId, headerTitle, pageInfo, sidebarCourses } from '../../state';
 import {
-  allRows, courseError, courseState, courseStatus, focusZone, infoOpen, pinnedRow, previewCmId, rows, selectedCmId, summaries, tab, topicNumber, topics, currentTopic,
+  courseError, courseState, courseStatus, focusZone, mergedSummaries, pinnedRow, previewCmId, rows, sectionView, secondaryNav, selectedCmId, topicNumber, topics, currentTopic,
 } from '../../state/course';
 import { Button } from '../components/Button';
+import { CourseNav } from '../components/CourseNav';
 import { useEffectsConfig, useQuietFocus } from '../components/hooks';
-import { Hero, type HeroLink } from '../components/Hero';
+import { Hero } from '../components/Hero';
 import { PinnedRow } from '../components/PinnedRow';
 import { PreviewSheet } from '../components/PreviewSheet';
 import { ResourceRow } from '../components/ResourceRow';
 import { SlideUpText } from '../components/SlideUpText';
 import { EmptyState, RowSkeleton, TopicSkeleton } from '../components/States';
-import { Tabs } from '../components/Tabs';
+import { SubsectionCard } from '../components/SubsectionCard';
 import { TopicList, topicDisplayTitle } from '../components/TopicList';
-import { pad2 } from '../../data/topics';
-
-const FALLBACK_TITLE_RE = /^(?:general|üldine)$/i;
 
 function useCourseInit(): void {
   const id = activeCourseId.value;
@@ -67,7 +60,7 @@ function useCompactTitle(code: string, courseName: string, topicLabel: { chip: s
       io.disconnect();
       headerTitle.value = null;
     };
-  }, [courseState.value === undefined, infoOpen.value, topicNumber.value]);
+  }, [courseState.value === undefined, topicNumber.value]);
   useEffect(() => syncRef.current(), [code, courseName, topicLabel?.chip, topicLabel?.text]);
 }
 
@@ -83,14 +76,12 @@ export function CourseView() {
   const st = courseState.value;
   const tps = topics.value;
   const topic = currentTopic.value;
-  const info0 = infoOpen.value;
   const rowList = rows.value;
-  const everyRow = allRows.value;
+  const view = sectionView.value;
   const pins = pinsStore().value.value ?? [];
-  const activeTab = tab.value;
   const sel = selectedCmId.value;
   const previewId = previewCmId.value;
-  const previewRow = previewId === undefined ? undefined : everyRow.find((r) => r.cm.id === previewId);
+  const previewRow = previewId === undefined ? undefined : rowList.find((r) => r.cm.id === previewId);
 
   const code = course?.code ?? courseCode();
   const rawName = course?.name ?? info?.heading ?? '';
@@ -98,52 +89,20 @@ export function CourseView() {
   const sem = course?.semester;
   const label = [code, sem ? `${seasonLabel(sem.season)} ${sem.year}` : ''].filter(Boolean).join(' / ');
 
-  const sec0 = st ? section0(st) : undefined;
-  const infoTitle = !sec0?.title || FALLBACK_TITLE_RE.test(sec0.title) ? t('course.info') : sec0.title;
-
-  const detailTitle = info0 ? infoTitle : topic ? topicDisplayTitle(topic) : '';
-  const compactLabel = detailTitle ? { chip: info0 ? t('course.infoLabel') : `${t('course.topic')} ${topic?.number ?? ''}`, text: detailTitle } : undefined;
+  const detailTitle = topic ? topicDisplayTitle(topic) : '';
+  const compactLabel = detailTitle && topic ? { chip: topic.isIntro ? code : `${t('course.topic')} ${topic.number}`, text: detailTitle } : undefined;
   useCompactTitle(code, rawName, compactLabel);
 
-  // The page the hero's Recordings link would show.
-  const recordings = (() => {
-    if (!st) return undefined;
-    const sec = tps.find((x) => RECORDING_RE.test(x.title));
-    if (sec) return { topic: sec.section.number };
-    for (const s of tps) {
-      const cm = cmsOfSection(st, s.section).find((c) => classifyKind({ modname: c.modname, name: c.name }) === 'recording');
-      if (cm) return { url: cm.url };
-    }
-    return undefined;
-  })();
-
-  const links: HeroLink[] = [
-    { key: 'info', label: t('course.info'), href: '#', onClick: (e) => { e.preventDefault(); showInfo(); } },
-  ];
-  if (recordings) {
-    links.push({
-      key: 'rec',
-      label: t('course.recordings'),
-      href: recordings.url ?? `#topic-${recordings.topic}`,
-      onClick: (e) => {
-        e.preventDefault();
-        if (recordings.topic !== undefined) setTopic(recordings.topic, { focus: true });
-        else if (recordings.url) go(recordings.url, true);
-      },
-    });
-  }
-  if (id) links.push({ key: 'grades', label: t('course.grades'), href: homeUrl(`/grade/report/user/index.php?id=${id}`) });
-
-  const subtitle = !info0 && topic ? subtitleForRows(everyRow, {
-    lecture: t('kind.lecture'), practical: t('kind.practical'), assignment: t('kind.assignment'), quiz: t('kind.quiz'),
-    recording: t('kind.recording'), reading: t('kind.reading'), material: t('kind.material'), discussion: t('kind.discussion'),
-  }, t('kind.and')) : '';
-
-  const topicSection = info0 ? sec0 : topic?.section;
-  const summaryHtml = topicSection ? (summaries.value.get(topicSection.id) ?? (topicSection.summaryHtml ? sanitizeHtml(topicSection.summaryHtml) : '')) : '';
+  // Moodle's own summary of the section, sanitized (images and links kept).
+  const topicSection = topic?.section;
+  const summaryHtml = topicSection ? (mergedSummaries.value.get(topicSection.id) ?? (topicSection.summaryHtml ? sanitizeHtml(topicSection.summaryHtml) : '')) : '';
   const count = resourceCount(rowList);
-  const primary = primaryIndex(rowList);
+  const primaryRow = rowList[primaryIndex(rowList)];
+  // Display position of each material (notes are not numbered), across the topic and its subsection cards.
+  const position = new Map<number, number>();
   let n = 0;
+  for (const r of rowList) if (r.kind !== 'note') position.set(r.cm.id, ++n);
+  const orderOf = new Map(rowList.map((r, i) => [r.cm.id, i]));
 
   const onTopicKeys = (e: KeyboardEvent): void => {
     if (e.key === 'Home' || e.key === 'End') {
@@ -181,28 +140,46 @@ export function CourseView() {
   const loading = status === 'loading' && !st;
   const failed = status === 'error' && !st;
 
+  const renderRow = (row: RowModel, enter: number) => (
+    <ResourceRow
+      key={row.cm.id}
+      row={row}
+      index={position.get(row.cm.id) ?? 0}
+      topicNumber={pad2(topic?.section.number ?? 0)}
+      pinned={isPinned(row.cm.id, pins)}
+      primary={row === primaryRow}
+      selected={row.cm.id === sel}
+      enter={enter}
+      onSelect={(cmid) => (selectedCmId.value = cmid)}
+      onOpen={(r, newTab) => openCm(r, newTab)}
+      onPreview={(r: RowModel) => previewCm(r)}
+      onPin={(r: RowModel) => void togglePin(r)}
+      onDone={(r: RowModel) => void toggleDone(r)}
+    />
+  );
+
   return (
     <main class="kex-main kex-course" id="kex-main" data-kex-test="course" data-kex-course={id ?? ''}>
       <Hero
         key={id ?? 0}
         label={label}
         lines={lines.length ? lines : [rawName]}
-        links={links}
+        links={[]}
         seed={id ?? 0}
       />
       <div class="kex-content">
         <PinnedRow pins={pinnedRow.value} courseId={id} />
         <div class="kex-matheader">
           <SlideUpText as="h2" class="kex-matheader__title" text={t('course.materials')} split="words" stagger={0.08} duration={0.6} inView />
-          <Tabs value={activeTab} onChange={(k: TabKey) => setTab(k)} />
+          <CourseNav tabs={secondaryNav.value} />
         </div>
         <div class="kex-body">
           {loading ? (
             <TopicSkeleton />
           ) : failed ? null : tps.length ? (
-            <TopicList topics={tps} active={info0 ? undefined : topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} />
+            <TopicList topics={tps} active={topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} />
           ) : null}
-          <section class="kex-detail" id="kex-tabpanel" role="tabpanel" aria-labelledby={`kex-tab-${activeTab}`} data-kex-test="detail">
+          <section class="kex-detail" id="kex-detail" data-kex-test="detail">
             {failed ? (
               <EmptyState tone="error" kicker={t('course.errorKicker')} title={t('course.error')} text={courseError.value}>
                 <Button variant="outlined" arrow={false} onClick={retryCourse}>{t('course.retry')}</Button>
@@ -214,13 +191,14 @@ export function CourseView() {
                 <span class="kex-skel kex-skel--title" />
                 <RowSkeleton />
               </>
-            ) : st && !tps.length && !info0 ? (
-              <EmptyState kicker={t('course.infoLabel')} title={t('course.noTopics')} />
+            ) : st && !tps.length ? (
+              <EmptyState kicker={t('course.noRows')} title={t('course.noTopics')} />
             ) : (
               <>
+                {topic?.tile && <img class="kex-detail__banner" src={topic.tile} alt="" decoding="async" data-kex-test="detail-banner" />}
                 <div class="kex-detail__top">
                   <p class="kex-detail__kicker kex-mono" data-kex-test="detail-kicker">
-                    {info0 ? t('course.infoLabel') : topic?.isRange ? `${t('course.week')} ${topic.number}` : `${t('course.topic')} ${topic?.number ?? ''}`}
+                    {topic?.isIntro ? '' : topic?.isRange ? `${t('course.week')} ${topic.number}` : `${t('course.topic')} ${topic?.number ?? ''}`}
                   </p>
                   <p class="kex-detail__count kex-mono" data-kex-test="detail-count">
                     {count === 1 ? t('course.resource') : t('course.resources', { n: count })}
@@ -229,58 +207,25 @@ export function CourseView() {
                 <div class="kex-detail__head">
                   <div class="kex-detail__titles">
                     <SlideUpText as="h3" class="kex-detail__title" testId="detail-title" text={detailTitle} split="characters" stagger={0.018} duration={0.45} />
-                    {subtitle && <SlideUpText as="p" class="kex-detail__sub" text={subtitle} split="words" stagger={0.02} duration={0.4} delay={0.08} />}
                     {topic?.isRange && <p class="kex-detail__range">{topic.title}</p>}
                   </div>
-                  {topic?.tile && !info0 && <img class="kex-detail__tile" src={topic.tile} alt="" width="160" height="100" decoding="async" />}
                 </div>
-                {summaryHtml && (info0 ? (
-                  <div class="kex-detail__summary" dangerouslySetInnerHTML={{ __html: summaryHtml }} />
-                ) : (
-                  <details class="kex-about">
-                    <summary>
-                      <span>{t('course.about')}</span>
-                      <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
-                    </summary>
-                    <div class="kex-detail__summary" dangerouslySetInnerHTML={{ __html: summaryHtml }} />
-                  </details>
-                ))}
-                {rowList.length ? (
-                  <ul class="kex-rows" key={`${info0 ? 0 : topicNumber.value}:${activeTab}`} data-kex-test="rows">
-                    {rowList.map((row, i) => {
-                      const header = row.group && row.group !== rowList[i - 1]?.group ? <li class="kex-rowgroup kex-mono" key={`g-${row.group}-${i}`}>{row.group}</li> : null;
-                      const isNote = row.kind === 'note';
-                      const index = isNote ? 0 : ++n;
-                      return (
-                        <>
-                          {header}
-                          <ResourceRow
-                            key={row.cm.id}
-                            row={row}
-                            index={index}
-                            topicNumber={info0 ? undefined : pad2(topicNumberOf(topic))}
-                            pinned={isPinned(row.cm.id, pins)}
-                            primary={i === primary}
-                            selected={row.cm.id === sel}
-                            enter={i}
-                            onSelect={(cmid) => (selectedCmId.value = cmid)}
-                            onOpen={(r, newTab) => openCm(r, newTab)}
-                            onPreview={(r: RowModel) => previewCm(r)}
-                            onPin={(r: RowModel) => void togglePin(r)}
-                            onDone={(r: RowModel) => void toggleDone(r)}
-                          />
-                        </>
-                      );
-                    })}
+                {summaryHtml && <div class="kex-detail__summary" data-kex-test="detail-summary" dangerouslySetInnerHTML={{ __html: summaryHtml }} />}
+                {view.blocks.length ? (
+                  <ul class="kex-rows" key={topicNumber.value} data-kex-test="rows">
+                    {view.blocks.map((block, bi) =>
+                      block.type === 'row' ? (
+                        renderRow(block.row, orderOf.get(block.row.cm.id) ?? bi)
+                      ) : (
+                        <SubsectionCard key={`g-${block.group.section.id}`} group={block.group} index={bi + 1}>
+                          {block.group.rows.map((r) => renderRow(r, orderOf.get(r.cm.id) ?? bi))}
+                        </SubsectionCard>
+                      ),
+                    )}
                   </ul>
-                ) : (
-                  <EmptyState
-                    kicker={t('course.noRows')}
-                    title={everyRow.some((r) => r.kind !== 'note') ? t('course.noMatch', { tab: t(activeTab === 'labs' ? 'tab.labs' : 'tab.lectures') }) : t('course.noRowsText')}
-                  >
-                    {activeTab !== 'all' && <Button variant="outlined" arrow={false} onClick={() => setTab('all')}>{t('tab.all')}</Button>}
-                  </EmptyState>
-                )}
+                ) : !summaryHtml ? (
+                  <EmptyState kicker={t('course.noRows')} title={t('course.noRowsText')} />
+                ) : null}
               </>
             )}
           </section>
@@ -297,8 +242,4 @@ export function CourseView() {
       )}
     </main>
   );
-}
-
-function topicNumberOf(topic: { section: { number: number } } | undefined): number {
-  return topic?.section.number ?? 0;
 }

@@ -1,10 +1,8 @@
 import { cache } from '../cache';
-import type { TabKey } from '../classify';
 
-/** Per-course UI memory: last topic and tab (`ui:{courseId}`), used for the "initial topic" rule (b). */
+/** Per-course UI memory: last topic (`ui:{courseId}`), used for the "initial topic" rule (b). */
 export interface CourseUi {
   topic?: number;
-  tab?: TabKey;
   at: number;
 }
 

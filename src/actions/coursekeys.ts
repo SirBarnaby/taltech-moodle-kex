@@ -1,6 +1,6 @@
 import type { MessageKey } from '../i18n';
 import type { Binding } from '../lib/keys';
-import { setTab, closePreview, copyLink, currentRow, enterRows, enterTopics, moveRow, moveTopic, openCm, previewCm, setTopic, showInfo, stepPreview, togglePin, toggleDone, undoLast, topicHash } from './course';
+import { closePreview, copyLink, currentRow, enterRows, enterTopics, moveRow, moveTopic, openCm, previewCm, setTopic, stepPreview, togglePin, toggleDone, undoLast, topicHash } from './course';
 import { focusZone, previewCmId, topicNumber, topics } from '../state/course';
 
 /** Course-page and preview key bindings (happy-path §3 and §7). Registered while the course view is mounted. */
@@ -34,10 +34,7 @@ export function courseBindings(): Binding[] {
     b('h', d('help.course.focus'), enterTopics, idle),
     b('arrowleft', d('help.course.focus'), enterTopics, (e) => idle() && inLists(e.target)),
     b('g t', d('help.course.gotopics'), enterTopics),
-    b('0', d('help.course.info'), showInfo),
-    b('1', d('help.course.tabs'), () => setTab('all')),
-    b('2', d('help.course.tabs'), () => setTab('lectures')),
-    b('3', d('help.course.tabs'), () => setTab('labs')),
+    b('0', d('help.course.info'), () => setTopic(0, { focus: true })),
     b('enter', d('help.course.open'), () => {
       const row = currentRow();
       if (row && !row.locked && row.kind !== 'note') openCm(row);

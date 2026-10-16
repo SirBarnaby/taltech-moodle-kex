@@ -19,7 +19,9 @@ export interface Neighbours {
 /** Every visible activity that is a page of its own (labels and subsection containers are not). */
 export function readingOrder(state: CourseState): Placed[] {
   const out: Placed[] = [];
-  const sections = [section0(state), ...topicSections(state)].filter((s): s is Section => !!s);
+  const topics = topicSections(state);
+  const first = section0(state);
+  const sections = first && !topics.some((s) => s.id === first.id) ? [first, ...topics] : topics;
   for (const section of sections) {
     for (const cm of cmsOfSection(state, section)) {
       if (cm.modname === 'label' || cm.modname === 'subsection' || classifyKind({ modname: cm.modname, name: cm.name }) === 'note') continue;

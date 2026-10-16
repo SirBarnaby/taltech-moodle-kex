@@ -33,7 +33,7 @@ export interface Section {
   parentId?: number | null;
   /** `mod_subsection` for delegated sections (rendered inside their parent topic). */
   component?: string;
-  /** For delegated sections: the id of the owning cm. */
+  /** For delegated sections: the id of the owning component instance (a subsection instance id on Moodle 4.5, not the cm id). */
   itemid?: number;
 }
 
@@ -51,6 +51,8 @@ export interface Cm {
   restricted: boolean;
   tracked: boolean;
   completion?: CompletionState;
+  /** Moodle 4.5 `delegatesectionid`: the section this subsection cm owns. */
+  delegatedSectionId?: number;
   details?: CmDetails;
 }
 
@@ -65,6 +67,8 @@ export type Kind =
 export interface CmDetails {
   iconKey: string;
   format: Format;
+  /** Moodle's own localised module name ("File", "Fail"), from the activity's type text or its icon alt. */
+  typeName?: string;
   badge?: string;
   dates: { label: string; text: string }[];
   descriptionHtml?: string;

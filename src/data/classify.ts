@@ -1,7 +1,7 @@
 import type { Format, Kind } from './model';
 
 /**
- * Classification rules (happy-path §6): kind, format, tabs, labels, title/subtitle split, button verb.
+ * Classification rules (happy-path §6): kind, format (icon, thumb and verb selection), labels, title/subtitle split, button verb.
  * Matching is case-insensitive and Unicode-aware. `\b` fails on õäöü, so word starts use a lookbehind on letters and digits.
  */
 
@@ -110,16 +110,6 @@ export function classifyFormat(input: ClassifyInput, kind: Kind): Format {
   if (f === 'text') return 'TEXT';
   if (f === 'sourcecode' || f === 'html' || f === 'markdown') return 'CODE';
   return 'FILE';
-}
-
-export type TabKey = 'all' | 'lectures' | 'labs';
-
-const LECTURE_TAB: ReadonlySet<Kind> = new Set<Kind>(['lecture', 'recording', 'reading', 'material']);
-const LAB_TAB: ReadonlySet<Kind> = new Set<Kind>(['practical', 'assignment', 'quiz']);
-
-export function inTab(kind: Kind, tab: TabKey): boolean {
-  if (tab === 'all') return true;
-  return tab === 'lectures' ? LECTURE_TAB.has(kind) : LAB_TAB.has(kind);
 }
 
 const KIND_WORD: Record<Kind, string> = {

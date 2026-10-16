@@ -1,12 +1,16 @@
 import { effect } from '@preact/signals';
 import { cache } from '../data/cache';
-import type { TabKey } from '../data/classify';
 import type { Pin } from '../data/model';
-import { hydrateDetails, loadDetails, setManualDone, staleIds } from '../data/repo/cmdetails';
+import type { NavTab } from '../data/scrape/secondarynav';
+import { hydrateDetails, loadDetails, seedDetails, setManualDone, staleIds } from '../data/repo/cmdetails';
 import { courseEventsStore } from '../data/repo/courseevents';
-import { courseStateStore, type CourseState } from '../data/repo/coursestate';
-import { isRecentUi, readCourseUi, writeCourseUi } from '../data/repo/ui';
-import type { Tile } from '../data/scrape/tiles';
+import { cmsOfSection, courseStateStore, subsectionMap, topicNumberOfCm, topicSections, type CourseState } from '../data/repo/coursestate';
+import { hydrateModNames, loadModNames } from '../data/repo/modnames';
+import { readCourseUi, writeCourseUi } from '../data/repo/ui';
+import { parseCmItems } from '../data/scrape/cm';
+import { scrapeSecondaryNav } from '../data/scrape/secondarynav';
+import { scrapeSummaries } from '../data/scrape/summaries';
+import { scrapeTiles, type Tile } from '../data/scrape/tiles';
 import { deadlineTopic, incompleteTopic, initialTopic, parseTopicHash, type RowModel } from '../data/topics';
 import { ws } from '../data/ws';
 import { t } from '../i18n';
@@ -15,7 +19,7 @@ import {
   hooks, pageInfo, settings, sidebarCourses,
 } from '../state';
 import {
-  courseError, courseEvents, courseState, courseStatus, focusZone, infoOpen, previewCmId, rows, selectedCmId, tab, tileImages, topicNumber, topics,
+  courseError, courseEvents, courseState, courseStatus, fetchedSummaries, focusZone, previewCmId, rows, secondaryNav, selectedCmId, summaries, tileImages, topicNumber, topics,
 } from '../state/course';
 import { go } from './navigate';
 import { pinItem } from './pins';
@@ -47,21 +51,23 @@ function urlTopicRequest(state: CourseState): number | undefined {
   if (sectionParam && /^\d+$/.test(sectionParam)) return Number(sectionParam);
   if (location.pathname.endsWith('/course/section.php')) {
     const sid = Number(q.get('id'));
-    return state.sections.find((s) => s.id === sid)?.number;
+    const sec = state.sections.find((s) => s.id === sid);
+    if (!sec) return undefined;
+    if (!sec.component) return sec.number;
+    // A subsection opens inside its parent topic.
+    const owner = [...subsectionMap(state)].find(([, d]) => d.id === sec.id)?.[0];
+    const cm = state.cms.find((c) => c.id === owner);
+    return cm ? topicNumberOfCm(state, cm) : undefined;
   }
   return undefined;
 }
 
 /** Choose the starting topic (once per page load) with the rules of happy-path §3.3. */
 function pickStart(state: CourseState): void {
-  if (topicNumber.value !== undefined || infoOpen.value) return;
+  if (topicNumber.value !== undefined) return;
   const tps = topics.value;
   const ui = readCourseUi(courseId);
   const fromUrl = urlTopicRequest(state);
-  if (fromUrl === 0) {
-    infoOpen.value = true;
-    return;
-  }
   const n = initialTopic({
     topics: tps,
     fromUrl,
@@ -69,7 +75,6 @@ function pickStart(state: CourseState): void {
     deadlineTopic: deadlineTopic(state, [...courseEvents.value.values()]),
     incompleteTopic: incompleteTopic(state),
   });
-  if (isRecentUi(ui) && ui?.tab) tab.value = ui.tab;
   if (n !== undefined) topicNumber.value = n;
 }
 
@@ -80,8 +85,6 @@ export function initCourse(id: number, tiles: readonly Tile[] = []): () => void 
   courseStatus.value = 'loading';
   courseError.value = undefined;
   topicNumber.value = undefined;
-  infoOpen.value = false;
-  tab.value = 'all';
   focusZone.value = 'topics';
   selectedCmId.value = undefined;
   previewCmId.value = undefined;
@@ -90,6 +93,11 @@ export function initCourse(id: number, tiles: readonly Tile[] = []): () => void 
   const cachedTiles = cache.peek<{ id: number; img: string }[]>(`tiles:${id}`)?.data ?? [];
   setTiles(cachedTiles.map((c) => [c.id, c.img]));
   if (tiles.length) setTileList(tiles);
+  fetchedSummaries.value = new Map((cache.peek<[number, string][]>(`sums:${id}`)?.data ?? []));
+  attempted.clear();
+  secondaryNav.value = cache.peek<NavTab[]>(`snav:${id}`)?.data ?? [];
+  hydrateModNames();
+  scrapePage(id);
 
   const store = courseStateStore(id);
   const events = courseEventsStore(id);
@@ -99,6 +107,7 @@ export function initCourse(id: number, tiles: readonly Tile[] = []): () => void 
       if (v) {
         courseState.value = v;
         courseStatus.value = 'ready';
+        void loadModNames(v.cms.map((c) => c.modname));
       }
     }),
     effect(() => {
@@ -121,9 +130,10 @@ export function initCourse(id: number, tiles: readonly Tile[] = []): () => void 
     // Details of the selected topic now, its neighbours next, the rest when idle.
     effect(() => {
       const st = courseState.value;
-      const n = infoOpen.value ? 0 : topicNumber.value;
+      const n = topicNumber.value;
       if (!st || n === undefined) return;
       prefetchAround(st, n);
+      void loadSummaries(st, n);
     }),
     effect(() => {
       // Keep the selected row valid.
@@ -158,13 +168,68 @@ function onPop(): void {
   if (!st) return;
   const n = parseTopicHash(location.hash);
   if (n !== undefined && topics.value.some((x) => x.section.number === n)) {
-    infoOpen.value = false;
     topicNumber.value = n;
   }
 }
 
 function setTiles(entries: [number, string][]): void {
   tileImages.value = new Map(entries);
+}
+
+/**
+ * What Moodle's own page already holds, read once per course load: tile photos, section summaries, the course
+ * secondary navigation, and the rendered activities (labels with their banners, type names, dates).
+ */
+function scrapePage(id: number): void {
+  // The course view can start before Moodle's own markup has been parsed.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => scrapePage(id), { once: true });
+    return;
+  }
+  if (courseId !== id) return;
+  try {
+    const found = scrapeTiles(document);
+    if (found.length) setTileList(found);
+    const sums = scrapeSummaries(document);
+    if (sums.size) summaries.value = new Map([...summaries.value, ...sums]);
+    const nav = scrapeSecondaryNav(document);
+    if (nav.length) {
+      secondaryNav.value = nav;
+      void cache.write(`snav:${id}`, nav);
+    }
+  } catch (e) {
+    log.warn('scrapePage', e);
+  }
+  // The activity cards are heavier to parse: after the first paint.
+  idle(() => {
+    if (courseId !== id) return;
+    try {
+      seedDetails(id, parseCmItems(document));
+    } catch (e) {
+      log.warn('seedDetails', e);
+    }
+  });
+}
+
+const attempted = new Set<number>();
+
+/**
+ * The summary of the opened topic when Moodle's page did not hold it (tiles format shows one section at a time):
+ * fetched from section.php. Subsections are not asked for: Moodle does not render a summary of its own for them.
+ */
+async function loadSummaries(st: CourseState, n: number): Promise<void> {
+  const sec = topicSections(st).find((s) => s.number === n);
+  if (!sec || !sec.hasSummary || summaries.value.has(sec.id) || fetchedSummaries.value.has(sec.id) || attempted.has(sec.id)) return;
+  attempted.add(sec.id);
+  try {
+    const html = await ws.fetchText(`/course/section.php?id=${sec.id}`);
+    const got = scrapeSummaries(new DOMParser().parseFromString(html, 'text/html')).get(sec.id);
+    if (!got || courseId !== st.courseId) return;
+    fetchedSummaries.value = new Map([...fetchedSummaries.value, [sec.id, got]]);
+    void cache.write(`sums:${courseId}`, [...fetchedSummaries.value]);
+  } catch (e) {
+    log.warn('summary', sec.id, e);
+  }
 }
 
 /** Tiles scraped from the page DOM (tiles format). Cached 7 days. */
@@ -183,21 +248,8 @@ function sectionOfCm(st: CourseState): (cmid: number) => number | undefined {
 }
 
 function idsOfNumber(st: CourseState, n: number): number[] {
-  const sec = st.sections.find((s) => s.number === n);
-  if (!sec) return [];
-  const ids: number[] = [];
-  const byId = new Map(st.cms.map((c) => [c.id, c]));
-  for (const id of sec.cmIds) {
-    const cm = byId.get(id);
-    if (!cm?.uservisible) continue;
-    if (cm.modname === 'subsection') {
-      const sub = st.sections.find((s) => s.itemid === cm.id);
-      sub?.cmIds.forEach((x) => ids.push(x));
-    } else {
-      ids.push(id);
-    }
-  }
-  return ids;
+  const sec = topicSections(st).find((s) => s.number === n);
+  return sec ? cmsOfSection(st, sec).map((c) => c.id) : [];
 }
 
 function prefetchAround(st: CourseState, n: number): void {
@@ -231,13 +283,12 @@ function idle(fn: () => void): void {
   else window.setTimeout(fn, 60);
 }
 
-// -------------------------------------------------------------------- topics and tabs
+// -------------------------------------------------------------------- topics
 
 /** Switch topic. `user` navigations add a history entry (coalesced while the user keeps pressing j/k). */
 export function setTopic(n: number, opts: { push?: boolean; focus?: boolean } = {}): void {
   if (!topics.value.some((x) => x.section.number === n)) return;
   performance.mark('kex:topic-switch');
-  infoOpen.value = false;
   topicNumber.value = n;
   selectedCmId.value = undefined;
   writeCourseUi(courseId, { topic: n });
@@ -250,23 +301,10 @@ export function setTopic(n: number, opts: { push?: boolean; focus?: boolean } = 
   if (opts.focus) focusTopic(n);
 }
 
-export function showInfo(): void {
-  infoOpen.value = true;
-  selectedCmId.value = undefined;
-  const url = new URL(location.href);
-  url.hash = '';
-  history.replaceState(null, '', url);
-}
-
-export function setTab(next: TabKey): void {
-  tab.value = next;
-  writeCourseUi(courseId, { tab: next });
-}
-
 export function moveTopic(delta: 1 | -1): void {
   const list = topics.value;
   if (!list.length) return;
-  const i = list.findIndex((x) => x.section.number === topicNumber.value && !infoOpen.value);
+  const i = list.findIndex((x) => x.section.number === topicNumber.value);
   const next = i < 0 ? (delta === 1 ? 0 : list.length - 1) : Math.max(0, Math.min(list.length - 1, i + delta));
   const target = list[next];
   if (target) setTopic(target.section.number, { focus: true });
@@ -304,7 +342,7 @@ export function enterRows(): void {
 }
 
 export function enterTopics(): void {
-  const n = infoOpen.value ? topics.value[0]?.section.number : topicNumber.value;
+  const n = topicNumber.value ?? topics.value[0]?.section.number;
   if (n !== undefined) focusTopic(n);
 }
 
