@@ -54,7 +54,7 @@ export function decorateBook(doc: Document): void {
   const nav = existing ?? doc.createElement('nav');
   nav.className = 'kex-booktoc';
   nav.setAttribute('aria-label', doc.querySelector('.block_book_toc .card-title')?.textContent?.trim() || 'Contents');
-  nav.innerHTML = fresh.outerHTML;
+  nav.replaceChildren(fresh);
   if (!existing) main.prepend(nav);
   main.classList.add('kex-bookgrid');
 }
