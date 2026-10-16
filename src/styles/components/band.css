@@ -69,6 +69,11 @@
     font-size: 44px;
     line-height: 52px;
   }
+  .kex-band--long .kex-band__title {
+    font-size: 30px;
+    line-height: 40px;
+    letter-spacing: -0.015em;
+  }
   .kex-band__meta {
     margin-top: 12px;
     display: flex;

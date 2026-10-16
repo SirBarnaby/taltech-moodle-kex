@@ -43,8 +43,8 @@ describe('effectiveMode', () => {
     expect(effectiveMode(r('/my/', 'page-my-index'), { workspace: 'skin' }).effective).toBe('skin');
     expect(effectiveMode(r('/user/profile.php', 'page-user-profile'), { generic: 'off' }).effective).toBe('off');
   });
-  it('keeps login pure Moodle until M5; quiz attempts are focus mode', () => {
-    expect(effectiveMode(r('/login/index.php', 'page-login-index'), {}).effective).toBe('off');
+  it('the login view is an app view (M5); quiz attempts are focus mode', () => {
+    expect(effectiveMode(r('/login/index.php', 'page-login-index'), {}).effective).toBe('app');
     expect(effectiveMode(r('/mod/quiz/attempt.php', 'page-mod-quiz-attempt'), {}).effective).toBe('skin');
   });
 });

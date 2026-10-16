@@ -2,7 +2,8 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Page } from '@playwright/test';
-import { test, expect, LAB } from './fixtures';
+import AxeBuilder from '@axe-core/playwright';
+import { test, expect, LAB, waitForShell, installKex } from './fixtures';
 import { iter3Seed, root } from '../harness/kex';
 
 /** M5 acceptance (implementation-plan): Login, Notifications, Grades overview. Runs against the lab. */
@@ -178,5 +179,169 @@ test.describe('notifications', () => {
     const href = await page.locator('[data-kex-test="nf-open"]').getAttribute('href');
     expect(href).toBeTruthy();
     await Promise.all([page.waitForURL((u) => u.href === href), page.keyboard.press('Enter')]);
+  });
+});
+
+/** Skin+ areas (page-designs §8-§16): label, title, the specific restyle hooks, and axe in both themes. */
+const SKIN_PAGES: { path: string; label: RegExp; title?: string; check: (page: Page) => Promise<void> }[] = [
+  {
+    path: '/course/user.php?mode=grade&id=2&user=3',
+    label: /^GRADES \/ ITI8801$/,
+    title: 'Cloud & DevOps',
+    check: async (page) => {
+      await expect(page.locator('table.user-grade tbody tr .item').first()).toBeVisible();
+      const align = await page.locator('table.user-grade td.column-range').first().evaluate((e) => getComputedStyle(e).textAlign);
+      expect(align).toBe('right');
+      const font = await page.locator('table.user-grade td.column-percentage').first().evaluate((e) => getComputedStyle(e).fontFamily);
+      expect(font).toContain('JetBrains');
+      const total = await page.locator('table.user-grade th.baggt').first().evaluate((e) => getComputedStyle(e).borderTopWidth);
+      expect(parseFloat(total)).toBeGreaterThanOrEqual(2);
+    },
+  },
+  {
+    path: '/calendar/view.php?view=month',
+    label: /^CALENDAR \/ [A-Z]+ \d{4}$/,
+    check: async (page) => {
+      await expect(page.locator('[data-kex-test="cal-tabs"] [role="tab"]')).toHaveCount(3);
+      await expect(page.locator('[data-region="view-selector"]').first()).toBeHidden();
+      const today = await page.locator('table.calendarmonth td.today .day-number-circle >> nth=0').evaluate((e) => getComputedStyle(e).backgroundColor);
+      expect(today).not.toBe('rgba(0, 0, 0, 0)');
+      // The tab presses Moodle's own dropdown item: the view changes without a page load.
+      await page.locator('[data-kex-test="cal-tabs"] [data-tab="upcoming"]').click();
+      await expect(page.locator('[data-kex-test="cal-tabs"] [data-tab="upcoming"]')).toHaveAttribute('aria-selected', 'true');
+      await expect(page.locator('[data-kex-test="band-label"]')).toContainText('UPCOMING');
+    },
+  },
+  {
+    path: '/message/index.php?id=4',
+    label: /^MESSAGES$/,
+    check: async (page) => {
+      await page.waitForSelector('.message-app .message[data-region="message"]');
+      const hidden = await page.locator('.message-app [data-region="retry-send"]').first().evaluate((e) => getComputedStyle(e).display);
+      expect(hidden, 'Moodle hides the retry button with .hidden; the skin must not bring it back').toBe('none');
+      const bg = await page.locator('.message-app .message.received').first().evaluate((e) => getComputedStyle(e).backgroundColor);
+      expect(bg).not.toBe('rgba(0, 0, 0, 0)');
+    },
+  },
+  {
+    path: '/user/profile.php',
+    label: /^PROFILE$/,
+    check: async (page) => {
+      const cols = await page.locator('.profile_tree').evaluate((e) => getComputedStyle(e).gridTemplateColumns.split(' ').length);
+      expect(cols).toBe(2);
+    },
+  },
+  {
+    path: '/user/preferences.php',
+    label: /^PREFERENCES$/,
+    title: 'Preferences',
+    check: async (page) => {
+      const row = await page.locator('#page-user-preferences .card-text li a').first().evaluate((e) => ({ h: e.getBoundingClientRect().height, after: getComputedStyle(e, '::after').content }));
+      expect(row.h).toBeGreaterThanOrEqual(44);
+      expect(row.after).toContain('\u203A');
+    },
+  },
+  {
+    path: '/user/index.php?id=2',
+    label: /^PARTICIPANTS \/ ITI8801$/,
+    check: async (page) => {
+      await expect(page.locator('#participants .kex-col-roles .kex-role').first()).toBeVisible();
+      const av = await page.locator('#participants :is(td, th).c1 :is(.userinitials, img.userpicture)').first().evaluate((e) => e.getBoundingClientRect().width);
+      expect(av).toBe(28);
+    },
+  },
+  {
+    path: '/badges/mybadges.php',
+    label: /^BADGES$/,
+    title: 'Badges',
+    check: async (page) => {
+      const w = await page.locator('ul.badges > li').first().evaluate((e) => e.getBoundingClientRect().width);
+      expect(w).toBe(180);
+    },
+  },
+  {
+    path: '/course/index.php?categoryid=2',
+    label: /^CATALOGUE$/,
+    check: async () => undefined,
+  },
+  {
+    path: '/course/search.php?search=cloud',
+    label: /^SEARCH \/ "CLOUD"$/,
+    title: 'Search',
+    check: async (page) => {
+      const code = await page.locator('.coursebox .coursename .kex-coursecode').first().textContent();
+      expect(code).toBe('ITI8801');
+      // The code left the Moodle link text; the link still points at the course.
+      await expect(page.locator('.coursebox .coursename a').first()).toHaveAttribute('href', /course\/view\.php\?id=2/);
+    },
+  },
+];
+
+test.describe('skin+ pages', () => {
+  for (const theme of ['light', 'dark'] as const) {
+    test.describe(theme, () => {
+      test.use({ seed: iter3Seed({ theme, debug: { freezeTime: 7.3 } }) });
+      for (const sp of SKIN_PAGES) {
+        test(`${sp.path}`, async ({ page }) => {
+          const errors: string[] = [];
+          page.on('pageerror', (e) => errors.push(e.message));
+          await page.goto(sp.path);
+          await waitForShell(page);
+          await page.waitForSelector('[data-kex-test="band"]');
+          await expect(page.locator('html')).toHaveAttribute('data-kex-theme', theme);
+          await expect(page.locator('[data-kex-test="band-label"]')).toHaveText(sp.label);
+          if (sp.title) await expect(page.locator('[data-kex-test="band-title"]')).toContainText(sp.title);
+          await sp.check(page);
+          expect(errors, 'no uncaught errors').toEqual([]);
+        });
+      }
+    });
+  }
+
+  test('axe: no serious or critical violations from KEX CSS (light and dark)', async ({ browser, studentState }) => {
+    test.setTimeout(400_000);
+    const bad: string[] = [];
+    for (const theme of ['light', 'dark'] as const) {
+      const ctx = await browser.newContext({ storageState: studentState, viewport: { width: 1585, height: 992 } });
+      const on = await ctx.newPage();
+      await installKex(on, iter3Seed({ theme, debug: { freezeTime: 7.3 } }));
+      const off = await ctx.newPage();
+      const run = async (p: Page): Promise<Map<string, string>> => {
+        const res = await new AxeBuilder({ page: p }).analyze();
+        const m = new Map<string, string>();
+        for (const v of res.violations.filter((x) => x.impact === 'serious' || x.impact === 'critical')) {
+          for (const n of v.nodes) m.set(`${v.id}|${n.target.join(' ').replace(/[0-9a-f]{16,}/g, '#')}`, `${v.id}: ${n.target.join(' ')} ${n.any.map((a) => a.message).join(';').slice(0, 140)}`);
+        }
+        return m;
+      };
+      for (const sp of SKIN_PAGES) {
+        await on.goto(sp.path);
+        await waitForShell(on);
+        await on.waitForTimeout(900);
+        await off.goto(sp.path);
+        await off.waitForTimeout(900);
+        const [a, b] = [await run(on), await run(off)];
+        for (const [k, v] of a) if (!b.has(k)) bad.push(`${theme} ${sp.path} ${v}`);
+      }
+      await ctx.close();
+    }
+    expect(bad).toEqual([]);
+  });
+});
+
+test.describe('participants (TalTech markup, captures/pages/user_index__id-37582.html)', () => {
+  test.use({ seed: iter3Seed({ theme: 'light', debug: { freezeTime: 7.3 } }) });
+  test('the Estonian capture is restyled: roles as pills, 28 px avatars, band label', async ({ page }) => {
+    const html = readFileSync(path.join(root, 'captures/pages/user_index__id-37582.html'), 'utf8');
+    await page.route(`${LAB}/user/index.php**`, (route) => route.fulfill({ status: 200, contentType: 'text/html', body: html }));
+    await page.route('https://moodle.taltech.ee/**', (route) => route.abort());
+    await page.goto('/user/index.php?id=37582');
+    await page.waitForSelector('[data-kex-test="band"]');
+    await expect(page.locator('html')).toHaveAttribute('data-kex', 'skin');
+    await expect(page.locator('[data-kex-test="band-label"]')).toHaveText(/^(PARTICIPANTS|OSALEJAD)/);
+    await page.waitForSelector('#participants .kex-col-roles .kex-role');
+    expect(await page.locator('#participants tbody td.kex-col-roles .kex-role').count()).toBeGreaterThan(5);
+    const w = await page.locator('#participants :is(td, th).c1 :is(img.userpicture, .userinitials)').first().evaluate((e) => e.getBoundingClientRect().width);
+    expect(w).toBe(28);
   });
 });

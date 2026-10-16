@@ -1,16 +1,18 @@
 import { ArrowLeft, ArrowRight, CircleCheck, Copy, Download, ExternalLink, FileText, Globe, Pin as PinIcon } from 'lucide-preact';
 import { useEffect } from 'preact/hooks';
-import { copyUrlTarget, downloadUrl, gotoNeighbour, loadNeighbourState, pinFromPage, pinPage, toggleDonePage, openNewTab } from '../../actions/skin';
+import { copyUrlTarget, downloadUrl, loadNeighbourState, pinFromPage, pinPage, toggleDonePage, openNewTab } from '../../actions/skin';
 import { go, homeUrl } from '../../actions/navigate';
 import { classifyFormat, classifyKind, monoLabel } from '../../data/classify';
 import { cmDetails } from '../../data/repo/cmdetails';
 import { isPinned, pinsStore } from '../../data/repo/pins';
 import { placedLabel } from '../../data/neighbours';
-import { t } from '../../i18n';
-import { pageInfo, route, sidebarCourses } from '../../state';
+import { displayName } from '../../data/repo/courses';
+import { t, type MessageKey } from '../../i18n';
+import { pageInfo, route, sidebarCourses, user } from '../../state';
 import { isActivity, neighbours, skinPage } from '../../state/skin';
 import { Band } from '../components/Band';
 import { useEffectsConfig } from '../components/hooks';
+import { Tabs, type TabDef } from '../components/Tabs';
 import { pad2 } from '../../data/topics';
 
 /** Course code of the page's course, from the sidebar list or the breadcrumb. */
@@ -47,17 +49,76 @@ export function pageLabel(code: string): string {
   const area = (k: Parameters<typeof t>[0]): string => t(k);
   if (/\/grade\/report\/user\/|\/course\/user\.php/.test(path)) return [area('area.grades'), code].filter(Boolean).join(' / ');
   if (/\/user\/index\.php/.test(path)) return [area('area.participants'), code].filter(Boolean).join(' / ');
-  if (/\/calendar\//.test(path)) return area('area.calendar');
+  if (/\/calendar\//.test(path)) {
+    const heading = skinPage.value?.calendar?.heading;
+    return heading ? `${area('area.calendar')} / ${heading.toUpperCase()}` : area('area.calendar');
+  }
   if (/\/message\//.test(path)) return area('area.messages');
   if (/\/user\/(profile|view)\.php/.test(path)) return area('area.profile');
   if (/\/user\/(preferences|editadvanced|edit)\.php|\/message\/notificationpreferences|\/user\/.*preferences/.test(path)) return area('area.preferences');
   if (/\/badges\//.test(path)) return area('area.badges');
   if (/\/course\/(index|management)\.php|^\/$/.test(path)) return area('area.catalogue');
-  if (/\/(course|search)\/search\.php|\/search\/index\.php/.test(path)) return area('area.search');
+  if (/\/(course|search)\/search\.php|\/search\/index\.php/.test(path)) {
+    const q = searchQuery();
+    return q ? `${area('area.search')} / "${q.toUpperCase()}"` : area('area.search');
+  }
   if (/\/user\/files\.php/.test(path)) return area('area.files');
   const crumbs = pageInfo.value?.breadcrumb ?? [];
   const tail = crumbs.length > 1 ? crumbs[crumbs.length - 2] : undefined;
   return (tail?.text ?? code ?? '').toUpperCase().slice(0, 48);
+}
+
+function searchQuery(): string {
+  const p = new URLSearchParams(location.search);
+  return (p.get('search') ?? p.get('q') ?? '').trim().slice(0, 40);
+}
+
+const titleCase = (s: string): string => s.charAt(0) + s.slice(1).toLowerCase();
+
+/** Band title: the course's short name on course-scoped reports, the area for pages Moodle titles with the user's own name. */
+export function chromeTitle(heading: string): string {
+  const path = location.pathname;
+  const info = pageInfo.value;
+  const course = info && info.courseId > 1 ? sidebarCourses.value.find((c) => c.id === info.courseId) : undefined;
+  if (course && /\/grade\/report\/user\/|\/course\/user\.php|\/user\/index\.php/.test(path)) return displayName(course);
+  if (/\/calendar\//.test(path)) return titleCase(t('area.calendar'));
+  if (/\/(course|search)\/search\.php|\/search\/index\.php/.test(path)) return titleCase(t('area.search'));
+  const own = user.value?.fullname;
+  if (own && heading === own) {
+    const key: MessageKey | undefined = /\/badges\//.test(path) ? 'area.badges' : /preferences|\/user\/(edit|editadvanced|language|forum|editor|calendar|contentbank)\.php|\/login\/change_password/.test(path) ? 'area.preferences' : /\/user\/files\.php/.test(path) ? 'area.files' : undefined;
+    if (key) return titleCase(t(key));
+  }
+  return heading;
+}
+
+/** Moodle's calendar view switch (Month / Day / Upcoming) as our tabs; a click presses Moodle's own dropdown item so its JS runs. */
+function CalendarTabs() {
+  const cal = skinPage.value?.calendar;
+  if (!cal || cal.views.length < 2) return null;
+  const items: TabDef<string>[] = cal.views.map((v) => ({ key: v.view, label: 'nav.calendar' as MessageKey, text: v.label, digit: '' }));
+  const active = cal.views.find((v) => v.active)?.view ?? cal.views[0]?.view ?? '';
+  const press = (view: string): void => {
+    const item = document.querySelector<HTMLElement>(`[data-region="view-selector"] .dropdown-item[data-view="${view}"]`);
+    if (!item) return;
+    // Moodle's handler calls preventDefault. If it has not attached yet (early click), load the view's own URL instead.
+    const ev = new MouseEvent('click', { bubbles: true, cancelable: true });
+    item.dispatchEvent(ev);
+    if (!ev.defaultPrevented) {
+      const d = item.dataset;
+      const u = new URL('/calendar/view.php', location.origin);
+      u.searchParams.set('view', view);
+      if (d.courseid && d.courseid !== '1') u.searchParams.set('course', d.courseid);
+      if (view !== 'upcoming' && d.year && d.month && d.day) u.searchParams.set('time', String(Math.floor(new Date(+d.year, +d.month - 1, +d.day).getTime() / 1000)));
+      location.assign(u.href);
+    }
+  };
+  return (
+    <div class="kex-content kex-chrome-tabs" data-kex-test="cal-tabs">
+      <div class="kex-matheader">
+        <Tabs<string> value={active} onChange={press} items={items} label={t('nav.calendar')} idPrefix="kex-cal-tab" panelId="region-main" />
+      </div>
+    </div>
+  );
 }
 
 function ChromeActions() {
@@ -240,13 +301,14 @@ export function SkinChrome() {
       <div class="kex-chrome" data-kex-test="chrome" data-activity={activity ? 'true' : 'false'}>
         <Band
           label={label}
-          title={err ? err.message || sp?.title || '' : sp?.title ?? pageInfo.value?.heading ?? ''}
+          title={err ? err.message || sp?.title || '' : chromeTitle(sp?.title ?? pageInfo.value?.heading ?? '')}
           size={activity ? 'activity' : 'page'}
           actions={err ? <ErrorActions /> : activity ? <ChromeActions /> : undefined}
           meta={activity ? <ChromeMeta /> : undefined}
           seed={pageInfo.value?.cmId ?? pageInfo.value?.courseId ?? 3}
           testId="band"
         />
+        {!err && !activity && <CalendarTabs />}
       </div>
       <ChromeBody />
       {activity && <PrevNextBar />}

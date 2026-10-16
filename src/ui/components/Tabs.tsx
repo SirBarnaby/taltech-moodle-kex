@@ -5,6 +5,8 @@ export interface TabDef<K extends string = string> {
   key: K;
   label: MessageKey;
   digit: string;
+  /** Literal text instead of the translated label (labels that come from Moodle itself). */
+  text?: string;
 }
 
 const COURSE_TABS = [
@@ -71,9 +73,9 @@ export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, on
           aria-controls={panelId}
           tabIndex={value === tb.key ? 0 : -1}
           onClick={() => onChange(tb.key)}
-          title={`${t(tb.label)} (${tb.digit})`}
+          title={tb.digit ? `${tb.text ?? t(tb.label)} (${tb.digit})` : (tb.text ?? t(tb.label))}
         >
-          <span class="kex-tab__label">{t(tb.label)}</span>
+          <span class="kex-tab__label">{tb.text ?? t(tb.label)}</span>
         </button>
       ))}
       <span

@@ -1,0 +1,1048 @@
+/* Skin+ for the remaining Moodle areas (page-designs §8-§16): grade report, calendar, messages, profile, preferences, participants,
+   badges, catalogue and search. Moodle's markup and JS stay; only the look changes. Selectors cover Moodle 4.5 (BS4) and 5.x (BS5). */
+
+/* ================================================================== shared bits */
+
+/* Links inside running text are told apart by an underline, not by colour alone (the text and link colours are close). */
+:root[data-kex="skin"] :is(p, dd, .noticebox, .generalbox, .alert, .box) > a:not(.btn):not([role="button"]) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+:root[data-kex="skin"] .kex-coursecode {
+  flex: 0 0 auto;
+  min-width: 76px;
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--kex-mono);
+}
+
+/* ================================================================== grades user report (§8) */
+
+:root[data-kex="skin"] .grade-report-user .page-context-header,
+:root[data-kex="skin"] .path-grade-report-user .page-context-header {
+  margin-bottom: 4px !important;
+}
+:root[data-kex="skin"] .page-context-header .userinitials.size-100,
+:root[data-kex="skin"] .page-context-header .userpicture.size-100,
+:root[data-kex="skin"] .page-context-header img.userpicture {
+  width: 56px;
+  height: 56px;
+  font-size: 20px;
+  line-height: 56px;
+}
+:root[data-kex="skin"] .page-context-header .page-header-headings h2 {
+  font-family: var(--kex-font-display);
+  font-size: 24px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] .page-context-header .btn {
+  min-height: 36px;
+}
+:root[data-kex="skin"] .grade-report-user h2.main {
+  margin: 22px 0 14px !important;
+  font-size: 28px;
+}
+:root[data-kex="skin"] .user-report-container,
+:root[data-kex="skin"] table.user-grade tr {
+  background: transparent !important;
+}
+:root[data-kex="skin"] .user-report-container {
+  padding: 0;
+  border: 0;
+}
+:root[data-kex="skin"] table.user-grade {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-kex="skin"] table.user-grade :is(th, td) {
+  border-color: var(--kex-border);
+  vertical-align: middle;
+}
+:root[data-kex="skin"] table.user-grade thead th {
+  position: static;
+  padding: 10px 12px;
+  text-align: right;
+  white-space: nowrap;
+  background: transparent;
+  border-bottom: 1px solid var(--kex-border-strong);
+}
+:root[data-kex="skin"] table.user-grade thead th.column-itemname {
+  text-align: left;
+}
+:root[data-kex="skin"] table.user-grade thead th.column-feedback {
+  text-align: left;
+}
+/* Category rows: tinted band, mono-s name. */
+:root[data-kex="skin"] table.user-grade th.category {
+  padding: 12px 16px;
+  background: var(--kex-tint);
+  border: 0;
+  border-radius: 2px;
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kex-mono-strong);
+}
+:root[data-kex="skin"] table.user-grade th.category .btn {
+  min-height: 0;
+  padding: 2px 6px;
+  color: inherit;
+}
+:root[data-kex="skin"] table.user-grade th.category .category-content {
+  align-items: center;
+}
+/* The indent cell of a category (rowspan): a thin violet rail. */
+:root[data-kex="skin"] table.user-grade td[rowspan] {
+  width: 18px;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(90deg, var(--kex-tint-border) 0 3px, transparent 3px);
+}
+:root[data-kex="skin"] table.user-grade tr.spacer {
+  height: 0;
+}
+/* Item rows: 44 px, mono numerics on the right. */
+:root[data-kex="skin"] table.user-grade :is(th, td).item {
+  height: 44px;
+  padding: 6px 12px;
+  border-width: 0 0 1px;
+  background: transparent;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] table.user-grade tbody tr:hover > :is(th, td).item {
+  background: var(--kex-hover);
+}
+:root[data-kex="skin"] table.user-grade td.itemcenter {
+  text-align: right;
+  font-family: var(--kex-font-mono);
+  font-size: 14px;
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] table.user-grade td.column-grade > div {
+  justify-content: flex-end;
+}
+:root[data-kex="skin"] table.user-grade td.column-grade {
+  font-weight: 600;
+}
+:root[data-kex="skin"] table.user-grade td.feedbacktext {
+  text-align: left;
+  font-family: var(--kex-font-ui);
+  font-size: 14px;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] table.user-grade th.item .d-block.text-uppercase,
+:root[data-kex="skin"] table.user-grade th.baggt .d-block.text-uppercase {
+  font-family: var(--kex-font-mono);
+  font-size: 10.5px !important;
+  letter-spacing: 0.08em;
+  color: var(--kex-mono);
+}
+:root[data-kex="skin"] table.user-grade th.item a.gradeitemheader {
+  font-size: 15.5px;
+  font-weight: 500;
+}
+:root[data-kex="skin"] table.user-grade img.itemicon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.75;
+}
+:root[data-kex="skin"][data-kex-theme="dark"] table.user-grade img.itemicon {
+  filter: invert(1) brightness(1.1);
+}
+:root[data-kex="skin"] table.user-grade .action-menu .btn {
+  min-height: 0;
+  padding: 2px 6px;
+  color: var(--kex-text-3);
+}
+/* Course total: bold, with a top border. */
+:root[data-kex="skin"] table.user-grade :is(th, td).baggt {
+  padding: 12px;
+  border-width: 2px 0 0;
+  border-style: solid;
+  border-color: var(--kex-border-strong);
+  background: transparent;
+  font-weight: 700;
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] table.user-grade th.baggt .rowtitle {
+  font-weight: 700;
+}
+
+/* ================================================================== calendar (§9) */
+
+:root[data-kex="skin"] :is(#page-grade-report-user-index, #page-course-user) .limitedwidth {
+  max-width: none;
+}
+
+:root[data-kex="skin"] .maincalendar .header {
+  padding: 0 !important;
+  margin-bottom: 8px;
+  align-items: center;
+  gap: 10px;
+}
+:root[data-kex="skin"] .maincalendar .header > * {
+  margin: 0 !important;
+}
+:root[data-kex="skin"] .maincalendar [data-region="view-selector"] {
+  display: none;
+}
+:root[data-kex="skin"] .maincalendar .header .form-select {
+  width: auto;
+  min-width: 240px;
+  max-width: 360px;
+}
+:root[data-kex="skin"] .maincalendar .header [data-action="new-event-button"] {
+  margin-left: auto !important;
+}
+:root[data-kex="skin"] .maincalendar .calendar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 14px 0 12px;
+}
+:root[data-kex="skin"] .maincalendar .calendar-controls .hide {
+  display: none;
+}
+:root[data-kex="skin"] .maincalendar .calendar-controls h2.current {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+:root[data-kex="skin"] .maincalendar .calendar-controls .arrow_link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] .maincalendar .calendar-controls .arrow_link:hover {
+  color: var(--kex-accent);
+}
+:root[data-kex="skin"] .maincalendar .calendar-controls .arrow {
+  font-size: 10px;
+}
+:root[data-kex="skin"] table.calendarmonth {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: 1px solid var(--kex-border);
+}
+:root[data-kex="skin"] table.calendarmonth thead th {
+  padding: 10px 12px;
+  border: 1px solid var(--kex-border);
+  background: transparent;
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: left !important;
+  color: var(--kex-mono);
+}
+:root[data-kex="skin"] table.calendarmonth td {
+  height: 112px;
+  padding: 8px 8px 6px;
+  border: 1px solid var(--kex-border);
+  vertical-align: top;
+  background: transparent;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] table.calendarmonth td.dayblank {
+  background: color-mix(in srgb, var(--kex-tint) 30%, transparent);
+}
+:root[data-kex="skin"] table.calendarmonth td.weekend {
+  background: color-mix(in srgb, var(--kex-tint) 22%, transparent);
+}
+:root[data-kex="skin"] table.calendarmonth td.clickable:hover {
+  background: var(--kex-hover);
+}
+:root[data-kex="skin"] table.calendarmonth td.day .text-xs-center,
+:root[data-kex="skin"] table.calendarmonth td.day .text-md-start {
+  text-align: left !important;
+}
+:root[data-kex="skin"] table.calendarmonth .day-number-circle {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  border-radius: 12px;
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--kex-mono);
+  background: transparent;
+}
+:root[data-kex="skin"] table.calendarmonth td.today .day-number-circle {
+  background: var(--kex-primary);
+  color: var(--kex-on-primary);
+}
+:root[data-kex="skin"] table.calendarmonth a.day,
+:root[data-kex="skin"] table.calendarmonth a.aalink.day {
+  text-decoration: none;
+  color: inherit;
+}
+:root[data-kex="skin"] table.calendarmonth [data-region="day-content"] ul {
+  display: grid;
+  gap: 3px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+/* Events: 22 px pills with a left bar. Course events violet, due events magenta, user events grey. */
+:root[data-kex="skin"] table.calendarmonth li[data-region="event-item"] {
+  margin: 0;
+}
+:root[data-kex="skin"] table.calendarmonth li[data-region="event-item"] > a {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 1px 6px 1px 8px;
+  border-left: 3px solid var(--kex-violet-2);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--kex-violet-2) 9%, transparent);
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--kex-text-2);
+  text-decoration: none;
+  overflow: hidden;
+}
+:root[data-kex="skin"] table.calendarmonth li[data-region="event-item"] > a > .eventname {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+:root[data-kex="skin"] table.calendarmonth li[data-region="event-item"] > a:hover {
+  background: color-mix(in srgb, var(--kex-violet-2) 16%, transparent);
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] table.calendarmonth li[data-region="event-item"] .eventname {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-kex="skin"] table.calendarmonth li[data-region="event-item"] .calendar-circle {
+  display: none;
+}
+:root[data-kex="skin"] table.calendarmonth li[data-event-eventtype="due"] > a {
+  border-left-color: var(--kex-magenta);
+  background: color-mix(in srgb, var(--kex-magenta) 9%, transparent);
+}
+:root[data-kex="skin"] table.calendarmonth li[data-eventtype-user="1"] > a,
+:root[data-kex="skin"] table.calendarmonth li[data-event-eventtype="user"] > a {
+  border-left-color: var(--kex-text-4);
+  background: color-mix(in srgb, var(--kex-text-4) 12%, transparent);
+}
+:root[data-kex="skin"] table.calendarmonth li[data-eventtype-site="1"] > a {
+  border-left-color: var(--kex-accent);
+  background: color-mix(in srgb, var(--kex-accent) 8%, transparent);
+}
+:root[data-kex="skin"] table.calendarmonth li[data-action="view-more-events"] strong,
+:root[data-kex="skin"] table.calendarmonth li[data-action="view-more-events"] a {
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--kex-violet);
+}
+/* Day and upcoming views: events as rows. */
+:root[data-kex="skin"] .calendarwrapper h2.current.text-center {
+  margin: 18px 0 6px;
+  text-align: left !important;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event .card-footer {
+  padding: 4px 0 0 15px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-size: 14.5px;
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist {
+  margin-top: 4px;
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event {
+  margin: 0 !important;
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event .card {
+  border: 0;
+  border-bottom: 1px solid var(--kex-border);
+  border-radius: 0;
+  background: transparent;
+  padding: 14px 0 12px;
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event .card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 0 6px;
+  border: 0;
+  border-left: 3px solid var(--kex-violet-2);
+  padding-left: 12px;
+  background: transparent;
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event .card-header.calendar_event_user {
+  border-left-color: var(--kex-text-4);
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event[data-event-eventtype="due"] .card-header {
+  border-left-color: var(--kex-magenta);
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event .commands {
+  order: 3;
+  margin-left: auto;
+  float: none !important;
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event h3.name {
+  margin: 0;
+  font-family: var(--kex-font-ui);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event .card-body {
+  padding: 4px 0 0 15px;
+  font-size: 14.5px;
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event .card-body .row {
+  margin: 0 0 2px;
+  gap: 0;
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event .card-body .col-1 {
+  flex: 0 0 28px;
+  max-width: 28px;
+  color: var(--kex-text-4);
+}
+:root[data-kex="skin"] .calendarwrapper .eventlist .event .card-body .col-11 {
+  flex: 1 1 0;
+  max-width: none;
+}
+:root[data-kex="skin"] .calendarwrapper .calendar-no-results {
+  display: block;
+  padding: 24px 0;
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kex-mono);
+}
+:root[data-kex="skin"] [data-region="calendar-footer"] {
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+/* ================================================================== messages (§11) */
+
+:root[data-kex="skin"] .message-app {
+  height: calc(100vh - 67px - 132px - 76px);
+  min-height: 460px;
+  border: 1px solid var(--kex-border-card);
+  border-radius: 2px;
+  background: var(--kex-bg);
+  overflow: hidden;
+}
+:root[data-kex="skin"] .message-app .list-group {
+  background: transparent;
+}
+:root[data-kex="skin"] .message-app .list-group-item {
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--kex-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--kex-text);
+  transition: background 120ms var(--kex-ease);
+}
+:root[data-kex="skin"] .message-app .list-group-item:is(:hover, :focus-visible) {
+  background: var(--kex-hover);
+}
+:root[data-kex="skin"] .message-app .list-group-item.active,
+:root[data-kex="skin"] .message-app .list-group-item.active:hover {
+  background: var(--kex-tint);
+  color: var(--kex-text);
+  border-color: var(--kex-border);
+  box-shadow: inset 3px 0 0 var(--kex-primary);
+}
+:root[data-kex="skin"] .message-app .list-group-item.active :is(.text-muted, .small, .text-secondary),
+:root[data-kex="skin"] .message-app .list-group-item.active * {
+  color: inherit;
+}
+:root[data-kex="skin"] .message-app .list-group-item img.rounded-circle,
+:root[data-kex="skin"] .message-app .list-group-item .userinitials {
+  width: 32px;
+  height: 32px;
+}
+:root[data-kex="skin"] .message-app .list-group-item .text-truncate.fw-bold,
+:root[data-kex="skin"] .message-app .list-group-item h6 {
+  font-size: 15px;
+  font-weight: 600;
+}
+:root[data-kex="skin"] .message-app .list-group-item .last-message-time,
+:root[data-kex="skin"] .message-app .list-group-item .small,
+:root[data-kex="skin"] .message-app .list-group-item .last-message {
+  font-size: 13px;
+}
+:root[data-kex="skin"] .message-app .list-group-item .last-message-time {
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+:root[data-kex="skin"] .message-app .badge,
+:root[data-kex="skin"] .message-app .unread-count-badge-container .badge {
+  min-width: 20px;
+  padding: 2px 6px;
+  border: 1px solid var(--kex-primary);
+  border-radius: 999px;
+  background: var(--kex-primary);
+  color: var(--kex-on-primary);
+  font-family: var(--kex-font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+}
+:root[data-kex="skin"] .message-app [data-toggle="collapse"],
+:root[data-kex="skin"] .message-app [data-bs-toggle="collapse"] {
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kex-mono);
+}
+:root[data-kex="skin"] .message-app [data-region="view-conversation"] .header-container,
+:root[data-kex="skin"] .message-app .header-container {
+  background: transparent;
+  border-bottom: 1px solid var(--kex-border);
+}
+:root[data-kex="skin"] .message-app .content-message-container {
+  background: transparent !important;
+  padding: 8px 18px !important;
+}
+:root[data-kex="skin"] .message-app h6.day {
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kex-mono) !important;
+}
+/* Bubbles: own messages primary, others tint. */
+:root[data-kex="skin"] .message-app .message {
+  max-width: min(78%, 560px);
+  padding: 8px 12px !important;
+  border: 0;
+  border-radius: 10px;
+  font-size: 15.5px;
+  line-height: 1.45;
+  margin: 3px 4px !important;
+}
+:root[data-kex="skin"] .message-app .message.received {
+  align-self: flex-start;
+  background: var(--kex-tint);
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] .message-app .message:is(.send, .sent) {
+  align-self: flex-end;
+  margin-left: auto !important;
+  background: var(--kex-primary);
+  color: var(--kex-on-primary);
+}
+:root[data-kex="skin"][data-kex-theme="dark"] .message-app .message:is(.send, .sent) {
+  background: #4a2c9a;
+}
+:root[data-kex="skin"] .message-app .message .tail {
+  display: none;
+}
+:root[data-kex="skin"] .message-app .message > .d-flex.align-items-center {
+  padding-bottom: 2px !important;
+}
+:root[data-kex="skin"] .message-app .message > .d-flex.align-items-center > div:first-child:has(img) {
+  display: none;
+}
+:root[data-kex="skin"] .message-app .message h6 {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: inherit;
+}
+:root[data-kex="skin"] .message-app .message .time {
+  font-family: var(--kex-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+  color: inherit;
+}
+:root[data-kex="skin"] .message-app .message a {
+  color: inherit;
+  text-decoration: underline;
+}
+:root[data-kex="skin"] .message-app .message p {
+  margin: 0;
+}
+:root[data-kex="skin"] .message-app .message:is(.send, .sent) .time {
+  color: rgba(255, 255, 255, 0.82) !important;
+  opacity: 1;
+}
+:root[data-kex="skin"] .message-app :is(.text-muted, .text-secondary) {
+  color: var(--kex-text-3) !important;
+}
+:root[data-kex="skin"] .message-app .btn-link,
+:root[data-kex="skin"] .message-app .btn-link .icon {
+  color: var(--kex-violet);
+}
+/* Composer. */
+:root[data-kex="skin"] .message-app [data-region="send-message-txt"],
+:root[data-kex="skin"] .message-app textarea {
+  min-height: 44px;
+  border: 1px solid var(--kex-search-border);
+  border-radius: 4px;
+  background: var(--kex-bg);
+  color: var(--kex-text);
+  resize: none;
+}
+:root[data-kex="skin"] .message-app [data-action="send-message"] {
+  min-height: 0;
+  padding: 8px;
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] .message-app .form-control {
+  min-height: 40px;
+}
+
+/* ================================================================== profile (§12) */
+
+:root[data-kex="skin"] .userprofile .profile_tree {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  max-width: 1180px;
+}
+@media (min-width: 1280px) {
+  :root[data-kex="skin"] .userprofile .profile_tree {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+:root[data-kex="skin"] .userprofile .profile_tree > section.node_category {
+  margin: 0 !important;
+  display: block !important;
+  width: auto !important;
+  float: none !important;
+}
+:root[data-kex="skin"] .userprofile .node_category .card-body {
+  padding: 22px 24px 18px;
+}
+:root[data-kex="skin"] .userprofile .node_category h3 {
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--kex-border);
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kex-mono);
+}
+:root[data-kex="skin"] .userprofile .node_category ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:root[data-kex="skin"] .userprofile .node_category li {
+  margin: 0 0 10px;
+}
+:root[data-kex="skin"] .userprofile .node_category li.editprofile {
+  float: right;
+  margin: -44px 0 0;
+  font-size: 14px;
+}
+:root[data-kex="skin"] .userprofile .node_category dl {
+  margin: 0;
+}
+:root[data-kex="skin"] .userprofile .node_category dt {
+  margin: 0 0 2px;
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kex-mono);
+}
+:root[data-kex="skin"] .userprofile .node_category dd {
+  margin: 0;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .userprofile .node_category dd ul {
+  display: grid;
+  gap: 6px;
+}
+:root[data-kex="skin"] .userprofile .node_category dd li {
+  margin: 0;
+}
+
+/* ================================================================== preferences (§12) */
+
+:root[data-kex="skin"] #page-user-preferences #region-main > div[role="main"] > h2:first-of-type {
+  display: none;
+}
+:root[data-kex="skin"] #page-user-preferences #region-main .container-fluid > .row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+  margin: 0;
+}
+:root[data-kex="skin"] #page-user-preferences #region-main .container-fluid > .row > [class*="col-"] {
+  width: auto;
+  max-width: none;
+  padding: 0;
+}
+:root[data-kex="skin"] #page-user-preferences .card {
+  margin: 0 !important;
+}
+:root[data-kex="skin"] #page-user-preferences .card-body {
+  padding: 20px 0 8px;
+}
+:root[data-kex="skin"] #page-user-preferences .card-title {
+  margin: 0 0 6px;
+  padding: 0 22px 10px;
+  border-bottom: 1px solid var(--kex-border);
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kex-mono);
+}
+:root[data-kex="skin"] #page-user-preferences .card-text {
+  margin: 0;
+  padding: 0;
+}
+:root[data-kex="skin"] #page-user-preferences .card-text li {
+  margin: 0 !important;
+}
+:root[data-kex="skin"] #page-user-preferences .card-text li a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--kex-border);
+  color: var(--kex-text);
+  text-decoration: none;
+  transition: background 120ms var(--kex-ease), color 120ms var(--kex-ease);
+}
+:root[data-kex="skin"] #page-user-preferences .card-text li:last-child a {
+  border-bottom: 0;
+}
+:root[data-kex="skin"] #page-user-preferences .card-text li a::after {
+  content: "\203A";
+  font-size: 20px;
+  line-height: 1;
+  color: var(--kex-text-4);
+  transition: transform 140ms var(--kex-ease), color 120ms var(--kex-ease);
+}
+:root[data-kex="skin"] #page-user-preferences .card-text li a:hover {
+  background: var(--kex-hover);
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] #page-user-preferences .card-text li a:hover::after {
+  transform: translateX(3px);
+  color: var(--kex-violet);
+}
+
+/* ================================================================== participants (§13) */
+
+:root[data-kex="skin"] #participants :is(th, td) {
+  vertical-align: middle;
+}
+:root[data-kex="skin"] #participants tbody :is(td, th) {
+  height: 52px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+:root[data-kex="skin"] #participants :is(td, th).c1 a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--kex-text);
+  text-decoration: none;
+}
+:root[data-kex="skin"] #participants :is(td, th).c1 a:hover {
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] #participants :is(td, th).c1 :is(img.userpicture, .userinitials, .userpicture) {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 11px;
+  line-height: 28px;
+  border-radius: 50%;
+  margin: 0 !important;
+}
+:root[data-kex="skin"] #participants .kex-col-roles .kex-role {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  margin: 0 6px 0 0;
+  border: 1px solid var(--kex-tint-border);
+  border-radius: 999px;
+  background: var(--kex-tint);
+  font-family: var(--kex-font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kex-mono-strong);
+  white-space: nowrap;
+}
+:root[data-kex="skin"] #participants .kex-col-access:not(th) {
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--kex-mono);
+  white-space: nowrap;
+}
+:root[data-kex="skin"] #participants .kex-col-groups:not(th) {
+  font-size: 14px;
+  color: var(--kex-text-3);
+}
+:root[data-kex="skin"] #participants th .commands {
+  display: none;
+}
+:root[data-kex="skin"] #participants th a {
+  color: inherit;
+  text-decoration: none;
+}
+:root[data-kex="skin"] #participants th a:hover {
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] .initialbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0;
+}
+:root[data-kex="skin"] .initialbar .page-item .page-link {
+  min-width: 26px;
+  padding: 3px 6px;
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+}
+
+/* ================================================================== badges (§15) */
+
+:root[data-kex="skin"] ul.badges > li > a:has(img) {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+:root[data-kex="skin"] .profile_tree ul.badges {
+  grid-template-columns: repeat(auto-fill, 140px);
+  gap: 12px;
+  margin: 8px 0;
+}
+:root[data-kex="skin"] .profile_tree ul.badges > li {
+  width: 140px;
+  min-height: 0;
+  padding: 16px 8px 12px;
+}
+:root[data-kex="skin"] .profile_tree ul.badges .badge-image {
+  width: 72px;
+  height: 72px;
+}
+:root[data-kex="skin"] ul.badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 180px);
+  gap: 16px;
+  margin: 22px 0;
+  padding: 0;
+  list-style: none;
+}
+:root[data-kex="skin"] ul.badges > li {
+  display: grid;
+  grid-auto-rows: min-content;
+  justify-items: center;
+  gap: 8px;
+  width: 180px;
+  min-height: 200px;
+  margin: 0;
+  padding: 22px 12px 14px;
+  border: 1px solid var(--kex-border-card);
+  border-radius: 2px;
+  background: var(--kex-bg);
+  text-align: center;
+  transition: border-color 140ms var(--kex-ease), box-shadow 140ms var(--kex-ease);
+}
+:root[data-kex="skin"] ul.badges > li:hover {
+  border-color: var(--kex-tint-border);
+  box-shadow: 0 6px 20px rgba(32, 16, 85, 0.1);
+}
+:root[data-kex="skin"] ul.badges .badge-image {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+:root[data-kex="skin"] ul.badges .badge-actions {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  min-height: 0;
+}
+:root[data-kex="skin"] ul.badges .badge-actions .btn {
+  min-height: 0;
+  padding: 3px 7px;
+  color: var(--kex-text-3);
+}
+:root[data-kex="skin"] ul.badges .badge-name {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--kex-text);
+}
+
+/* ================================================================== catalogue and search (§14, §16) */
+
+:root[data-kex="skin"] .course_category_tree .collapsible-actions {
+  text-align: right;
+  margin: 4px 0 10px;
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:root[data-kex="skin"] .course_category_tree .category > .info {
+  padding: 0;
+  border-bottom: 1px solid var(--kex-border);
+}
+:root[data-kex="skin"] .course_category_tree h3.categoryname {
+  margin: 0;
+  padding: 14px 4px;
+  font-family: var(--kex-font-ui);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+:root[data-kex="skin"] .course_category_tree h3.categoryname a {
+  color: var(--kex-text);
+  text-decoration: none;
+}
+:root[data-kex="skin"] .course_category_tree h3.categoryname a:hover {
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] .course_category_tree .category .category {
+  margin-left: 22px;
+}
+:root[data-kex="skin"] .courses .coursebox {
+  margin: 0;
+  padding: 16px 4px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--kex-border);
+  background: transparent;
+}
+:root[data-kex="skin"] .courses .coursebox:hover {
+  background: var(--kex-hover);
+}
+:root[data-kex="skin"] .coursebox h3.coursename,
+:root[data-kex="skin"] .coursebox .coursename {
+  margin: 0 0 4px;
+  font-family: var(--kex-font-ui);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+:root[data-kex="skin"] .coursebox .coursename a {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  color: var(--kex-text);
+  text-decoration: none;
+}
+:root[data-kex="skin"] .coursebox .coursename a:hover {
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] .coursebox .coursename .kex-coursecode {
+  min-width: 76px;
+}
+:root[data-kex="skin"] .coursebox .content {
+  padding-left: 96px;
+}
+:root[data-kex="skin"] .coursebox .info {
+  padding-left: 0;
+}
+:root[data-kex="skin"] .coursebox .content {
+  padding-top: 0;
+}
+:root[data-kex="skin"] .coursebox .content .summary,
+:root[data-kex="skin"] .coursebox .content .moreinfo {
+  padding-left: 0;
+}
+:root[data-kex="skin"] .coursebox .summary {
+  color: var(--kex-text-3);
+  font-size: 15px;
+}
+:root[data-kex="skin"] .coursebox :is(.teachers, .coursecat) {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+:root[data-kex="skin"] .coursebox :is(.teachers, .coursecat) .fw-bold,
+:root[data-kex="skin"] .coursebox :is(.teachers, .coursecat) .font-weight-bold {
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kex-mono);
+}
+:root[data-kex="skin"] .coursebox .highlight {
+  background: var(--kex-tint);
+  color: inherit;
+  border-radius: 2px;
+}
+:root[data-kex="skin"] .courses .paging,
+:root[data-kex="skin"] .paging {
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  :root[data-kex="skin"] .coursebox .content {
+    padding-left: 0;
+  }
+  :root[data-kex="skin"] .coursebox .coursename a {
+    flex-direction: column;
+    gap: 2px;
+  }
+  :root[data-kex="skin"] table.calendarmonth td {
+    height: 72px;
+    padding: 4px;
+  }
+}
+
+/* ================================================================== calendar tabs (our chrome) */
+
+#kex-root .kex-chrome-tabs {
+  padding-bottom: 0;
+  max-width: none;
+}

@@ -442,3 +442,8 @@
 :root[data-kex="skin"][data-kex-theme="dark"] code {
   color: #ff8fc2;
 }
+
+/* Bootstrap's `.btn` is inline-flex here; Moodle's JS hides buttons with `.hidden` / `hidden`, which must keep winning. */
+:root[data-kex="skin"] :is(.btn.hidden, .btn[hidden], .btn.d-none) {
+  display: none !important;
+}

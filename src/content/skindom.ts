@@ -18,6 +18,8 @@ function toneOf(td: Element, row: number): Tone | undefined {
 
 export function decorateSkinPage(doc: Document): void {
   decorateBook(doc);
+  decorateParticipants(doc);
+  decorateCourseBoxes(doc);
   // An activity header that says nothing (no description, dates or completion) would render as an empty card.
   doc.querySelectorAll('[data-region="activity-information"]').forEach((el) => {
     const empty = !el.textContent?.trim() && !el.querySelector('img, button, a');
@@ -55,4 +57,63 @@ export function decorateBook(doc: Document): void {
   nav.innerHTML = fresh.outerHTML;
   if (!existing) main.prepend(nav);
   main.classList.add('kex-bookgrid');
+}
+
+const COL_CLASS: Record<string, string> = { roles: 'kex-col-roles', groups: 'kex-col-groups', lastaccess: 'kex-col-access', lastcourseaccess: 'kex-col-access' };
+
+/** Participants table: mark the roles, groups and last-access columns (by Moodle's `data-column`, not by language) and turn roles into pills. */
+export function decorateParticipants(doc: Document): void {
+  const table = doc.querySelector('table#participants');
+  if (!table) return;
+  const heads = Array.from(table.querySelectorAll('thead th'));
+  heads.forEach((th, i) => {
+    const key = th.querySelector('[data-column]')?.getAttribute('data-column') ?? th.querySelector('a[data-sortby]')?.getAttribute('data-sortby') ?? '';
+    const cls = COL_CLASS[key];
+    if (!cls) return;
+    th.classList.add(cls);
+    table.querySelectorAll('tbody tr').forEach((tr) => {
+      const td = tr.children[i];
+      if (!td) return;
+      td.classList.add(cls);
+      if (cls !== 'kex-col-roles' || td.querySelector('.kex-role')) return;
+      const inner = td.querySelectorAll(':scope > a, :scope > .inplaceeditable, :scope > span:not(.visually-hidden):not(.sr-only):not(.accesshide)');
+      if (inner.length) {
+        inner.forEach((el) => el.classList.add('kex-role'));
+        return;
+      }
+      const text = td.textContent?.trim() ?? '';
+      if (!text || td.children.length) return;
+      td.textContent = '';
+      for (const name of text.split(/\s*,\s*/).filter(Boolean)) {
+        const span = doc.createElement('span');
+        span.className = 'kex-role';
+        span.textContent = name;
+        td.append(span);
+      }
+    });
+  });
+}
+
+const COURSE_CODE_TAIL = /\s*\(([A-Z]{3}\d{4})\)\s*$/;
+
+/** Catalogue and search results: the trailing "(CODE)" of a course name becomes a mono code in front (page-designs §16). */
+export function decorateCourseBoxes(doc: Document): void {
+  doc.querySelectorAll('.coursebox .coursename a').forEach((a) => {
+    if (a.querySelector('.kex-coursecode')) return;
+    const walker = doc.createTreeWalker(a, 4 /* SHOW_TEXT */);
+    let last: Text | undefined;
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) if (n.nodeValue?.trim()) last = n as Text;
+    const m = last ? COURSE_CODE_TAIL.exec(last.nodeValue ?? '') : null;
+    if (!last || !m) return;
+    last.nodeValue = (last.nodeValue ?? '').replace(COURSE_CODE_TAIL, '');
+    const code = doc.createElement('span');
+    code.className = 'kex-coursecode';
+    code.textContent = m[1] ?? '';
+    a.prepend(code);
+    // Text nodes of the name are siblings of the highlight spans; a wrapper keeps them on one flex item.
+    const wrap = doc.createElement('span');
+    wrap.className = 'kex-coursename';
+    while (code.nextSibling) wrap.append(code.nextSibling);
+    a.append(wrap);
+  });
 }

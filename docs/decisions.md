@@ -241,3 +241,55 @@ can sit next to a release build.
 - `tools/lab/m4_seed.php` adds the book, folder, choice, resources, a quiz and forum posts; `tools/lab/m4_reset.php` resets the submission, the quiz
   attempts and the e2e forum posts.
 - Selector coverage: `test/unit/skinpage.test.ts` runs the parsers over the capture pages (4.5 / BS4) and over lab-shaped markup (5.3 / BS5).
+
+## M5
+
+### Login
+- The login page is a guest page: `boot()` resolves it before the shell (no sidebar, no user), mounts `LoginView` into `#kex-root` and sets
+  `data-kex-view="login"`. `scrapeLogin` reads the identity providers (`.potentialidplist .potentialidp a`, `.login-identityproviders a`), Moodle's own
+  `form#login` (moved, never cloned, so `logintoken` and the show-password toggle keep working; put back on unmount), the language menu, the FAQ sheet
+  and the error alert (`#loginerrormessage`, `.alert-danger`).
+- Stock Moodle 5 has no providers: the form is shown directly. TalTech has four: the form hides behind "More sign-in options" (`M`).
+  The primary button is the last used provider (`localStorage kex.lastIdp`, saved on click or on `1`-`4`/Enter), else Uni-ID, else the first.
+  `Enter` outside a control follows it. A logged-in visitor sees one "Continue" button.
+- The login page is dark in both themes (the design has no light variant: the panel uses the sidebar gradient), so its light and dark screenshots
+  are the same by design. The cookie notice (`.eupopup-container`) becomes a dark toast.
+- Moodle 5's `.toggle-sensitive-btn` sits inside the password field (absolute at the right edge) instead of below it.
+
+### Grades overview
+- App view over the scraped `#overview-grade` rows (`scrapeGradeOverview`): the course id comes from the link's `id=`, the code from the trailing
+  `(CODE)`; names come from the sidebar list (short names) when the course is known. Current = sidebar courses, All = every row (URL hash `#all`).
+  Current falls back to every row only while the sidebar list is still empty. Rows 56 px, grade in JetBrains Mono 600 20 px (an ungraded course
+  shows an en dash), keys `j`/`k`/arrows, `Enter` opens the user report, `Ctrl+Enter`/`o` a new tab, `1`/`2` the tabs.
+- The band label is `GRADES / <SEASON> <YEAR>` like My courses (page-designs says `AUTUMN 2026`).
+
+### Notifications
+- App view with the two-column layout of page-designs §10 (list 380 px, detail on the right; stacked below 1000 px). Data is the cached first page
+  of 20 (`notifsStore`) plus "Load older" (`message_popup_get_popup_notifications` with `offset`), kept in `moreNotifs`; the paged list is reset when the page opens.
+- Selecting a row never marks it read (reading a long message should not change counts by itself); `m` marks the selected one, `Shift+M` all,
+  `Enter` opens the target and marks it read. `markRead`/`markAllRead` update `countsStore`, so the sidebar badge, the avatar dot and the band
+  (`NOTIFICATIONS / 12 UNREAD`) move without a reload; failures roll back and toast.
+- The detail article is `fullmessagehtml` through `sanitizeHtml`. "Mark unread" does not exist (Moodle has no API), as the design says.
+
+### Skin+ areas
+- `skin/pages.css` styles the Moodle markup in place (4.5 and 5.x selectors): grade user report (`table.user-grade`: tinted category rows, 44 px items,
+  mono right-aligned numbers, bold total with a 2 px top border), calendar (month grid, today circle, event pills by type, day and upcoming rows),
+  messages, profile (2-column cards at >= 1280), preferences (rows with a chevron), participants, badges (180 px cards), catalogue and search (rows).
+- Band titles: a course-scoped report shows the course's short name; pages Moodle titles with the user's own name (preferences, badges, files)
+  show the area; search shows `SEARCH / "query"`. Titles over 44 characters step down to 30 px instead of being clipped.
+- The calendar view switch becomes our tabs in the chrome. A click presses Moodle's own dropdown item (`data-view`), so the AJAX view change, the
+  event popovers and "New event" stay Moodle's; the original dropdown is hidden with CSS.
+- Two small DOM decorations (idempotent, class/text only): participants columns are found by Moodle's `data-column` (not by header text, so the
+  Estonian capture works) and roles become pills; the trailing `(CODE)` of a course box moves in front as a mono code.
+- Bug found on the way: the skin's `.btn { display: inline-flex }` beat Moodle's `.hidden`, so hidden buttons (message "Retry") showed. `.btn.hidden`,
+  `.btn[hidden]` and `.btn.d-none` now keep `display: none`.
+- Messages keep Moodle's JS app; only bubbles, list rows and the composer are restyled. The drawer variant of the message app is not part of the page (no navbar).
+
+### Tests and tooling
+- `test/e2e-chromium/pages.spec.ts`: login on the lab (sign-in through our view, wrong password), login on the TalTech capture (via `page.route`: four
+  providers, form behind `M`, Enter follows Uni-ID / last used, `1`-`4`), grades overview, notifications (badge in step without reload, `j`, `m`, `Shift+M`,
+  `Enter`), nine skin+ pages in both themes with structural checks, the participants capture, and axe in both themes.
+- `npm run test:visual -- --all` (`scripts/test-visual.mjs`) writes a light and a dark Chromium screenshot for every route of the architecture §6 table
+  to `artifacts/pages/`; it also checks the `data-kex` mode of each route. Plain `npm run test:visual` still runs the geometry specs.
+- `tools/lab/m5_seed.php` awards two site badges (it generates the badge images with GD).
+- `test/unit/pages.test.ts` includes a selector report: every capture resolves to a route and a skin route yields a band title.

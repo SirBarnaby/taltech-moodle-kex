@@ -24,6 +24,18 @@ export interface SkinPage {
   urlTarget?: string;
   /** A Moodle error page (`.errorbox`, `#notice`, maintenance). */
   error?: { code: string; message: string };
+  /** The calendar page: the heading of the current view ("October 2026") and Moodle's own view switch. */
+  calendar?: { heading: string; views: { view: string; label: string; active: boolean }[] };
+}
+
+export function parseCalendar(doc: Document): SkinPage['calendar'] {
+  if (!doc.querySelector('.maincalendar, [data-region="calendar"]')) return undefined;
+  const views = Array.from(doc.querySelectorAll<HTMLElement>('[data-region="view-selector"] .dropdown-item[data-view]')).map((a) => ({
+    view: a.dataset.view ?? '',
+    label: cleanText(a),
+    active: a.classList.contains('active'),
+  }));
+  return { heading: cleanText(doc.querySelector('.calendarwrapper h2.current, .calendar-controls h2.current')), views: views.filter((v) => v.view) };
 }
 
 const DATE_SEL = ['[data-region="activity-dates"] > div', '[data-region="activity-dates"] .date-item', '.activity-dates > div'] as const;
@@ -94,5 +106,6 @@ export function parseSkinPage(doc: Document): SkinPage {
       : undefined,
     urlTarget: doc.querySelector<HTMLAnchorElement>('.urlworkaround a[href]')?.href ?? undefined,
     error: parseError(doc),
+    calendar: parseCalendar(doc),
   };
 }

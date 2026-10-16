@@ -33,7 +33,7 @@ export function Band({ label, title, size = 'page', actions, meta, seed = 0, tes
     return () => handle.dispose();
   }, [seed]);
   return (
-    <section class={`kex-band kex-band--${size}`} data-kex-test={testId} data-mode={mode}>
+    <section class={`kex-band kex-band--${size}${title.length > 44 ? ' kex-band--long' : ''}`} data-kex-test={testId} data-mode={mode}>
       <canvas class="kex-hero__canvas" ref={canvas} aria-hidden="true" />
       <Crosshair class="kex-cross--b" />
       <div class="kex-band__inner">
