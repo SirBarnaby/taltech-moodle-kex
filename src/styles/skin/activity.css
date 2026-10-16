@@ -1,0 +1,170 @@
+/* Activity pages (page-designs §7): everything the modules share. Prefixed with the skin mode; the band comes from the chrome. */
+
+/* Moodle's own linear navigation footer: our previous / next bar replaces it. */
+:root[data-kex="skin"][data-kex-chrome="activity"] #sticky-footer,
+:root[data-kex="skin"][data-kex-chrome="activity"] .stickyfooter {
+  display: none !important;
+}
+:root[data-kex="skin"][data-kex-chrome="activity"] #page.drawers {
+  padding-bottom: 72px;
+}
+
+/* ---- text column ---- */
+:root[data-kex="skin"][data-kex-chrome] #region-main > div > :is(.container, .container-fluid) {
+  padding-left: 0;
+  padding-right: 0;
+}
+:root[data-kex="skin"][data-kex-chrome] #region-main {
+  max-width: 1100px;
+}
+:root[data-kex="skin"][data-kex-chrome] #region-main :is(.box, .generalbox).boxaligncenter {
+  margin-left: 0;
+  margin-right: 0;
+  width: auto;
+  max-width: 100%;
+}
+:root[data-kex="skin"] #region-main .no-overflow {
+  overflow-wrap: anywhere;
+}
+
+/* ---- the activity information card (description, dates, completion) ---- */
+:root[data-kex="skin"] .activity-header {
+  margin: 0 0 28px !important;
+  max-width: 1100px;
+  width: 100%;
+}
+:root[data-kex="skin"] .activity-header :is([data-region="activity-information"], .activity-information) {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  max-width: none !important;
+  width: 100%;
+}
+:root[data-kex="skin"] :is(.text-info, .icon.text-info) {
+  color: var(--kex-violet-2) !important;
+}
+:root[data-kex="skin"] [data-region="activity-information"] {
+  border: 1px solid var(--kex-border-card);
+  border-radius: var(--kex-r-xs);
+  padding: 4px 20px;
+  background: transparent;
+}
+:root[data-kex="skin"] [data-region="activity-information"][data-kex-empty] {
+  display: none;
+}
+:root[data-kex="skin"] :is([data-region="activity-details"], .activity-details) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: 0;
+  border-radius: 0;
+}
+:root[data-kex="skin"] [data-region="activity-information"] > [data-region="activity-details"] + [data-region="activity-details"],
+:root[data-kex="skin"] [data-region="activity-information"] > * + * {
+  border-top: 1px solid var(--kex-border);
+}
+:root[data-kex="skin"] .activity-description {
+  max-width: 760px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .activity-description :is(.box, .generalbox) {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: auto;
+  background: transparent;
+  border: 0;
+}
+:root[data-kex="skin"] .activity-description p:last-child {
+  margin-bottom: 0;
+}
+:root[data-kex="skin"] :is([data-region="activity-dates"], .activity-dates) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 28px;
+  font-size: 14px;
+}
+:root[data-kex="skin"] :is([data-region="activity-dates"], .activity-dates) strong {
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kex-mono-soft);
+  margin-right: 8px;
+}
+:root[data-kex="skin"] [data-region="completion-info"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
+  font-size: 14px;
+}
+:root[data-kex="skin"] [data-region="completion-info"] .btn,
+:root[data-kex="skin"] [data-region="completion-info"] .badge {
+  min-height: 28px;
+  padding: 2px 12px;
+  font-size: 13px;
+}
+
+/* ---- sections inside a page ---- */
+:root[data-kex="skin"][data-kex-chrome="activity"] #region-main h2 {
+  margin: 36px 0 14px;
+  font-size: 24px;
+}
+:root[data-kex="skin"][data-kex-chrome="activity"] #region-main h3 {
+  margin: 28px 0 12px;
+}
+
+/* ---- status pills (added by decoratePage) ---- */
+.kex-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--kex-border-card);
+  background: transparent;
+  color: var(--kex-text-2);
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.kex-pill::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.9;
+}
+.kex-pill--violet {
+  color: var(--kex-violet);
+  border-color: var(--kex-tint-border);
+  background: var(--kex-tint);
+}
+.kex-pill--magenta {
+  color: var(--kex-magenta);
+  border-color: color-mix(in srgb, var(--kex-magenta) 40%, var(--kex-bg));
+  background: color-mix(in srgb, var(--kex-magenta) 9%, var(--kex-bg));
+}
+.kex-pill--green {
+  color: var(--kex-success);
+  border-color: color-mix(in srgb, var(--kex-success) 40%, var(--kex-bg));
+  background: color-mix(in srgb, var(--kex-success) 10%, var(--kex-bg));
+}
+.kex-pill--amber {
+  color: var(--kex-warning);
+  border-color: color-mix(in srgb, var(--kex-warning) 45%, var(--kex-bg));
+  background: color-mix(in srgb, var(--kex-warning) 11%, var(--kex-bg));
+}
+.kex-pill--grey {
+  color: var(--kex-text-3);
+}

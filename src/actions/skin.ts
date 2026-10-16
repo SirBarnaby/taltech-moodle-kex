@@ -2,6 +2,7 @@ import { classifyFormat, classifyKind } from '../data/classify';
 import type { Pin } from '../data/model';
 import { cmDetails } from '../data/repo/cmdetails';
 import { courseStateStore } from '../data/repo/coursestate';
+import { decorateSkinPage } from '../content/skindom';
 import { parseSkinPage } from '../content/skinpage';
 import { SEL } from '../data/selectors';
 import { t } from '../i18n';
@@ -16,6 +17,7 @@ import { pushToast } from './toasts';
 
 /** Re-read the chrome data from the live page. Call after DOMContentLoaded and whenever Moodle's JS changes the content. */
 export function refreshSkinPage(): void {
+  decorateSkinPage(document);
   skinPage.value = parseSkinPage(document);
 }
 
@@ -92,4 +94,15 @@ export function gotoNeighbour(dir: 1 | -1): void {
   const target = dir === 1 ? n?.next : n?.prev;
   if (target) go(target.cm.url);
   else pushToast(t(dir === 1 ? 'pn.noNext' : 'pn.noPrev'));
+}
+
+export async function copyUrlTarget(): Promise<void> {
+  const url = skinPage.value?.urlTarget;
+  if (!url) return;
+  try {
+    await navigator.clipboard.writeText(url);
+    pushToast(t('toast.copied'));
+  } catch {
+    pushToast(t('toast.failed'));
+  }
 }

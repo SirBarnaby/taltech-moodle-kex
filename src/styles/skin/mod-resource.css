@@ -1,0 +1,293 @@
+/* Resource, URL, page, book, folder (page-designs §7). */
+
+/* ---- the card of the URL and file-download views (rendered by the chrome) ---- */
+#kex-root {
+  .kex-urlcard {
+    margin: 32px var(--kex-pad) 0;
+    margin-left: calc(var(--kex-sb-w) + var(--kex-pad));
+    max-width: 1100px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 22px 24px;
+    border: 1px solid var(--kex-border-card);
+    border-radius: var(--kex-r-xs);
+    background: var(--kex-bg);
+    transition: margin-left 200ms var(--kex-ease);
+  }
+  .kex-urlcard__glyph {
+    flex: none;
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--kex-r-s);
+    background: var(--kex-tint);
+    color: var(--kex-violet);
+  }
+  .kex-urlcard__text {
+    flex: 1;
+    min-width: 0;
+  }
+  .kex-urlcard__host {
+    margin: 0 0 4px;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--kex-mono-strong);
+    text-transform: uppercase;
+  }
+  .kex-urlcard__url {
+    margin: 0;
+    font-size: 14px;
+    color: var(--kex-text-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .kex-urlcard__hint {
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: var(--kex-text-3);
+  }
+  .kex-urlcard__actions {
+    flex: none;
+    display: flex;
+    gap: 12px;
+  }
+  .kex-urlcard .kex-btn {
+    width: auto;
+    padding: 0 18px;
+    font-size: 16px;
+    height: 40px;
+  }
+  .kex-urlcard .kex-kbd {
+    margin-left: 2px;
+  }
+  .kex-viewer {
+    display: block;
+    width: calc(100% - var(--kex-sb-w));
+    margin-left: var(--kex-sb-w);
+    height: calc(100vh - var(--kex-header-h) - 168px - 48px);
+    min-height: 600px;
+    border: 0;
+    border-bottom: 1px solid var(--kex-border);
+    background: var(--kex-bg);
+  }
+}
+:root[data-kex="skin"][data-kex-card] :is(.urlworkaround, .resourceworkaround, .resourcedetails, .resourcecontent .resourcelinkdetails) {
+  display: none !important;
+}
+/* when the chrome shows a viewer there is nothing else to read below it but the description */
+:root[data-kex="skin"][data-kex-card="resource"] #page.drawers {
+  padding-top: 0;
+}
+:root[data-kex="skin"][data-kex-card] #page {
+  padding-top: 20px;
+}
+
+/* Moodle's own embedded object / iframe (display "embed"), made a full-height viewer */
+:root[data-kex="skin"] .resourcecontent :is(object, iframe, embed, #resourceobject),
+:root[data-kex="skin"] #resourceobject {
+  width: 100%;
+  min-height: 600px;
+  height: calc(100vh - var(--kex-header-h) - 168px - 120px);
+  border: 1px solid var(--kex-border);
+  border-radius: var(--kex-r-xs);
+  background: var(--kex-bg);
+}
+:root[data-kex="skin"] .resourcecontent .mediaplugin,
+:root[data-kex="skin"] .resourcecontent img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---- page: the article ---- */
+:root[data-kex="skin"] body.path-mod-page #region-main .box.generalbox > .no-overflow,
+:root[data-kex="skin"] body#page-mod-page-view #region-main .box.generalbox > .no-overflow {
+  max-width: 760px;
+  font-size: 17px;
+  line-height: 1.7;
+}
+:root[data-kex="skin"] body.path-mod-page #region-main .box.generalbox,
+:root[data-kex="skin"] body#page-mod-page-view #region-main .box.generalbox {
+  margin: 8px 0 24px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+:root[data-kex="skin"] body.path-mod-page #region-main :is(h2, h3, h4),
+:root[data-kex="skin"] body#page-mod-page-view #region-main :is(h2, h3, h4) {
+  margin-top: 1.6em;
+}
+:root[data-kex="skin"] body.path-mod-page .modified,
+:root[data-kex="skin"] body#page-mod-page-view .modified {
+  margin-top: 28px;
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kex-mono-soft);
+}
+:root[data-kex="skin"] .no-overflow img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--kex-r-xs);
+}
+
+/* ---- book: article plus a sticky chapter list ---- */
+:root[data-kex="skin"] #region-main.kex-bookgrid {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  column-gap: 40px;
+  max-width: 1200px;
+  align-items: start;
+}
+:root[data-kex="skin"] #region-main.kex-bookgrid > :not(.kex-booktoc) {
+  grid-column: 2;
+}
+:root[data-kex="skin"] .kex-booktoc {
+  grid-column: 1;
+  grid-row: 1 / span 12;
+  position: sticky;
+  top: calc(var(--kex-header-h-compact) + 16px);
+  border: 1px solid var(--kex-border-card);
+  border-radius: var(--kex-r-xs);
+  padding: 8px 0;
+  font-size: 15px;
+}
+:root[data-kex="skin"] .kex-booktoc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+:root[data-kex="skin"] .kex-booktoc li > :is(a, strong) {
+  display: block;
+  padding: 9px 18px;
+  color: var(--kex-text-2);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+}
+:root[data-kex="skin"] .kex-booktoc li ul li > :is(a, strong) {
+  padding-left: 34px;
+}
+:root[data-kex="skin"] .kex-booktoc li > a:hover {
+  background: var(--kex-hover);
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] .kex-booktoc li > strong {
+  border-left-color: var(--kex-accent);
+  color: var(--kex-violet);
+  font-weight: 600;
+  background: var(--kex-tint);
+}
+:root[data-kex="skin"] body.path-mod-book .book_content {
+  max-width: 760px;
+  padding: 0 !important;
+  font-size: 17px;
+  line-height: 1.7;
+  background: transparent;
+  border: 0;
+}
+:root[data-kex="skin"] body.path-mod-book .book_content h2 {
+  margin-top: 0;
+}
+:root[data-kex="skin"] .tertiary-navigation {
+  padding: 0;
+  margin: 0 0 8px;
+}
+:root[data-kex="skin"] .tertiary-navigation .btn-link {
+  border: 1px solid var(--kex-border-card);
+  border-radius: var(--kex-r-s);
+  padding: 6px 14px;
+  min-height: 36px;
+}
+:root[data-kex="skin"] .tertiary-navigation .btn-link:hover {
+  background: var(--kex-hover);
+}
+@media (max-width: 1100px) {
+  :root[data-kex="skin"] #region-main.kex-bookgrid {
+    display: block;
+  }
+  :root[data-kex="skin"] .kex-booktoc {
+    position: static;
+    margin-bottom: 20px;
+  }
+}
+
+/* ---- folder: rows ---- */
+:root[data-kex="skin"] form[action*="download_folder"] .btn {
+  background: var(--kex-primary);
+  border: 1.5px solid var(--kex-primary);
+  color: var(--kex-on-primary);
+}
+:root[data-kex="skin"] form[action*="download_folder"] .btn:is(:hover, :focus) {
+  background: var(--kex-primary-hover);
+  border-color: var(--kex-primary-hover);
+  color: var(--kex-on-primary);
+}
+:root[data-kex="skin"] .description-inner > .container-fluid:has(form[action*="download_folder"]) {
+  margin-bottom: 12px;
+}
+:root[data-kex="skin"] .box.generalbox:has(.foldertree) {
+  padding: 0 !important;
+  background: transparent;
+  border: 0;
+}
+:root[data-kex="skin"] .foldertree {
+  max-width: 1100px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--kex-border-card);
+  border-radius: var(--kex-r-xs);
+  list-style: none;
+  overflow: hidden;
+}
+:root[data-kex="skin"] .foldertree :is(ul, li) {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: none !important;
+}
+:root[data-kex="skin"] .foldertree ul ul {
+  padding-left: 28px;
+}
+:root[data-kex="skin"] .foldertree li > p {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 20px;
+  border-top: 1px solid var(--kex-border);
+  color: var(--kex-text);
+  font-weight: 500;
+}
+:root[data-kex="skin"] .foldertree > li > p {
+  display: none;
+}
+:root[data-kex="skin"] .foldertree > li > ul > li:first-child > p {
+  border-top: 0;
+}
+:root[data-kex="skin"] .foldertree li::before {
+  content: none !important;
+}
+:root[data-kex="skin"][data-kex-theme="dark"] .foldertree li > p::before {
+  filter: invert(1);
+}
+:root[data-kex="skin"] .foldertree li > p:hover {
+  background: var(--kex-hover);
+}
+:root[data-kex="skin"] .foldertree li > p img {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+:root[data-kex="skin"] .foldertree li > p a {
+  flex: 1;
+  color: var(--kex-text);
+  font-weight: 500;
+  text-decoration: none;
+}
+:root[data-kex="skin"] .foldertree li > p a:hover {
+  color: var(--kex-violet);
+}

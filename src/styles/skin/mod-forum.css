@@ -1,0 +1,199 @@
+/* Forum (page-designs §7): list rows of 56px with an unread dot, posts as cards. */
+
+/* ---- toolbar above the list ---- */
+:root[data-kex="skin"] body.path-mod-forum .forumsearch,
+:root[data-kex="skin"] body.path-mod-forum .simplesearchform {
+  max-width: 360px;
+}
+:root[data-kex="skin"] body.path-mod-forum .btn-submit.search-icon,
+:root[data-kex="skin"] body.path-mod-forum .simplesearchform .btn {
+  min-height: 40px;
+  border-radius: 0 var(--kex-r-m) var(--kex-r-m) 0;
+}
+
+/* ---- discussion list ---- */
+:root[data-kex="skin"] table.discussion-list {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+:root[data-kex="skin"] table.discussion-list thead th {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--kex-border) !important;
+  background: transparent;
+}
+:root[data-kex="skin"] table.discussion-list thead th a {
+  color: inherit;
+  text-decoration: none;
+}
+:root[data-kex="skin"] table.discussion-list tbody tr {
+  height: 56px;
+}
+:root[data-kex="skin"] table.discussion-list tbody :is(td, th) {
+  padding-top: 0;
+  padding-bottom: 0;
+  vertical-align: middle;
+  border-top: 0 !important;
+  border-bottom: 1px solid var(--kex-border) !important;
+}
+:root[data-kex="skin"] table.discussion-list tbody th.topic > div {
+  padding: 0 12px 0 0 !important;
+}
+:root[data-kex="skin"] table.discussion-list th.topic a {
+  color: var(--kex-text);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  position: relative;
+}
+:root[data-kex="skin"] table.discussion-list th.topic a:hover {
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] table.discussion-list tr.hasunread th.topic a {
+  font-weight: 650;
+  padding-left: 18px;
+}
+:root[data-kex="skin"] table.discussion-list tr.hasunread th.topic a::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--kex-magenta);
+}
+:root[data-kex="skin"] table.discussion-list .userpicture {
+  width: 28px;
+  height: 28px;
+  margin-right: 10px;
+}
+:root[data-kex="skin"] table.discussion-list .author-info {
+  min-width: 0;
+}
+:root[data-kex="skin"] table.discussion-list .author-info > div:first-child {
+  font-size: 14px;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] table.discussion-list .author-info time,
+:root[data-kex="skin"] table.discussion-list td time {
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--kex-mono-soft);
+}
+:root[data-kex="skin"] table.discussion-list .author-info a {
+  text-decoration: none;
+}
+:root[data-kex="skin"] table.discussion-list td:has(> span:only-child) span {
+  font-family: var(--kex-font-mono);
+  font-size: 14px;
+}
+:root[data-kex="skin"] table.discussion-list .fa-star,
+:root[data-kex="skin"] table.discussion-list .fa-thumbtack {
+  color: var(--kex-violet-2);
+}
+:root[data-kex="skin"] table.discussion-list .fa-solid.fa-star {
+  color: var(--kex-accent);
+}
+:root[data-kex="skin"] table.discussion-list tbody tr:hover > * {
+  background-color: var(--kex-hover);
+}
+:root[data-kex="skin"] table.discussion-list .form-switch .form-check-input {
+  width: 2.4em;
+  height: 1.3em;
+}
+:root[data-kex="skin"] .form-switch .form-check-input:not(:checked) {
+  background-color: var(--kex-switch-off);
+  border-color: var(--kex-switch-off);
+}
+:root[data-kex="skin"] .form-switch .form-check-input:focus {
+  box-shadow: none;
+  outline: 2px solid var(--kex-focus);
+  outline-offset: 2px;
+}
+
+/* ---- discussion: posts as cards ---- */
+:root[data-kex="skin"] body#page-mod-forum-discuss .discussionname,
+:root[data-kex="skin"] body#page-mod-forum-discuss #region-main h3.discussionname {
+  font-size: 24px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+:root[data-kex="skin"] .forumpost {
+  margin: 0 0 16px !important;
+  padding: 18px 20px 14px !important;
+  border: 1px solid var(--kex-border-card) !important;
+  border-radius: var(--kex-r-xs) !important;
+  background: var(--kex-bg);
+  box-shadow: none;
+}
+:root[data-kex="skin"] :is(article.forum-post-container, [data-content="forum-post"]) .userpicture {
+  width: 32px;
+  height: 32px;
+}
+:root[data-kex="skin"] :is(article.forum-post-container, [data-content="forum-post"]) :is(h3, h4, .h4, .h5) {
+  margin: 0 0 2px;
+  font-family: var(--kex-font-ui);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] :is(article.forum-post-container, [data-content="forum-post"]) :is(time, .author-info time, [data-region-content="forum-post-core"] header p) {
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--kex-mono-soft);
+}
+:root[data-kex="skin"] :is(article.forum-post-container, [data-content="forum-post"]) :is(a[href*="/user/view.php"], a[href*="/user/profile.php"]) {
+  font-weight: 600;
+  color: var(--kex-text);
+  text-decoration: none;
+}
+:root[data-kex="skin"] :is(article.forum-post-container, [data-content="forum-post"]) .post-content-container,
+:root[data-kex="skin"] :is(article.forum-post-container, [data-content="forum-post"]) .post-message {
+  font-size: 16px;
+  line-height: 1.65;
+  max-width: 760px;
+}
+:root[data-kex="skin"] :is(article.forum-post-container, [data-content="forum-post"]) footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+:root[data-kex="skin"] :is(article.forum-post-container, [data-content="forum-post"]) :is(footer, .post-actions) :is(a.btn, .btn-link, a[data-post-action]) {
+  min-height: 32px;
+  padding: 4px 14px;
+  border: 1.5px solid var(--kex-outline);
+  border-radius: var(--kex-r-s);
+  color: var(--kex-outline-text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+:root[data-kex="skin"] :is(article.forum-post-container, [data-content="forum-post"]) :is(footer, .post-actions) :is(a.btn, .btn-link, a[data-post-action]):hover {
+  background: var(--kex-hover);
+}
+:root[data-kex="skin"] .indent {
+  margin-left: 28px;
+  padding-left: 16px;
+  border-left: 2px solid var(--kex-border);
+}
+:root[data-kex="skin"] .discussion-nav :is(.btn, a),
+:root[data-kex="skin"] .discussionnavigation .btn {
+  min-height: 36px;
+  min-width: 36px;
+  padding: 4px 10px;
+}
+:root[data-kex="skin"] .forum-post-container [data-region="inpage-reply"] {
+  margin-top: 12px;
+}
+:root[data-kex="skin"] .badge.unread,
+:root[data-kex="skin"] [data-region="unread-count"] {
+  color: var(--kex-magenta) !important;
+  border-color: color-mix(in srgb, var(--kex-magenta) 45%, var(--kex-bg));
+}

@@ -406,6 +406,16 @@ export const en = {
   'chrome.continue': 'Continue',
   'help.act.prev': 'Previous activity',
   'help.act.next': 'Next activity',
+  'url.open': 'Open',
+  'url.copy': 'Copy link',
+  'url.hint': 'Opens in a new tab',
+  'file.preview': 'Preview of {name}',
+  'file.noPreview': 'This file type has no preview.',
+  'file.open': 'Open',
+  'help.act.copy': 'Copy the link (URL activities)',
+  'chrome.kind.reading': 'Reading',
+  'help.act.chapterPrev': 'Previous chapter (books)',
+  'help.act.chapterNext': 'Next chapter (books)',
 } as const;
 
 export type MessageKey = keyof typeof en;

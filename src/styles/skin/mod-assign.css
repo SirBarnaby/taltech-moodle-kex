@@ -1,0 +1,109 @@
+/* Assignment (page-designs §7): the status table becomes a key/value card; editsubmission keeps Moodle's form, restyled. */
+
+/* key / value card */
+:root[data-kex="skin"] :is(.submissionstatustable, .feedback, .submissionsummarytable) :is(table.generaltable, table.table) {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 0 8px;
+  border: 1px solid var(--kex-border-card);
+  border-radius: var(--kex-r-xs);
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+:root[data-kex="skin"] :is(.submissionstatustable, .feedback, .submissionsummarytable) table :is(th.cell, th.c0, tr > th:first-child) {
+  width: 232px;
+  padding: 14px 20px;
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kex-mono-soft);
+  background: transparent;
+  vertical-align: middle;
+}
+:root[data-kex="skin"] :is(.submissionstatustable, .feedback, .submissionsummarytable) table td {
+  padding: 12px 20px;
+  font-size: 16px;
+  vertical-align: middle;
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] :is(.submissionstatustable, .feedback, .submissionsummarytable) table tr:last-child > * {
+  border-bottom: 0 !important;
+}
+:root[data-kex="skin"] :is(.submissionstatustable, .feedback) table :is(td.overdue, td.latesubmission, .overdue, .latesubmission) {
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] .submissionstatustable table td .text-danger,
+:root[data-kex="skin"] .submissionstatustable table td.overdue {
+  color: var(--kex-text) !important;
+}
+/* "Add submission" and friends */
+:root[data-kex="skin"] .submissionaction,
+:root[data-kex="skin"] .submissionlinks {
+  margin: 8px 0 24px;
+}
+:root[data-kex="skin"] .submissionstatustable h3,
+:root[data-kex="skin"] .feedback h3 {
+  margin-top: 8px;
+}
+:root[data-kex="skin"] .submissionstatustable .submissionlinks a,
+:root[data-kex="skin"] .submissionstatustable .submissionaction .btn {
+  min-height: 40px;
+}
+/* the feedback comment as an article */
+:root[data-kex="skin"] .feedback .no-overflow,
+:root[data-kex="skin"] .feedback .feedbacktext {
+  max-width: 760px;
+  font-size: 17px;
+  line-height: 1.7;
+}
+:root[data-kex="skin"] .submissionstatustable td .editsubmissionlink,
+:root[data-kex="skin"] .submissionlinks a {
+  font-weight: 600;
+}
+
+/* ---- editsubmission and every other page with a filemanager (private files, forum attachments) ---- */
+:root[data-kex="skin"] .filemanager {
+  border: 0;
+  background: transparent;
+}
+:root[data-kex="skin"] .filemanager .fp-navbar {
+  border: 1px solid var(--kex-border);
+  border-radius: var(--kex-r-s) var(--kex-r-s) 0 0;
+  background: var(--kex-bg);
+  min-height: 44px;
+}
+:root[data-kex="skin"] .filemanager .fp-toolbar .fp-btn-add a,
+:root[data-kex="skin"] .filemanager .fp-toolbar .btn {
+  min-height: 32px;
+}
+:root[data-kex="skin"] .filemanager .fp-content {
+  min-height: 160px;
+  border: 1.5px dashed var(--kex-border-strong);
+  border-top: 0;
+  border-radius: 0 0 var(--kex-r-s) var(--kex-r-s);
+  background: transparent;
+  transition: border-color 120ms var(--kex-ease), background 120ms var(--kex-ease);
+}
+:root[data-kex="skin"] .filemanager.dndupload-over .fp-content,
+:root[data-kex="skin"] .filemanager .dndupload-target:hover {
+  border: 1.5px solid var(--kex-violet);
+  background: var(--kex-tint);
+}
+:root[data-kex="skin"] .filemanager .fp-filename,
+:root[data-kex="skin"] .filemanager .fp-filename-field {
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .filemanager .dndupload-message {
+  color: var(--kex-text-3);
+}
+:root[data-kex="skin"] .filemanager .fp-iconview .fp-thumbnail {
+  border-radius: var(--kex-r-xs);
+  background: var(--kex-tint);
+}
+:root[data-kex="skin"] .filemanager :is(.fp-restrictions, .fp-pathbar) {
+  color: var(--kex-text-3);
+  font-size: 13px;
+}

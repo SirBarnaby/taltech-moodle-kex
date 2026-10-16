@@ -1,6 +1,6 @@
-import { ArrowLeft, ArrowRight, CircleCheck, Download, ExternalLink, Pin as PinIcon } from 'lucide-preact';
+import { ArrowLeft, ArrowRight, CircleCheck, Copy, Download, ExternalLink, FileText, Globe, Pin as PinIcon } from 'lucide-preact';
 import { useEffect } from 'preact/hooks';
-import { downloadUrl, gotoNeighbour, loadNeighbourState, pinFromPage, pinPage, toggleDonePage, openNewTab } from '../../actions/skin';
+import { copyUrlTarget, downloadUrl, gotoNeighbour, loadNeighbourState, pinFromPage, pinPage, toggleDonePage, openNewTab } from '../../actions/skin';
 import { go, homeUrl } from '../../actions/navigate';
 import { classifyFormat, classifyKind, monoLabel } from '../../data/classify';
 import { cmDetails } from '../../data/repo/cmdetails';
@@ -34,7 +34,9 @@ export function chromeLabel(): string {
     const kind = classifyKind({ modname, name: sp?.title ?? '' });
     const format = cmDetails.value.get(info.cmId)?.format ?? classifyFormat({ modname, name: sp?.title ?? '' }, kind);
     const n = neighbours.value?.current.section.number;
-    return [code, n ? `${t('course.topic')} ${pad2(n)}` : '', monoLabel(kind, format).replace(' / ', ' · ')].filter(Boolean).join(' / ');
+    const [k, f] = monoLabel(kind, format).split(' / ');
+    const word = f && f !== k ? `${k} · ${f}` : k;
+    return [code, n ? `${t('course.topic')} ${pad2(n)}` : '', word].filter(Boolean).join(' / ');
   }
   return pageLabel(code);
 }
@@ -120,6 +122,72 @@ function ChromeMeta() {
   );
 }
 
+const PREVIEWABLE = /\.(pdf|png|jpe?g|gif|webp|svg|txt|mp4|webm|mp3|ogg|wav|html?)(\?|$)/i;
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+}
+
+/** URL activity: Moodle's "Click on ... to open the resource" becomes a card (page-designs §7). */
+function UrlCard({ href }: { href: string }) {
+  return (
+    <section class="kex-urlcard" data-kex-test="urlcard">
+      <span class="kex-urlcard__glyph" aria-hidden="true"><Globe size={28} strokeWidth={1.5} /></span>
+      <div class="kex-urlcard__text">
+        <p class="kex-mono kex-urlcard__host" data-kex-test="urlcard-host">{hostOf(href)}</p>
+        <p class="kex-urlcard__url" title={href}>{href}</p>
+      </div>
+      <div class="kex-urlcard__actions">
+        <button type="button" class="kex-btn kex-btn--outlined" data-kex-test="urlcard-copy" onClick={copyUrlTarget}>
+          <Copy size={16} strokeWidth={1.75} aria-hidden="true" />
+          {t('url.copy')}<kbd class="kex-kbd">c</kbd>
+        </button>
+        <a class="kex-btn kex-btn--filled" href={href} target="_blank" rel="noopener" data-kex-test="urlcard-open">
+          {t('url.open')}
+          <ExternalLink size={16} strokeWidth={1.75} aria-hidden="true" />
+        </a>
+      </div>
+    </section>
+  );
+}
+
+/** Resource page that Moodle shows as "click to open": a full-height preview of the file, or a download card. */
+function FileViewer({ url, name, details }: { url: string; name: string; details: string }) {
+  if (PREVIEWABLE.test(url)) {
+    return <iframe class="kex-viewer" src={url} title={t('file.preview', { name })} data-kex-test="viewer" />;
+  }
+  return (
+    <section class="kex-urlcard" data-kex-test="filecard">
+      <span class="kex-urlcard__glyph" aria-hidden="true"><FileText size={28} strokeWidth={1.5} /></span>
+      <div class="kex-urlcard__text">
+        <p class="kex-mono kex-urlcard__host">{details || name}</p>
+        <p class="kex-urlcard__url">{name}</p>
+        <p class="kex-urlcard__hint">{t('file.noPreview')}</p>
+      </div>
+      <div class="kex-urlcard__actions">
+        <a class="kex-btn kex-btn--filled" href={downloadUrl() ?? url} data-kex-test="filecard-download">
+          <Download size={16} strokeWidth={1.75} aria-hidden="true" />
+          {t('chrome.download')}
+        </a>
+      </div>
+    </section>
+  );
+}
+
+/** The content cards under the band (URL card, file viewer), which replace Moodle's own "click here" markup. */
+function ChromeBody() {
+  const sp = skinPage.value;
+  const r = route.value;
+  if (!sp || r?.key !== 'activity') return null;
+  if (r.mod === 'url' && sp.urlTarget) return <UrlCard href={sp.urlTarget} />;
+  if (r.mod === 'resource' && sp.fileUrl && sp.file && !sp.file.embedded) return <FileViewer url={sp.fileUrl} name={sp.file.name} details={sp.file.details} />;
+  return null;
+}
+
 /** The sticky previous / next bar under an activity (page-designs §0). */
 export function PrevNextBar() {
   const n = neighbours.value;
@@ -159,6 +227,13 @@ export function SkinChrome() {
   const sp = skinPage.value;
   const activity = isActivity.value;
   const err = sp?.error;
+  const card = !err && activity && ((route.value?.mod === 'url' && !!sp?.urlTarget) || (route.value?.mod === 'resource' && !!sp?.fileUrl && sp.file?.embedded === false));
+  useEffect(() => {
+    const root = document.documentElement;
+    if (card) root.setAttribute('data-kex-card', route.value?.mod ?? '');
+    else root.removeAttribute('data-kex-card');
+    return () => root.removeAttribute('data-kex-card');
+  }, [card, route.value?.mod]);
   const label = err ? `${t('area.error')} / ${err.code.toUpperCase()}` : chromeLabel();
   return (
     <>
@@ -173,6 +248,7 @@ export function SkinChrome() {
           testId="band"
         />
       </div>
+      <ChromeBody />
       {activity && <PrevNextBar />}
     </>
   );

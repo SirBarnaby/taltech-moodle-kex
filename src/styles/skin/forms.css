@@ -1,0 +1,60 @@
+/* Moodle forms (mform), shared by assign editsubmission, forum post, profile edit, preferences and every other form: restyled, not rebuilt. */
+
+/* the editor frame (TinyMCE / Atto keep their own interior) */
+:root[data-kex="skin"] :is(.tox-tinymce, .editor_atto_content_wrap, .editor_atto) {
+  border: 1px solid var(--kex-search-border) !important;
+  border-radius: var(--kex-r-m) !important;
+  overflow: hidden;
+}
+:root[data-kex="skin"] .tox:not(.tox-tinymce-aux) .tox-editor-header {
+  box-shadow: none;
+  border-bottom: 1px solid var(--kex-border);
+}
+
+/* the form: label column, spacing, action row */
+:root[data-kex="skin"] form.mform {
+  max-width: 1100px;
+}
+:root[data-kex="skin"] form.mform .fitem {
+  margin-bottom: 18px;
+}
+:root[data-kex="skin"] form.mform :is(.col-form-label, label) {
+  font-weight: 500;
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] form.mform fieldset {
+  border: 0;
+  padding: 0;
+}
+:root[data-kex="skin"] form.mform :is(legend, .fheader, .ftoggler) {
+  font-family: var(--kex-font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--kex-text);
+  letter-spacing: -0.015em;
+}
+:root[data-kex="skin"] form.mform .form-control-feedback,
+:root[data-kex="skin"] form.mform .invalid-feedback {
+  color: var(--kex-magenta);
+}
+:root[data-kex="skin"] form.mform .is-invalid {
+  border-color: var(--kex-magenta);
+}
+:root[data-kex="skin"] form.mform [data-fieldtype="group"] .fgroup {
+  gap: 8px;
+}
+:root[data-kex="skin"] form.mform .form-group.fitem:has(#id_submitbutton) {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--kex-border);
+}
+:root[data-kex="skin"] form.mform .form-group.fitem:has(#id_submitbutton) :is(.col-md-3, .col-md-9) {
+  flex: 0 0 auto;
+  width: auto;
+  max-width: none;
+  padding-left: 0;
+}
+:root[data-kex="skin"] form.mform .form-group.fitem:has(#id_submitbutton) .felement {
+  display: flex;
+  gap: 12px;
+}

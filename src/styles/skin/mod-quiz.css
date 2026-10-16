@@ -1,0 +1,462 @@
+/* Quiz (page-designs §7): view table, focus mode for attempt and summary, review cards. */
+
+/* ---- view ---- */
+:root[data-kex="skin"] .quizinfo {
+  margin: 12px 0 20px;
+  padding: 0;
+  text-align: left;
+}
+:root[data-kex="skin"] .quizinfo p {
+  margin: 0 0 4px;
+  font-family: var(--kex-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kex-mono-soft);
+}
+:root[data-kex="skin"] .quizattemptsummary,
+:root[data-kex="skin"] table.quizattemptsummary {
+  width: 100%;
+  max-width: 1100px;
+}
+:root[data-kex="skin"] .quizattemptcounts,
+:root[data-kex="skin"] .quizattemptsummary + p {
+  color: var(--kex-text-3);
+}
+:root[data-kex="skin"] .quizattemptsummary td.c1 .statedetails {
+  display: inline-block;
+}
+:root[data-kex="skin"] #region-main .singlebutton,
+:root[data-kex="skin"] #region-main .quizstartbuttondiv {
+  margin: 8px 0 20px;
+  text-align: left;
+}
+
+/* ---- question cards (attempt, summary, review) ---- */
+:root[data-kex="skin"] .que {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 0;
+  margin: 0 0 20px;
+  border: 1px solid var(--kex-border-card);
+  border-left-width: 1px;
+  border-radius: var(--kex-r-xs);
+  background: var(--kex-bg);
+  overflow: hidden;
+  position: relative;
+}
+:root[data-kex="skin"] .que .info {
+  float: none;
+  width: auto;
+  margin: 0;
+  padding: 16px 16px;
+  border: 0;
+  border-right: 1px solid var(--kex-border);
+  border-radius: 0;
+  background: transparent;
+  font-size: 13px;
+  color: var(--kex-text-3);
+}
+:root[data-kex="skin"] .que .info h3.no {
+  margin: 0 0 8px;
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kex-mono-soft);
+}
+:root[data-kex="skin"] .que .info h3.no .qno {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--kex-font-display);
+  font-size: 32px;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] .que .info > div {
+  margin: 0 0 6px;
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+:root[data-kex="skin"] .que .info .state {
+  font-weight: 600;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .que .info .questionflag {
+  margin-top: 8px;
+  font-family: var(--kex-font-ui);
+  font-size: 13px;
+}
+:root[data-kex="skin"] .que .content {
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+:root[data-kex="skin"] .que .formulation,
+:root[data-kex="skin"] .que .outcome,
+:root[data-kex="skin"] .que .comment {
+  margin: 0;
+  padding: 18px 22px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .que .formulation {
+  background: transparent;
+  font-size: 17px;
+  line-height: 1.6;
+}
+:root[data-kex="skin"] .que .qtext {
+  margin-bottom: 16px;
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] .que .outcome,
+:root[data-kex="skin"] .que .comment {
+  border-top: 1px solid var(--kex-border);
+  background: var(--kex-tint);
+  font-size: 15px;
+}
+:root[data-kex="skin"] .que .answer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+:root[data-kex="skin"] .que .answer :is(.r0, .r1) {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--kex-r-s);
+  border: 1px solid transparent;
+}
+:root[data-kex="skin"] .que .answer :is(.r0, .r1):hover {
+  background: var(--kex-hover);
+}
+:root[data-kex="skin"] .que .answer :is(.r0, .r1):has(input:checked) {
+  background: var(--kex-tint);
+  border-color: var(--kex-tint-border);
+}
+:root[data-kex="skin"] .que .answer input[type="radio"],
+:root[data-kex="skin"] .que .answer input[type="checkbox"] {
+  accent-color: var(--kex-violet);
+  flex: none;
+}
+:root[data-kex="skin"] .que .answernumber {
+  font-family: var(--kex-font-mono);
+  font-size: 13px;
+  color: var(--kex-mono-soft);
+}
+:root[data-kex="skin"] .que .prompt {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--kex-text-3);
+}
+:root[data-kex="skin"] .que .rightanswer {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .que :is(.specificfeedback, .generalfeedback) {
+  margin-top: 8px;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .que input.form-control[type="text"] {
+  width: auto;
+  min-width: 220px;
+  display: inline-block;
+}
+/* review marks */
+:root[data-kex="skin"] .que.correct,
+:root[data-kex="skin"] .que.incorrect,
+:root[data-kex="skin"] .que.partiallycorrect {
+  border-left-width: 4px;
+}
+:root[data-kex="skin"] .que.correct { border-left-color: var(--kex-success); }
+:root[data-kex="skin"] .que.incorrect { border-left-color: var(--kex-magenta); }
+:root[data-kex="skin"] .que.partiallycorrect { border-left-color: var(--kex-warning); }
+:root[data-kex="skin"] .que.correct .info .state { color: var(--kex-success); }
+:root[data-kex="skin"] .que.incorrect .info .state { color: var(--kex-magenta); }
+:root[data-kex="skin"] .que.partiallycorrect .info .state { color: var(--kex-warning); }
+:root[data-kex="skin"] .que .answer .correct,
+:root[data-kex="skin"] .que .answer .incorrect {
+  background: transparent;
+}
+:root[data-kex="skin"] .que .answer .correct { border-color: color-mix(in srgb, var(--kex-success) 45%, var(--kex-bg)); }
+:root[data-kex="skin"] .que .answer .incorrect { border-color: color-mix(in srgb, var(--kex-magenta) 45%, var(--kex-bg)); }
+:root[data-kex="skin"] .que :is(.icon.fa-check, .fa-check) { color: var(--kex-success); }
+:root[data-kex="skin"] .que :is(.icon.fa-xmark, .fa-xmark, .fa-times) { color: var(--kex-magenta); }
+
+/* review summary table (Started on / Completed / Grade) */
+:root[data-kex="skin"] table.quizreviewsummary {
+  width: 100%;
+  max-width: 1100px;
+  border: 1px solid var(--kex-border-card);
+  border-radius: var(--kex-r-xs);
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+:root[data-kex="skin"] table.quizreviewsummary th {
+  width: 232px;
+  padding: 12px 20px;
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kex-mono-soft);
+}
+:root[data-kex="skin"] table.quizreviewsummary td {
+  padding: 12px 20px;
+  color: var(--kex-text);
+}
+:root[data-kex="skin"] table.quizreviewsummary tr:last-child > * {
+  border-bottom: 0 !important;
+}
+
+/* summary page */
+:root[data-kex="skin"] table.quizsummaryofattempt {
+  width: 100%;
+  max-width: 1100px;
+}
+:root[data-kex="skin"] .submitbtns {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+/* ---- focus mode: attempt.php and summary.php ---- */
+:root[data-kex="skin"][data-kex-focus] #page-header {
+  display: none !important;
+}
+:root[data-kex="skin"][data-kex-focus] #page-wrapper {
+  padding-top: calc(var(--kex-header-h) + 20px);
+}
+:root[data-kex="skin"][data-kex-focus] #page.drawers,
+:root[data-kex="skin"] body#page-mod-quiz-review #page.drawers {
+  padding-right: calc(260px + var(--kex-pad) + 24px);
+}
+:root[data-kex="skin"][data-kex-focus] #region-main {
+  max-width: 920px;
+}
+:root[data-kex="skin"][data-kex-focus] #page-content .back-button,
+:root[data-kex="skin"][data-kex-focus] .quizattempt .mod_quiz-back {
+  margin-bottom: 8px;
+}
+
+/* the blocks drawer carries the navigation block: shown as a sticky right rail */
+:root[data-kex="skin"] body#page-mod-quiz-review #theme_boost-drawers-blocks,
+:root[data-kex="skin"][data-kex-focus] #theme_boost-drawers-blocks {
+  display: block !important;
+  visibility: visible !important;
+  position: fixed;
+  top: calc(var(--kex-header-h) + 20px);
+  right: var(--kex-pad) !important;
+  bottom: auto;
+  left: auto !important;
+  width: 260px;
+  min-width: 0;
+  transition: none !important;
+  animation: none !important;
+  clip-path: none !important;
+  pointer-events: auto !important;
+  height: auto;
+  max-height: calc(100vh - var(--kex-header-h) - 40px);
+  transform: none !important;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--kex-border-card);
+  border-radius: var(--kex-r-xs);
+  background: var(--kex-bg);
+  box-shadow: none;
+  overflow: auto;
+  z-index: 3;
+}
+:root[data-kex="skin"] body#page-mod-quiz-review #theme_boost-drawers-blocks :is(.drawerheader, .drawer-toggler, .drawertoggle),
+:root[data-kex="skin"][data-kex-focus] #theme_boost-drawers-blocks :is(.drawerheader, .drawer-toggler, .drawertoggle) {
+  display: none !important;
+}
+:root[data-kex="skin"] body#page-mod-quiz-review #theme_boost-drawers-blocks .drawercontent,
+:root[data-kex="skin"][data-kex-focus] #theme_boost-drawers-blocks .drawercontent {
+  padding: 0;
+  height: auto;
+  overflow: visible;
+}
+:root[data-kex="skin"] body#page-mod-quiz-review #theme_boost-drawers-blocks .block,
+:root[data-kex="skin"][data-kex-focus] #theme_boost-drawers-blocks .block {
+  margin: 0 !important;
+  border: 0;
+  background: transparent;
+}
+:root[data-kex="skin"] body#page-mod-quiz-review #theme_boost-drawers-blocks .block:not(#mod_quiz_navblock),
+:root[data-kex="skin"][data-kex-focus] #theme_boost-drawers-blocks .block:not(#mod_quiz_navblock) {
+  display: none;
+}
+:root[data-kex="skin"] body#page-mod-quiz-review #mod_quiz_navblock .card-body,
+:root[data-kex="skin"][data-kex-focus] #mod_quiz_navblock .card-body {
+  padding: 16px !important;
+}
+:root[data-kex="skin"] body#page-mod-quiz-review #mod_quiz_navblock .block-header h3,
+:root[data-kex="skin"] body#page-mod-quiz-review #mod_quiz_navblock .card-title,
+:root[data-kex="skin"][data-kex-focus] #mod_quiz_navblock .block-header h3,
+:root[data-kex="skin"][data-kex-focus] #mod_quiz_navblock .card-title {
+  margin: 0;
+  font-family: var(--kex-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kex-mono-soft);
+}
+:root[data-kex="skin"] .qn_buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+:root[data-kex="skin"] .qn_buttons a.qnbutton {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 32px !important;
+  height: 32px !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid var(--kex-border-strong) !important;
+  border-radius: var(--kex-r-xs);
+  background: transparent !important;
+  color: var(--kex-text-2) !important;
+  font-family: var(--kex-font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  overflow: hidden;
+  box-shadow: none;
+}
+:root[data-kex="skin"] .qnbutton :is(.thispageholder, .trafficlight) {
+  display: none !important;
+}
+:root[data-kex="skin"] .qn_buttons a.qnbutton:is(.answersaved, .complete, .correct, .partiallycorrect, .incorrect) {
+  background: var(--kex-primary) !important;
+  border-color: var(--kex-primary) !important;
+  color: var(--kex-on-primary) !important;
+}
+:root[data-kex="skin"] .qn_buttons a.qnbutton.correct { background: var(--kex-success) !important; border-color: var(--kex-success) !important; }
+:root[data-kex="skin"] .qn_buttons a.qnbutton.incorrect { background: var(--kex-magenta) !important; border-color: var(--kex-magenta) !important; }
+:root[data-kex="skin"] .qn_buttons a.qnbutton.partiallycorrect { background: var(--kex-warning) !important; border-color: var(--kex-warning) !important; }
+:root[data-kex="skin"] .qn_buttons a.qnbutton.thispage {
+  border: 2px solid var(--kex-accent) !important;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px var(--kex-bg) inset;
+}
+:root[data-kex="skin"] .qn_buttons a.qnbutton.notyetanswered.thispage {
+  color: var(--kex-text) !important;
+}
+:root[data-kex="skin"] .qn_buttons a.qnbutton.flagged::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-style: solid;
+  border-width: 0 11px 11px 0;
+  border-color: transparent var(--kex-magenta) transparent transparent;
+}
+:root[data-kex="skin"] .qnbutton .flagstate {
+  display: none;
+}
+:root[data-kex="skin"] .qn_buttons a.qnbutton:is(:hover, :focus-visible) {
+  border-color: var(--kex-accent) !important;
+}
+:root[data-kex="skin"] .othernav {
+  margin-top: 14px;
+  font-size: 14px;
+}
+:root[data-kex="skin"] #mod_quiz_navblock .othernav a {
+  display: block;
+  padding: 6px 0;
+  color: var(--kex-violet);
+}
+
+/* on the review page the band sits above: the rail scrolls with the page instead of being fixed */
+:root[data-kex="skin"] body#page-mod-quiz-review #page-wrapper {
+  position: relative;
+}
+:root[data-kex="skin"] body#page-mod-quiz-review #theme_boost-drawers-blocks {
+  position: absolute;
+  top: 28px;
+  max-height: none;
+}
+
+/* the timer: a mono pill in the header area */
+:root[data-kex="skin"][data-kex-focus] #quiz-timer-wrapper {
+  position: fixed;
+  z-index: calc(var(--kex-z-header) + 1);
+  top: 14px;
+  right: calc(var(--kex-pad) + 352px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  margin: 0 !important;
+  padding: 0 4px 0 14px;
+  border: 1px solid var(--kex-tint-border);
+  border-radius: 999px;
+  background: var(--kex-tint);
+  color: var(--kex-violet);
+  font-family: var(--kex-font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+:root[data-kex="skin"][data-kex-focus] #quiz-timer {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-kex="skin"][data-kex-focus] #quiz-timer #quiz-time-left {
+  font-variant-numeric: tabular-nums;
+}
+:root[data-kex="skin"][data-kex-focus] #toggle-timer {
+  min-height: 0;
+  margin: 0 !important;
+  padding: 3px 10px;
+  border: 0 !important;
+  border-radius: 999px;
+  background: transparent !important;
+  font-family: var(--kex-font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--kex-text-3) !important;
+}
+:root[data-kex="skin"][data-kex-focus] #toggle-timer:hover {
+  background: var(--kex-hover) !important;
+}
+:root[data-kex="skin"][data-kex-focus] #quiz-timer-wrapper:has(.timeleft, #quiz-timer[class*="timeleft"]) {
+  color: var(--kex-magenta);
+}
+
+@media (max-width: 1100px) {
+  :root[data-kex="skin"][data-kex-focus] #page.drawers,
+  :root[data-kex="skin"] body#page-mod-quiz-review #page.drawers {
+    padding-right: var(--kex-pad);
+  }
+  :root[data-kex="skin"][data-kex-focus] #theme_boost-drawers-blocks,
+  :root[data-kex="skin"] body#page-mod-quiz-review #theme_boost-drawers-blocks {
+    position: static;
+    width: auto;
+    margin: 0 var(--kex-pad) 20px calc(var(--kex-sb-w) + var(--kex-pad));
+  }
+}

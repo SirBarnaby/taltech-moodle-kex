@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+import { installKex, login, LAB, iter3Seed } from '../test/harness/kex.ts';
+const [,, url, expr, theme='light'] = process.argv;
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport:{width:1585,height:992} });
+await login(ctx);
+const p = await ctx.newPage();
+await installKex(p, iter3Seed({theme, debug:{freezeTime:7.3}}));
+await p.goto(LAB+url);
+await p.waitForTimeout(3000);
+console.log(JSON.stringify(await p.evaluate(expr), null, 1));
+await b.close();
