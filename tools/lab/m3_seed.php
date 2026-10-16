@@ -19,7 +19,13 @@ require_once($CFG->dirroot . '/calendar/lib.php');
 require_once($CFG->dirroot . '/message/lib.php');
 
 \core\session\manager::set_user(get_admin());
-$gen = \core\test\phpunit\phpunit_util::get_data_generator();
+if (class_exists('\\core\\test\\phpunit\\phpunit_util')) {
+    $gen = \core\test\phpunit\phpunit_util::get_data_generator();
+} else { // Moodle 4.5 lab
+    require_once($CFG->libdir . '/testing/generator/lib.php');
+    require_once($CFG->libdir . '/phpunit/classes/util.php');
+    $gen = new testing_data_generator();
+}
 $student = $DB->get_record('user', ['username' => 'student'], '*', MUST_EXIST);
 $teacher = $DB->get_record('user', ['username' => 'teacher'], '*', MUST_EXIST);
 $now = time();
@@ -93,7 +99,9 @@ if (!$quiz || !$DB->record_exists('quiz_slots', ['quizid' => $quiz->id])) {
   }
     global $USER;
     $contextid = context_module::instance($quiz->cmid)->id;
-    $qcat = question_get_default_category($contextid, true);
+    $qcat = $CFG->branch < 500
+        ? question_make_default_categories([context_module::instance($quiz->cmid)]) // Moodle 4.x
+        : question_get_default_category($contextid, true);
     $mk = function (string $qtype, string $name, string $text, array $extra) use ($qcat, $contextid, $USER) {
         $form = new stdClass();
         $form->category = $qcat->id . ',' . $contextid;

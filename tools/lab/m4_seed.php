@@ -8,7 +8,13 @@ require('/var/www/html/config.php');
 require_once($CFG->dirroot . '/course/lib.php');
 
 \core\session\manager::set_user(get_admin());
-$gen = \core\test\phpunit\phpunit_util::get_data_generator();
+if (class_exists('\\core\\test\\phpunit\\phpunit_util')) {
+    $gen = \core\test\phpunit\phpunit_util::get_data_generator();
+} else { // Moodle 4.5 lab
+    require_once($CFG->libdir . '/testing/generator/lib.php');
+    require_once($CFG->libdir . '/phpunit/classes/util.php');
+    $gen = new testing_data_generator();
+}
 $c = $DB->get_record('course', ['shortname' => 'IEE2630'], '*', MUST_EXIST);
 
 function has_mod(string $mod, int $courseid, string $name): bool {
