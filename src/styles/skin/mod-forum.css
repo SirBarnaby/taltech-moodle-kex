@@ -23,6 +23,9 @@
   border-bottom: 1px solid var(--kex-border) !important;
   background: transparent;
 }
+:root[data-kex="skin"] table.discussion-list :is(th, td):is(.author, .lastpost) {
+  min-width: 176px;
+}
 :root[data-kex="skin"] table.discussion-list thead th a {
   color: inherit;
   text-decoration: none;

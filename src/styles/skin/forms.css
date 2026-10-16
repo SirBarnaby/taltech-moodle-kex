@@ -58,3 +58,71 @@
   display: flex;
   gap: 12px;
 }
+
+/* Plain radios and checkboxes (quiz answers, choice options): one drawn control in both themes. */
+:root[data-kex="skin"] :is(.que .answer, ul.choices) input[type="radio"],
+:root[data-kex="skin"] :is(.que .answer, ul.choices) input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  align-self: center;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid var(--kex-mono);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+:root[data-kex="skin"] :is(.que .answer, ul.choices) input[type="checkbox"] {
+  border-radius: 4px;
+}
+:root[data-kex="skin"] :is(.que .answer, ul.choices) input[type="radio"]:checked {
+  border-color: var(--kex-violet);
+  background: radial-gradient(circle, var(--kex-violet) 0 4.5px, transparent 5.5px);
+}
+:root[data-kex="skin"] :is(.que .answer, ul.choices) input[type="checkbox"]:checked {
+  border-color: var(--kex-violet);
+  background: var(--kex-violet);
+  box-shadow: inset 0 0 0 3px var(--kex-bg);
+}
+:root[data-kex="skin"] :is(.que .answer, ul.choices) input:is([type="radio"], [type="checkbox"]):focus-visible {
+  outline: 2px solid var(--kex-focus);
+  outline-offset: 2px;
+}
+:root[data-kex="skin"] :is(.que .answer, ul.choices) input:disabled {
+  opacity: 0.55;
+}
+:root[data-kex="skin"] ul.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  margin: 16px 0;
+  padding: 0;
+}
+:root[data-kex="skin"] ul.choices li.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 !important;
+}
+:root[data-kex="skin"] ul.choices li.option label {
+  margin: 0;
+  cursor: pointer;
+}
+:root[data-kex="skin"] ul.choices li.clearfloat {
+  display: none;
+}
+
+/* File manager / picker toolbars. */
+:root[data-kex="skin"] .fp-viewbar .btn.checked,
+:root[data-kex="skin"] .fp-viewbar .btn.active {
+  background: var(--kex-tint);
+  border-color: var(--kex-tint-border);
+  color: var(--kex-violet);
+}
+:root[data-kex="skin"] .fp-pathbar .fp-path-folder {
+  /* Moodle's folder icon is a black bitmap background: drop it rather than invert text. */
+  background-image: none;
+  padding-left: 0;
+}

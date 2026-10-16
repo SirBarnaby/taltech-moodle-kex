@@ -142,10 +142,13 @@
   background: var(--kex-tint);
   border-color: var(--kex-tint-border);
 }
-:root[data-kex="skin"] .que .answer input[type="radio"],
-:root[data-kex="skin"] .que .answer input[type="checkbox"] {
-  accent-color: var(--kex-violet);
-  flex: none;
+/* The flag icon is a black bitmap from Moodle's theme: invert it on dark. */
+:root[data-kex="skin"][data-kex-theme="dark"] .que .questionflagimage {
+  filter: invert(1);
+}
+:root[data-kex="skin"] .que .questionflagimage {
+  margin-right: 4px;
+  vertical-align: -3px;
 }
 :root[data-kex="skin"] .que .answernumber {
   font-family: var(--kex-font-mono);
@@ -221,15 +224,27 @@
   border-bottom: 0 !important;
 }
 
-/* summary page */
+/* summary page: the heading row is empty in stock Moodle */
+:root[data-kex="skin"] tr.quizsummaryheading:has(> th:empty) {
+  display: none;
+}
 :root[data-kex="skin"] table.quizsummaryofattempt {
   width: 100%;
   max-width: 1100px;
 }
 :root[data-kex="skin"] .submitbtns {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 12px;
   margin: 20px 0;
+  text-align: left;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .submitbtns .controls,
+:root[data-kex="skin"] .submitbtns :is(.singlebutton, .btn-finishattempt) {
+  margin: 0 !important;
+  text-align: left;
 }
 
 /* ---- focus mode: attempt.php and summary.php ---- */
@@ -314,6 +329,11 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--kex-mono);
+}
+:root[data-kex="skin"] #mod_quiz_navblock .block-header {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--kex-border) !important;
 }
 :root[data-kex="skin"] .qn_buttons {
   display: flex;

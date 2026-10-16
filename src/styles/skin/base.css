@@ -185,6 +185,10 @@
 :root[data-kex="skin"] :is(.btn-danger, .btn-outline-danger) {
   border-radius: var(--kex-r-s);
 }
+:root[data-kex="skin"] :where(a, button, [role="button"], [role="tab"], [tabindex], summary):focus-visible {
+  outline: 2px solid var(--kex-focus);
+  outline-offset: 2px;
+}
 :root[data-kex="skin"] .btn:focus-visible {
   outline: 2px solid var(--kex-focus);
   outline-offset: 2px;
@@ -194,6 +198,14 @@
 :root[data-kex="skin"] .btn.btn-icon {
   min-height: 0;
   padding: 4px 8px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--kex-text-2);
+}
+:root[data-kex="skin"] .btn.btn-icon:is(:hover, :focus, :focus-visible, :active) {
+  border-color: transparent;
+  background: var(--kex-hover);
+  color: var(--kex-text);
 }
 
 /* ---- cards, lists, tables ---- */

@@ -23,11 +23,18 @@
   width: auto;
   max-width: 100%;
 }
+:root[data-kex="skin"][data-kex-chrome] #region-main > div[role="main"] {
+  padding-left: 0;
+  padding-right: 0;
+}
 :root[data-kex="skin"] #region-main .no-overflow {
   overflow-wrap: anywhere;
 }
 
 /* ---- the activity information card (description, dates, completion) ---- */
+:root[data-kex="skin"] .activity-header:not(:has(*)) {
+  display: none;
+}
 :root[data-kex="skin"] .activity-header {
   margin: 0 0 28px !important;
   max-width: 1100px;

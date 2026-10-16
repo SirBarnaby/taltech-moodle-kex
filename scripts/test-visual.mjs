@@ -63,7 +63,7 @@ const ROUTES = [
   { group: 'generic', name: 'badges', mode: 'skin', path: '/badges/mybadges.php', wait: 'ul.badges li' },
   { group: 'generic', name: 'catalogue', mode: 'skin', path: '/course/index.php?categoryid=2', wait: '[data-kex-test="band"]' },
   { group: 'generic', name: 'search', mode: 'skin', path: '/course/search.php?search=cloud', wait: '.coursebox .kex-coursecode' },
-  { group: 'generic', name: 'private-files', mode: 'skin', path: '/user/files.php', wait: '[data-kex-test="band"]' },
+  { group: 'generic', name: 'private-files', mode: 'skin', path: '/user/files.php', wait: '.filemanager.fm-loaded .fp-navbar' },
   { group: 'generic', name: 'error', mode: 'skin', path: '/mod/assign/view.php?id=99999', wait: '[data-kex-test="band"]' },
 ].filter((r) => !only || `${r.group}-${r.name}`.includes(only));
 
@@ -80,6 +80,8 @@ async function settle(page, wait) {
   if (wait) await page.waitForSelector(wait, { timeout: 20_000 });
   await page.evaluate(() => document.fonts.ready);
   await page.waitForFunction(() => !document.documentElement.dataset.kexData || document.documentElement.dataset.kexData === 'idle', null, { timeout: 10_000 }).catch(() => undefined);
+  // Moodle 5's React secondary navigation mounts late: wait for it so the screenshot does not show an empty bar.
+  await page.waitForFunction(() => { const n = document.querySelector('.secondary-navigation [data-react-component]'); return !n || n.hasAttribute('data-react-mounted'); }, null, { timeout: 8000 }).catch(() => undefined);
   await page.waitForTimeout(1600);
 }
 
