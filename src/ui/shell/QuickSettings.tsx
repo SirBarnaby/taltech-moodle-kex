@@ -1,4 +1,5 @@
-import { Settings as SettingsIcon } from 'lucide-preact';
+import { Settings as SettingsIcon, SlidersHorizontal } from 'lucide-preact';
+import { go, homeUrl, PAGES } from '../../actions/navigate';
 import { updateSettings } from '../../actions/settings';
 import { t } from '../../i18n';
 import { hooks, quickSettingsOpen, settings } from '../../state';
@@ -61,6 +62,20 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
         <SettingsIcon size={15} strokeWidth={1.75} aria-hidden="true" />
         {t('settings.all')}
       </button>
+      <a
+        class="kex-pop__item"
+        href={homeUrl(PAGES.preferences)}
+        data-kex-test="qs-moodle-prefs"
+        onClick={(e) => {
+          if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+          e.preventDefault();
+          close();
+          go(homeUrl(PAGES.preferences));
+        }}
+      >
+        <SlidersHorizontal size={15} strokeWidth={1.75} aria-hidden="true" />
+        {t('nav.preferences')}
+      </a>
     </Popover>
   );
 }

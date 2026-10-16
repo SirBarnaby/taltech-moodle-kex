@@ -1,7 +1,11 @@
-import { ArrowUpRight, BookMarked, ChevronRight, House, Settings as SettingsIcon, SquareArrowOutUpRight } from 'lucide-preact';
+import {
+  ArrowUpRight, BookMarked, CalendarDays, ChevronRight, GraduationCap, House, LibraryBig, MessageSquare, Settings as SettingsIcon, SlidersHorizontal,
+  SquareArrowOutUpRight, type LucideIcon,
+} from 'lucide-preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { setCourseAlias } from '../../actions/settings';
 import { go, homeUrl, PAGES } from '../../actions/navigate';
+import { stripBase } from '../../content/router';
 import { countsStore } from '../../data/repo/counts';
 import type { Course } from '../../data/model';
 import { seasonLabel } from '../../data/names';
@@ -123,6 +127,44 @@ function CourseItem({ course, active, index, editing, onEdit }: CourseItemProps)
   );
 }
 
+type NavKey = 'mycourses' | 'calendar' | 'messages' | 'grades' | 'preferences';
+
+/** Which first-class row the page we are on belongs to (by route, else by Moodle path). */
+export function activeNav(routeKey: string | undefined, path: string): NavKey | undefined {
+  if (routeKey === 'mycourses') return 'mycourses';
+  if (routeKey === 'grades') return 'grades';
+  if (/^\/calendar\//.test(path)) return 'calendar';
+  if (/^\/message\/(index|edit)\.php/.test(path)) return 'messages';
+  if (/^\/user\/(preferences|edit|editadvanced|language|forum|calendar|notification|message)/.test(path) || /^\/message\/notificationpreferences\.php/.test(path)) return 'preferences';
+  return undefined;
+}
+
+interface NavRowProps {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  current: boolean;
+  testId: string;
+  onClick?: (e: MouseEvent) => void;
+  badge?: number;
+  badgeLabel?: string;
+}
+
+/** A secondary first-class row: Moodle's own label (src/i18n/moodle.ts), compact height. */
+function NavRow({ href, label, icon: Icon, current, testId, onClick, badge = 0, badgeLabel }: NavRowProps) {
+  return (
+    <li>
+      <a class="kex-sb__row kex-sb__row--sub" href={href} aria-current={current ? 'page' : undefined} data-tip={label} data-kex-test={testId} onClick={onClick}>
+        <Icon size={22} strokeWidth={1.5} aria-hidden="true" />
+        <span class="kex-sb__rowlabel">{label}</span>
+        {badge > 0 && (
+          <span class="kex-sb__pill kex-mono" data-kex-test={`${testId}-badge`} aria-label={badgeLabel}>{badge > 99 ? '99+' : badge}</span>
+        )}
+      </a>
+    </li>
+  );
+}
+
 export function Sidebar() {
   const mode = sidebarMode.value;
   const overlayOpen = sidebarOverlay.value;
@@ -142,7 +184,9 @@ export function Sidebar() {
   const isPinned = key === 'workspace' && hash.value === '#pinned';
   const counts = countsStore().value.value;
   const unread = counts?.notifs ?? 0;
-  const anyUnread = unread + (counts?.messages ?? 0) > 0;
+  const messages = counts?.messages ?? 0;
+  const anyUnread = unread + messages > 0;
+  const nav = activeNav(key, pageInfo.value ? stripBase(location.pathname, pageInfo.value.wwwroot) : location.pathname);
   // Links to the page we are on switch views in place (a plain navigation to `/my/` from `/my/#pinned` would reload).
   const here = (e: MouseEvent, path: string): void => {
     if (key !== 'workspace' || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
@@ -182,6 +226,14 @@ export function Sidebar() {
               <span class="kex-sb__rowlabel">{t('nav.pinned')}</span>
             </a>
           </li>
+          <NavRow href={homeUrl(PAGES.mycourses)} label={t('nav.mycourses')} icon={LibraryBig} current={nav === 'mycourses'} testId="sb-mycourses" />
+          <NavRow href={homeUrl(PAGES.calendar)} label={t('nav.calendar')} icon={CalendarDays} current={nav === 'calendar'} testId="sb-calendar" />
+          <NavRow
+            href={homeUrl(PAGES.messages)} label={t('nav.messages')} icon={MessageSquare} current={nav === 'messages'} testId="sb-messages"
+            badge={messages} badgeLabel={`${t('nav.messages')}: ${messages}`}
+          />
+          <NavRow href={homeUrl(PAGES.grades)} label={t('nav.grades')} icon={GraduationCap} current={nav === 'grades'} testId="sb-grades" />
+          <NavRow href={homeUrl(PAGES.preferences)} label={t('nav.preferences')} icon={SlidersHorizontal} current={nav === 'preferences'} testId="sb-preferences" />
         </ul>
         <div class="kex-sb__divider kex-sb__divider--2" />
         <div class="kex-sb__label" aria-hidden={expanded ? undefined : 'true'}>{label}</div>

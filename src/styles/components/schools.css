@@ -1,0 +1,149 @@
+/* Faculty themes: the school (first letter of the course code) sets the course accent and the hero's palette (src/lib/school.ts).
+   `html[data-kex-school]` is set by the content controller on course pages; the default school has no attribute. */
+:root[data-kex][data-kex-school="it"] {
+  --kex-accent: #0aa0c4;
+  --kex-accent-bar: linear-gradient(180deg, #4fd6ee, #0a93bd 50%, #5a8ff0);
+  --kex-focus: #0aa0c4;
+  --kex-tint: #e2f4fa;
+  --kex-tint-border: #c8e6f0;
+  --kex-hover: #edf8fc;
+  --kex-hero-bg: linear-gradient(90deg, #121637 0%, #151c44 28%, #1a2658 55%, #12385e 100%);
+  --kex-hero-fallback: var(--kex-hero-bg);
+  --kex-hero-gradient-text: linear-gradient(90deg, #a7b8ff 0%, #7fd6f7 45%, #5fe6ee 100%);
+  --kex-hero-cross: rgba(90, 190, 230, 0.55);
+  --kex-hero-cross-bright: rgba(150, 225, 245, 0.75);
+}
+:root[data-kex][data-kex-school="eng"] {
+  --kex-accent: #d9760a;
+  --kex-accent-bar: linear-gradient(180deg, #f5b84a, #d9760a 50%, #b9481a);
+  --kex-focus: #d9760a;
+  --kex-violet: #8a3c0c;
+  --kex-violet-2: #a54a12;
+  --kex-tint: #fbefe0;
+  --kex-tint-border: #f0dcc2;
+  --kex-hover: #fcf4ea;
+  --kex-hero-bg: linear-gradient(90deg, #2a1608 0%, #331a0a 28%, #3e200c 55%, #4a2a0e 100%);
+  --kex-hero-fallback: var(--kex-hero-bg);
+  --kex-hero-gradient-text: linear-gradient(90deg, #ffd48c 0%, #ffb457 50%, #ff9a63 100%);
+  --kex-hero-cross: rgba(230, 160, 80, 0.55);
+  --kex-hero-cross-bright: rgba(250, 205, 150, 0.75);
+}
+:root[data-kex][data-kex-school="sci"] {
+  --kex-accent: #14a07a;
+  --kex-accent-bar: linear-gradient(180deg, #55d58c, #14a07a 50%, #0e8a8c);
+  --kex-focus: #14a07a;
+  --kex-violet: #0b6a58;
+  --kex-violet-2: #0f7d68;
+  --kex-tint: #e0f4ec;
+  --kex-tint-border: #c6e8da;
+  --kex-hover: #ecf8f3;
+  --kex-hero-bg: linear-gradient(90deg, #0b231f 0%, #0d2b25 28%, #103329 55%, #0e3a38 100%);
+  --kex-hero-fallback: var(--kex-hero-bg);
+  --kex-hero-gradient-text: linear-gradient(90deg, #a9f0cb 0%, #78e2b8 50%, #8ae9e1 100%);
+  --kex-hero-cross: rgba(90, 200, 160, 0.55);
+  --kex-hero-cross-bright: rgba(160, 232, 205, 0.75);
+}
+:root[data-kex][data-kex-school="biz"] {
+  --kex-accent: #4a4fd0;
+  --kex-accent-bar: linear-gradient(180deg, #6e73f0, #4247c8 55%, #e0a82a);
+  --kex-focus: #4a4fd0;
+  --kex-violet: #2a2d9a;
+  --kex-violet-2: #3a3eb8;
+  --kex-tint: #e8e9fb;
+  --kex-tint-border: #d3d5f3;
+  --kex-hover: #f1f1fc;
+  --kex-hero-bg: linear-gradient(90deg, #12123a 0%, #161745 28%, #1c1d56 55%, #26226a 100%);
+  --kex-hero-fallback: var(--kex-hero-bg);
+  --kex-hero-gradient-text: linear-gradient(90deg, #b6bbff 0%, #d4c6ff 45%, #ffd88a 100%);
+  --kex-hero-cross: rgba(150, 150, 235, 0.55);
+  --kex-hero-cross-bright: rgba(235, 215, 150, 0.75);
+}
+:root[data-kex][data-kex-school="sea"] {
+  --kex-accent: #0d78c8;
+  --kex-accent-bar: linear-gradient(180deg, #46c6ec, #0d78c8 50%, #14409a);
+  --kex-focus: #0d78c8;
+  --kex-violet: #0a4f8c;
+  --kex-violet-2: #0d62a8;
+  --kex-tint: #e0eff9;
+  --kex-tint-border: #c6dff0;
+  --kex-hover: #ebf5fb;
+  --kex-hero-bg: linear-gradient(90deg, #08203a 0%, #0a2a4a 28%, #0c3558 55%, #0a4468 100%);
+  --kex-hero-fallback: var(--kex-hero-bg);
+  --kex-hero-gradient-text: linear-gradient(90deg, #a8dcff 0%, #70cdf0 50%, #8febf3 100%);
+  --kex-hero-cross: rgba(80, 180, 225, 0.55);
+  --kex-hero-cross-bright: rgba(150, 220, 245, 0.75);
+}
+
+/* Dark theme: lighter accents. */
+:root[data-kex][data-kex-theme="dark"][data-kex-school="it"] {
+  --kex-accent: #3cd0ee; --kex-focus: #7fe3f5; --kex-tint: rgba(60, 208, 238, 0.13); --kex-tint-border: rgba(60, 208, 238, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
+}
+:root[data-kex][data-kex-theme="dark"][data-kex-school="eng"] {
+  --kex-accent: #f5a43c; --kex-focus: #ffcc88; --kex-violet: #ffd8ae; --kex-violet-2: #ffc994; --kex-tint: rgba(245, 164, 60, 0.13); --kex-tint-border: rgba(245, 164, 60, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
+}
+:root[data-kex][data-kex-theme="dark"][data-kex-school="sci"] {
+  --kex-accent: #46d8a0; --kex-focus: #9cecc8; --kex-violet: #bff3dc; --kex-violet-2: #a6edd0; --kex-tint: rgba(70, 216, 160, 0.13); --kex-tint-border: rgba(70, 216, 160, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
+}
+:root[data-kex][data-kex-theme="dark"][data-kex-school="biz"] {
+  --kex-accent: #8f94ff; --kex-focus: #c4c7ff; --kex-violet: #d4d6ff; --kex-violet-2: #bfc2ff; --kex-tint: rgba(143, 148, 255, 0.13); --kex-tint-border: rgba(143, 148, 255, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
+}
+:root[data-kex][data-kex-theme="dark"][data-kex-school="sea"] {
+  --kex-accent: #4cb8f0; --kex-focus: #9ad8f8; --kex-violet: #c4e6fb; --kex-violet-2: #aedcf8; --kex-tint: rgba(76, 184, 240, 0.13); --kex-tint-border: rgba(76, 184, 240, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
+}
+
+/* Course hero: the meta row (teachers, progress, next deadline) takes the eyebrow's place. */
+#kex-root {
+  .kex-hero__meta {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0;
+    min-height: 16px;
+    max-width: 62%;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .kex-hero__mi {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 0 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    animation: kex-fade 200ms var(--kex-ease) both;
+  }
+  .kex-hero__mi + .kex-hero__mi::before {
+    content: "·";
+    flex: none;
+    margin: 0 12px;
+    color: var(--kex-hero-cross-bright);
+  }
+  .kex-hero__mi--teachers {
+    flex-shrink: 1;
+  }
+  .kex-hero__mi--next {
+    flex-shrink: 2;
+  }
+  .kex-hero__mi--overdue {
+    color: #ffb4d8;
+  }
+  .kex-hero__bar {
+    position: relative;
+    flex: none;
+    display: block;
+    width: 44px;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.18);
+    overflow: hidden;
+    b {
+      position: absolute;
+      inset: 0 auto 0 0;
+      display: block;
+      border-radius: 2px;
+      background: var(--kex-hero-gradient-text);
+    }
+  }
+}

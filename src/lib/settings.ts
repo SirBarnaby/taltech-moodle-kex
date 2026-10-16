@@ -11,7 +11,10 @@ export interface Settings {
   theme: ThemeSetting;
   effects: EffectsSetting;
   motion: MotionSetting;
-  uiLanguage: 'en' | 'et';
+  /** 'auto' follows Moodle's own language (<html lang>). */
+  uiLanguage: 'auto' | 'en' | 'et';
+  /** Colour course pages and heroes by school (first letter of the course code). */
+  colourBySchool: boolean;
   sidebarSource: 'moodle' | 'inprogress' | 'starred' | 'all';
   sidebarCollapsed: boolean;
   courseAliases: Record<string, string>;
@@ -30,7 +33,8 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
   effects: 'animated',
   motion: 'system',
-  uiLanguage: 'en',
+  uiLanguage: 'auto',
+  colourBySchool: true,
   sidebarSource: 'moodle',
   sidebarCollapsed: false,
   courseAliases: {},
@@ -62,7 +66,8 @@ export function normalizeSettings(raw: unknown): Settings {
     theme: pick(r.theme, ['system', 'light', 'dark'], d.theme),
     effects: pick(r.effects, ['animated', 'static', 'off'], d.effects),
     motion: pick(r.motion, ['system', 'reduced', 'full'], d.motion),
-    uiLanguage: pick(r.uiLanguage, ['en', 'et'], d.uiLanguage),
+    uiLanguage: pick(r.uiLanguage, ['auto', 'en', 'et'], d.uiLanguage),
+    colourBySchool: typeof r.colourBySchool === 'boolean' ? r.colourBySchool : d.colourBySchool,
     sidebarSource: pick(r.sidebarSource, ['moodle', 'inprogress', 'starred', 'all'], d.sidebarSource),
     sidebarCollapsed: typeof r.sidebarCollapsed === 'boolean' ? r.sidebarCollapsed : d.sidebarCollapsed,
     courseAliases: rec(r.courseAliases),

@@ -2,18 +2,19 @@ import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { lang } from '../i18n';
 import { resolveTheme } from '../lib/theme';
-import { useSettings } from '../lib/useSettings';
+import { useResolvedLang, useSettings } from '../lib/useSettings';
 import { Segmented } from '../ui/components/Segmented';
 import { Switch } from '../ui/components/Switch';
 import { t } from '../i18n';
 
 function Popup() {
   const [s, update, ready] = useSettings();
+  const resolved = useResolvedLang(s.uiLanguage);
+  lang.value = resolved;
   useEffect(() => {
-    lang.value = s.uiLanguage;
     document.documentElement.dataset.kexTheme = resolveTheme(s.theme);
-    document.documentElement.lang = s.uiLanguage;
-  }, [s.theme, s.uiLanguage]);
+    document.documentElement.lang = resolved;
+  }, [s.theme, resolved]);
   if (!ready) return null;
   return (
     <main class="ext-popup">

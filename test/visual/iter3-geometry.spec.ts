@@ -23,7 +23,7 @@ const TARGETS: Target[] = [
   { id: 'hero', x: 246, y: 67, w: 1339, h: 253 },
   { id: 'search', x: 1214, y: 11, w: 268, h: 44 },
   { id: 'theme-toggle', x: 1518, y: 11, w: 42, h: 44 },
-  { id: 'sb-active-course', x: 0, y: 287, w: 246, h: 68, tolH: 4 },
+  { id: 'sb-active-course', x: 0, y: 487, w: 246, h: 68, tolH: 4 },
   { id: 'pinned', x: 274, y: 347, w: 1202, h: 74 },
   { id: 'pinned-edit', x: 1500, y: 347, w: 52, h: 16, tolW: 4, tolH: 4 },
   { id: 'tab-underline', x: 1276, y: 493, w: 98, h: 3, tolX: 6, tolW: 6 },

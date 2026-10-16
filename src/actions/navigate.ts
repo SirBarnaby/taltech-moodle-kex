@@ -1,4 +1,4 @@
-import { hash, pageInfo } from '../state';
+import { hash, hooks, pageInfo } from '../state';
 
 /** Same-tab navigation, or a new tab with noopener. Relative URLs resolve against the Moodle root. */
 export function go(url: string, newTab = false): void {
@@ -15,6 +15,8 @@ export function go(url: string, newTab = false): void {
     window.dispatchEvent(new HashChangeEvent('hashchange'));
     return;
   }
+  // App views open in place (no reload, the shell stays painted); everything else is a normal page load.
+  if (hooks.navigate(target)) return;
   window.location.assign(abs);
 }
 

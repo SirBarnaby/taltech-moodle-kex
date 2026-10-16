@@ -1,5 +1,6 @@
 import FRAG from './ribbons.glsl';
 import { DEBUG } from '../lib/log';
+import { DEFAULT_RIBBONS, type RibbonStyle } from '../lib/school';
 
 /** WebGL2 ribbons renderer (architecture §14, design-spec §9). One full-screen triangle, all work in the fragment shader. */
 
@@ -15,6 +16,8 @@ export interface RibbonsOptions {
   leftFade?: number;
   /** Part of the 1339x253 reference frame the canvas shows: [x0, y0, x1, y1]. Default: all of it. */
   window?: [number, number, number, number];
+  /** School theme: palette, shape and seed offset. Default: the iteration3 look. */
+  style?: RibbonStyle;
   /** Called when the context is lost or cannot be created, so the caller can show the CSS fallback. */
   onFallback?: (reason: 'unsupported' | 'lost') => void;
   /** Called once the shader program is compiled and linked (asynchronously after construction). */
@@ -143,7 +146,7 @@ export class RibbonsRenderer {
       gl.deleteShader(vs);
       gl.deleteShader(fs);
       gl.useProgram(prog);
-      for (const n of ['uRes', 'uTime', 'uPointer', 'uIntensity', 'uLeftFade', 'uSeed', 'uWin']) this.loc[n] = gl.getUniformLocation(prog, n);
+      for (const n of ['uRes', 'uTime', 'uPointer', 'uIntensity', 'uLeftFade', 'uSeed', 'uWin', 'uBody', 'uAccent', 'uHi', 'uShape', 'uSharp']) this.loc[n] = gl.getUniformLocation(prog, n);
       this.pending = false;
       this.resize();
       this.settle(true);
@@ -184,7 +187,13 @@ export class RibbonsRenderer {
     gl.uniform2f(this.loc.uPointer ?? null, this.pointer[0], this.pointer[1]);
     gl.uniform1f(this.loc.uIntensity ?? null, this.opts.intensity ?? 1);
     gl.uniform1f(this.loc.uLeftFade ?? null, this.opts.leftFade ?? 0.46);
-    gl.uniform1f(this.loc.uSeed ?? null, (this.opts.seed ?? 0) * 0.37);
+    const st = this.opts.style ?? DEFAULT_RIBBONS;
+    gl.uniform1f(this.loc.uSeed ?? null, ((this.opts.seed ?? 0) + st.seed) * 0.37);
+    gl.uniform3f(this.loc.uBody ?? null, st.body[0], st.body[1], st.body[2]);
+    gl.uniform3f(this.loc.uAccent ?? null, st.accent[0], st.accent[1], st.accent[2]);
+    gl.uniform3f(this.loc.uHi ?? null, st.hi[0], st.hi[1], st.hi[2]);
+    gl.uniform4f(this.loc.uShape ?? null, st.shape[0], st.shape[1], st.shape[2], st.shape[3]);
+    gl.uniform1f(this.loc.uSharp ?? null, st.sharp);
     const w = this.opts.window ?? [0, 0, 1339, 253];
     gl.uniform4f(this.loc.uWin ?? null, w[0], w[1], w[2], w[3]);
     if (DEBUG && this.drawn === 0) {

@@ -19,7 +19,11 @@ const H = 992;
 
 /** Regions of the mock (design-spec §10) and their maximum mismatch in percent. */
 export const REGIONS = [
-  { name: 'sidebar', x: 0, y: 0, w: 246, h: 992, max: 12 },
+  // Round 2 added first-class rows (My courses, Calendar, Messages, Grades, Preferences) between the pinned row and the course list, so the
+  // course list sits lower than in the mock. The mock's brand and first rows, and its footer (pinned to the bottom), still must match.
+  { name: 'sidebar-top', x: 0, y: 0, w: 246, h: 215, max: 12 },
+  { name: 'sidebar-foot', x: 0, y: 745, w: 246, h: 247, max: 12 },
+  { name: 'sidebar-courses', x: 0, y: 215, w: 246, h: 530, max: 40, informational: true },
   { name: 'header', x: 246, y: 0, w: 1339, h: 67, max: 8 },
   { name: 'hero-text', x: 246, y: 67, w: 614, h: 253, max: 10 },
   { name: 'hero-ribbons', x: 860, y: 67, w: 725, h: 253, max: 45, informational: true },

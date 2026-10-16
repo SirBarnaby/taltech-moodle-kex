@@ -1,8 +1,9 @@
-import { ArrowUpRight, Bell, CircleCheck, Eye, Megaphone, MessagesSquare, Pin as PinIcon } from 'lucide-preact';
+import { ArrowUpRight, Bell, CircleCheck, Eye, Megaphone, MessagesSquare, Pin as PinIcon, X } from 'lucide-preact';
+import { Fragment } from 'preact';
 import { useEffect } from 'preact/hooks';
 import {
   feedPinned, initWorkspace, manualOf, markEverythingRead, markNotifRead, openCourse, openFeedItem, pinFeedItem, recentKind, rowFromRecent, selectFeed, setFeedTab,
-  toggleDoneById,
+  setWsCourse, toggleDoneById,
 } from '../../actions/workspace';
 import { go, homeUrl, PAGES } from '../../actions/navigate';
 import { classifyFormat, monoLabel } from '../../data/classify';
@@ -16,7 +17,8 @@ import type { RecentItem } from '../../data/repo/recent';
 import { formatDate, lang, t, type MessageKey } from '../../i18n';
 import { clock, greeting, heroDay, relTime, shortDay, studyWeek } from '../../lib/time';
 import { sidebarCourses, user } from '../../state';
-import { dueList, feed, feedError, feedLoading, feedSel, feedTab, nowSec, notifList, recentList, unreadCount, wsPreview } from '../../state/workspace';
+import { startsCourseGroup } from '../../lib/feedgroups';
+import { dueList, feed, feedError, feedLoading, feedSel, feedTab, nowSec, notifList, recentList, unreadCount, wsCourse, wsPreview } from '../../state/workspace';
 import { Button } from '../components/Button';
 import { Hero, type HeroLink } from '../components/Hero';
 import { useEffectsConfig, useQuietFocus } from '../components/hooks';
@@ -202,26 +204,51 @@ function UpdateRow({ item, index, selected }: { item: Extract<FeedItem, { type: 
   );
 }
 
+/** The COURSES column: the heading opens My courses, a course card filters the feed to it in place (URL `?course=`), "All" clears it. */
 function CourseColumn() {
   const courses = sidebarCourses.value;
   const due = dueList.value;
   const next = nextByCourse(due);
   const nearest = nearestCourse(due);
+  const picked = wsCourse.value;
+  const filtered = picked !== undefined;
+  const pick = (e: MouseEvent, id: number | undefined): void => {
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    setWsCourse(id);
+  };
   return (
     <aside class="kex-topics kex-wscourses" aria-label={t('ws.courses')} data-kex-test="ws-courses">
-      <h3 class="kex-topics__label kex-mono">{t('ws.courses')}</h3>
+      <h3 class="kex-topics__label kex-mono">
+        <a class="kex-wscourses__all" href={homeUrl(PAGES.mycourses)} data-kex-test="ws-courses-link">{t('ws.courses')}<ArrowUpRight size={13} strokeWidth={1.75} aria-hidden="true" /></a>
+      </h3>
       <ul class="kex-wscourses__list">
+        <li>
+          <a
+            class={`kex-wc kex-wc--reset${!filtered ? ' kex-wc--picked' : ''}`}
+            href={homeUrl(PAGES.workspace)}
+            aria-current={!filtered ? 'true' : undefined}
+            data-kex-test="ws-course-all"
+            onClick={(e) => pick(e, undefined)}
+          >
+            <span class="kex-wc__name">{t('common.all')}</span>
+          </a>
+        </li>
         {courses.map((c) => {
           const nx = next.get(c.id);
           const pct = c.progress === null ? undefined : Math.max(0, Math.min(100, Math.round(c.progress)));
+          const on = picked === c.id;
+          const active = filtered ? on : c.id === nearest;
           return (
             <li key={c.id}>
               <a
-                class={`kex-wc${c.id === nearest ? ' kex-wc--active' : ''}`}
-                href={c.url}
+                class={`kex-wc${active ? ' kex-wc--active' : ''}`}
+                href={`${homeUrl(PAGES.workspace)}?course=${c.id}`}
                 data-kex-wc={c.id}
                 data-kex-test="ws-course"
-                aria-current={c.id === nearest ? 'true' : undefined}
+                aria-current={active ? 'true' : undefined}
+                title={t('ws.filterCourse', { name: `${c.code} ${displayName(c)}` })}
+                onClick={(e) => pick(e, on ? undefined : c.id)}
               >
                 <span class="kex-wc__top">
                   <span class="kex-wc__code kex-mono">{c.code}</span>
@@ -236,6 +263,20 @@ function CourseColumn() {
         })}
       </ul>
     </aside>
+  );
+}
+
+/** Course heading above a run of deadlines of one course. */
+function CourseHeading({ courseId, code }: { courseId: number; code: string }) {
+  const c = sidebarCourses.value.find((x) => x.id === courseId);
+  return (
+    <li class="kex-feedgroup" data-kex-test="feed-group" data-course-id={courseId}>
+      <a class="kex-feedgroup__link" href={c?.url ?? homeUrl(`/course/view.php?id=${courseId}`)}>
+        <span class="kex-feedgroup__code kex-mono">{c?.code ?? code}</span>
+        {c && <span class="kex-feedgroup__name">{displayName(c)}</span>}
+        <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
+      </a>
+    </li>
   );
 }
 
@@ -269,6 +310,9 @@ export function WorkspaceView() {
   const unread = unreadCount.value;
   const preview = wsPreview.value;
   const u = user.value;
+  const pickedId = wsCourse.value;
+  const pickedCourse = pickedId === undefined ? undefined : courses.find((c) => c.id === pickedId);
+  const pickedName = pickedCourse ? `${pickedCourse.code} ${displayName(pickedCourse)}` : '';
 
   const sum = weekSummary(due, now);
   const week = studyWeek(courses.map((c) => c.startdate), now);
@@ -313,7 +357,12 @@ export function WorkspaceView() {
               <p class="kex-detail__count kex-mono" data-kex-test="feed-count">{loading ? '' : count}</p>
             </div>
             <div class="kex-feedhead__row">
-              <Stamp />
+              {pickedCourse ? (
+                <button type="button" class="kex-filterchip kex-mono" data-kex-test="ws-filter" onClick={() => setWsCourse(undefined)} aria-label={`${t('ws.filterOn', { name: pickedName })}, ${t('common.all')}`}>
+                  <span>{pickedCourse.code}</span>
+                  <X size={13} strokeWidth={1.9} aria-hidden="true" />
+                </button>
+              ) : <Stamp />}
               {tab === 'updates' && unreadInFeed && (
                 <button type="button" class="kex-link kex-feedhead__all" data-kex-test="mark-all-read" onClick={() => void markEverythingRead()}>{t('ws.markAll')}</button>
               )}
@@ -327,7 +376,7 @@ export function WorkspaceView() {
             ) : onlyEmpty ? (
               <EmptyState
                 kicker={t('ws.emptyKicker')}
-                title={tab === 'updates' ? t('ws.empty.updates') : t('ws.empty.deadlines')}
+                title={pickedCourse && tab !== 'updates' ? t('ws.noneForCourse') : tab === 'updates' ? t('ws.empty.updates') : t('ws.empty.deadlines')}
                 text={tab === 'all' && !recentList.value.length ? t('ws.empty.recent') : undefined}
               >
                 {tab !== 'updates' && <Button variant="outlined" arrow={false} href={homeUrl(PAGES.calendar)} onClick={(e) => { e.preventDefault(); go(PAGES.calendar); }}>{t('ws.link.calendar')}</Button>}
@@ -336,7 +385,14 @@ export function WorkspaceView() {
               <ul class="kex-rows" key={tab} data-kex-test="feed-rows">
                 {list.map((item, i) => {
                   const selected = item.key === sel;
-                  if (item.type === 'deadline') return <DeadlineRow key={item.key} item={item} index={i} now={now} selected={selected} first={i === 0} />;
+                  if (item.type === 'deadline') {
+                    return (
+                      <Fragment key={item.key}>
+                        {startsCourseGroup(list, i) && <CourseHeading courseId={item.item.courseId} code={item.item.courseCode} />}
+                        <DeadlineRow item={item} index={i} now={now} selected={selected} first={i === 0} />
+                      </Fragment>
+                    );
+                  }
                   if (item.type === 'continue') return <ContinueRow key={item.key} item={item} index={i} now={now} selected={selected} />;
                   return <UpdateRow key={item.key} item={item} index={i} selected={selected} />;
                 })}

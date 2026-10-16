@@ -44,9 +44,18 @@ test.describe('workspace', () => {
     await openWorkspace(page);
     const flags = await feedRows(page).evaluateAll((els) => els.map((e) => ({ overdue: e.classList.contains('kex-row--overdue'), deadline: e.classList.contains('kex-row--deadline') })));
     expect(flags[0]?.overdue, 'first row is overdue').toBe(true);
-    const firstNonOverdue = flags.findIndex((f) => f.deadline && !f.overdue);
-    expect(firstNonOverdue).toBeGreaterThan(0);
-    expect(flags.slice(firstNonOverdue).some((f) => f.overdue), 'no overdue row after a due row').toBe(false);
+    expect(flags.some((f) => f.deadline && !f.overdue), 'some deadline is still due').toBe(true);
+    // Deadlines are grouped by course (round 2): overdue comes first inside every course group.
+    const seq = await page.locator('[data-kex-test="feed-rows"] > li.kex-feedgroup, [data-kex-test="feed-rows"] > li[data-kex-item]').evaluateAll((els) =>
+      els.map((e) => (e.classList.contains('kex-feedgroup') ? 'group' : e.classList.contains('kex-row--overdue') ? 'overdue' : e.classList.contains('kex-row--deadline') ? 'due' : 'other')),
+    );
+    expect(seq.includes('group'), 'course headings are present').toBe(true);
+    let seenDue = false;
+    for (const s of seq) {
+      if (s === 'group' || s === 'other') seenDue = false;
+      else if (s === 'due') seenDue = true;
+      else expect(seenDue, 'no overdue row after a due row inside a course group').toBe(false);
+    }
     // Due dates ascend inside the due block.
     const dueLines = await page.locator('.kex-row--deadline:not(.kex-row--overdue) .kex-row__sub').allTextContents();
     expect(dueLines.length).toBeGreaterThan(1);

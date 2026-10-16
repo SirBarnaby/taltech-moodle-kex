@@ -6,7 +6,7 @@ import type { Pin } from '../data/model';
 import { MAX_PINS, parsePinsJson, pinsToJson } from '../data/repo/pins';
 import { SETTINGS_KEY, type RouteMode } from '../lib/settings';
 import { resolveTheme } from '../lib/theme';
-import { useSettings } from '../lib/useSettings';
+import { useResolvedLang, useSettings } from '../lib/useSettings';
 import { Segmented } from '../ui/components/Segmented';
 import { Switch } from '../ui/components/Switch';
 
@@ -81,11 +81,12 @@ function Options() {
   const [status, setStatus] = useState('');
   const [pinSets, setPinSets] = useState<PinsKey[]>([]);
 
+  const resolved = useResolvedLang(s.uiLanguage);
+  lang.value = resolved;
   useEffect(() => {
-    lang.value = s.uiLanguage;
     document.documentElement.dataset.kexTheme = resolveTheme(s.theme);
-    document.documentElement.lang = s.uiLanguage;
-  }, [s.theme, s.uiLanguage]);
+    document.documentElement.lang = resolved;
+  }, [s.theme, resolved]);
   useEffect(() => {
     void cachedCourseNames().then(setNames);
   }, [s.courseAliases]);
@@ -150,8 +151,13 @@ function Options() {
         <Row label={t('ext.enabled')} hint={t('ext.enabledHint')} htmlFor="o-enabled">
           <Switch id="o-enabled" label={t('ext.enabled')} checked={s.enabled} onChange={(enabled) => update({ enabled })} />
         </Row>
-        <Row label={t('ext.language')}>
-          <Segmented label={t('ext.language')} value={s.uiLanguage} onChange={(uiLanguage) => update({ uiLanguage })} options={[{ value: 'en', label: 'English' }, { value: 'et', label: 'Eesti' }]} />
+        <Row label={t('ext.language')} hint={t('ext.langHint')}>
+          <Segmented
+            label={t('ext.language')}
+            value={s.uiLanguage}
+            onChange={(uiLanguage) => update({ uiLanguage })}
+            options={[{ value: 'auto', label: t('ext.langAuto') }, { value: 'et', label: 'Eesti' }, { value: 'en', label: 'English' }]}
+          />
         </Row>
         <Row label={t('ext.offPill')} hint={t('ext.offPillHint')} htmlFor="o-pill">
           <Switch id="o-pill" label={t('ext.offPill')} checked={s.showOffPill} onChange={(showOffPill) => update({ showOffPill })} />
@@ -182,6 +188,9 @@ function Options() {
             onChange={(effects) => update({ effects })}
             options={[{ value: 'animated', label: t('ext.fx.animated') }, { value: 'static', label: t('ext.fx.static') }, { value: 'off', label: t('ext.fx.off') }]}
           />
+        </Row>
+        <Row label={t('ext.colourSchool')} hint={t('ext.colourSchoolHint')} htmlFor="o-school">
+          <Switch id="o-school" label={t('ext.colourSchool')} checked={s.colourBySchool} onChange={(colourBySchool) => update({ colourBySchool })} />
         </Row>
         <Row label={t('settings.motion')} hint={t('ext.motionHint')}>
           <Segmented

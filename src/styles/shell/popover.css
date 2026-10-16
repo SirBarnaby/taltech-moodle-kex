@@ -84,3 +84,21 @@
 :root[data-kex-motion="reduced"] #kex-root .kex-popover {
   animation: none;
 }
+
+/* User menu: the language group. */
+#kex-root {
+  .kex-pop__label--menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 8px 2px;
+    svg {
+      color: var(--kex-sb-label);
+    }
+  }
+  .kex-pop__spacer {
+    flex: none;
+    width: 15px;
+    height: 15px;
+  }
+}

@@ -1,6 +1,13 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { effects } from '../../fx/effects';
+import { formatDate, t } from '../../i18n';
+import { nextByCourse } from '../../data/feed';
+import { eventsStore } from '../../data/repo/events';
+import { contactsStore, teacherLine } from '../../lib/contacts';
+import { SCHOOLS } from '../../lib/school';
+import { activeCourseId, activeSchool, route, sidebarCourses } from '../../state';
 import { heroEffectMode } from '../../state/effects';
+import { nowSec } from '../../state/workspace';
 import { ArrowNE } from './Glyphs';
 import { SlideUpText } from './SlideUpText';
 
@@ -12,7 +19,7 @@ export interface HeroLink {
 }
 
 interface HeroProps {
-  /** "ITI8801 / AUTUMN 2026" */
+  /** Mono eyebrow ("WORKSPACE / THU 16 OCT"). Course heroes do not show it: the breadcrumb already names the course. */
   label: string;
   /** Title lines (the second one is painted with the gradient). */
   lines: [string, string?];
@@ -34,35 +41,75 @@ export function Crosshair({ class: cls }: { class: string }) {
   );
 }
 
+/** Teachers, progress and the next deadline of the course on screen: all Moodle's own data, no invented labels. */
+function CourseMeta({ courseId }: { courseId: number }) {
+  const contacts = contactsStore(courseId);
+  const events = eventsStore();
+  useEffect(() => {
+    void contacts.refresh();
+    void events.refresh();
+  }, [courseId]);
+  const course = sidebarCourses.value.find((c) => c.id === courseId);
+  const teachers = teacherLine(contacts.value.value ?? []);
+  const pct = course && course.progress !== null ? Math.max(0, Math.min(100, Math.round(course.progress))) : undefined;
+  const due = (events.value.value ?? []).filter((d) => d.courseId === courseId);
+  const overdue = due.find((d) => d.overdue);
+  const next = overdue ?? nextByCourse(due).get(courseId);
+  void nowSec.value;
+  return (
+    <p class="kex-hero__label kex-hero__meta kex-mono" data-kex-test="hero-meta">
+      {teachers && <span class="kex-hero__mi kex-hero__mi--teachers" data-kex-test="hero-teachers" title={t('hero.teachers')}>{teachers}</span>}
+      {pct !== undefined && (
+        <span class="kex-hero__mi" data-kex-test="hero-progress" title={t('hero.progress')}>
+          <i class="kex-hero__bar" aria-hidden="true"><b style={{ width: `${pct}%` }} /></i>
+          {pct}%
+        </span>
+      )}
+      {next && (
+        <span class={`kex-hero__mi kex-hero__mi--next${next.overdue ? ' kex-hero__mi--overdue' : ''}`} data-kex-test="hero-next" title={t('hero.next')}>
+          {next.overdue
+            ? `${t('label.overdue')} · ${next.title}`
+            : t('ws.next', { title: next.title, day: formatDate(next.due * 1000, { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '') })}
+        </span>
+      )}
+    </p>
+  );
+}
+
 export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls }: HeroProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const root = useRef<HTMLElement>(null);
   const mode = heroEffectMode.value;
+  const r = route.value;
+  const isCourse = r?.effective === 'app' && (r.key === 'course' || r.key === 'section');
+  const courseId = isCourse ? activeCourseId.value : null;
+  const school = activeSchool.value;
 
   useEffect(() => {
     const c = canvas.current;
     if (!c) return;
-    const handle = effects.register(c, { seed, intensity, leftFade: 0.46 }, (m) => (heroEffectMode.value = m));
+    const handle = effects.register(c, { seed, intensity, leftFade: 0.46, style: SCHOOLS[school].ribbons }, (m) => (heroEffectMode.value = m));
     const el = root.current;
     const onMove = (e: PointerEvent): void => {
-      const r = c.getBoundingClientRect();
-      handle.setPointer(((e.clientX - r.left) / r.width) * 2 - 1, -(((e.clientY - r.top) / r.height) * 2 - 1));
+      const rect = c.getBoundingClientRect();
+      handle.setPointer(((e.clientX - rect.left) / rect.width) * 2 - 1, -(((e.clientY - rect.top) / rect.height) * 2 - 1));
     };
     el?.addEventListener('pointermove', onMove, { passive: true });
     return () => {
       el?.removeEventListener('pointermove', onMove);
       handle.dispose();
     };
-  }, [seed, intensity]);
+  }, [seed, intensity, school]);
 
   const text = lines[1] ? `${lines[0]}\n${lines[1]}` : lines[0];
+  const aria = courseId ? lines.filter(Boolean).join(' ') : label;
   return (
-    <section class={`kex-hero${cls ? ` ${cls}` : ''}`} ref={root} data-kex-test="hero" data-mode={mode}>
+    <section class={`kex-hero${cls ? ` ${cls}` : ''}`} ref={root} data-kex-test="hero" data-mode={mode} data-school={school === 'default' ? undefined : school}>
       <canvas class="kex-hero__canvas" ref={canvas} aria-hidden="true" />
       <Crosshair class="kex-cross--a" />
       <Crosshair class="kex-cross--b" />
       <div class="kex-hero__inner">
-        <p class="kex-hero__label kex-mono" data-kex-test="hero-label">{label}</p>
+        {courseId ? <CourseMeta courseId={courseId} /> : <p class="kex-hero__label kex-mono" data-kex-test="hero-label">{label}</p>}
         <SlideUpText
           as="h1"
           class="kex-hero__title"
@@ -74,7 +121,7 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
           delay={0.05}
           gradient={lines[1] ? [1] : [0]}
         />
-        <nav class="kex-hero__links" aria-label={label}>
+        <nav class="kex-hero__links" aria-label={aria}>
           {links.map((l) => (
             <a key={l.key} class="kex-hero__link" href={l.href ?? '#'} onClick={l.onClick}>
               <span>{l.label}</span>

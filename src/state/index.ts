@@ -3,6 +3,8 @@ import type { EffectiveRoute } from '../content/router';
 import type { PageInfo } from '../content/pageinfo';
 import type { Course, UserInfo } from '../data/model';
 import { applyAliases, orderCourses } from '../data/repo/courses';
+import { lang } from '../i18n';
+import { schoolFor, type SchoolId } from '../lib/school';
 import type { UserMenuItem } from '../data/scrape/usermenu';
 import { DEFAULT_SETTINGS, type Settings } from '../lib/settings';
 import { prefersDark, resolveMotion, resolveTheme, sidebarModeFor } from '../lib/theme';
@@ -35,15 +37,59 @@ export const sidebarMode = computed(() =>
   sidebarModeFor(viewportWidth.value, settings.value.sidebarCollapsed || (route.value?.key === 'quiz-focus' && route.value.effective === 'skin')),
 );
 
-export const sidebarCourses = computed<Course[]>(() =>
-  applyAliases(orderCourses(coursesRaw.value, settings.value.courseOrder), settings.value.courseAliases),
-);
+/**
+ * Courses as the sidebar shows them. The user's own aliases always apply; the shipped English short names (for the author's six courses)
+ * only on an English UI, so Estonian course names stay exactly as Moodle delivers them.
+ */
+export const sidebarCourses = computed<Course[]>(() => {
+  const ordered = orderCourses(coursesRaw.value, settings.value.courseOrder);
+  const aliases = settings.value.courseAliases;
+  if (lang.value === 'en') return applyAliases(ordered, aliases);
+  return ordered.map((c) => (aliases[String(c.id)] ? { ...c, alias: aliases[String(c.id)] } : c));
+});
 
 /** The course whose page we are on (1 is the site front page). */
 export const activeCourseId = computed<number | null>(() => {
   const id = pageInfo.value?.courseId ?? 0;
   return id > 1 ? id : null;
 });
+
+/** Code of the course whose page we are on: the course list first, then the page's own breadcrumb or heading. */
+export const activeCourseCode = computed<string | undefined>(() => {
+  const id = activeCourseId.value;
+  if (!id) return undefined;
+  const known = coursesRaw.value.find((c) => c.id === id);
+  if (known) return known.code;
+  const info = pageInfo.value;
+  const texts = [...(info?.breadcrumb.map((c) => c.text) ?? []), info?.heading ?? ''];
+  for (const t of texts) {
+    const m = /\b[A-Za-z]{3}\d{4}\b/.exec(t);
+    if (m) return m[0].toUpperCase();
+  }
+  return undefined;
+});
+
+/** The faculty theme of the course page (default look when the option is off or the code has no known school letter). */
+export const activeSchool = computed<SchoolId>(() => schoolFor(activeCourseCode.value, settings.value.colourBySchool));
+
+/**
+ * The fetched page behind a soft-navigated view (null on a normal page load: the live document). Anything that reads Moodle's
+ * own markup for the current view (tiles, summaries, secondary navigation, activity cards) reads `livePageDoc()`, not `document`.
+ */
+export const pageDoc = signal<Document | null>(null);
+export const livePageDoc = (): Document => pageDoc.peek() ?? document;
+
+/** `location.search`, kept in a signal so views can follow query parameters that change without a reload (the Workspace course filter). */
+export const search = signal(typeof location === 'undefined' ? '' : location.search);
+
+/** Languages Moodle offers (from its own language menu): label as Moodle writes it, code, and the URL that switches to it. */
+export interface MoodleLanguage {
+  code: string;
+  label: string;
+  href: string;
+  current: boolean;
+}
+export const languages = signal<MoodleLanguage[]>([]);
 
 // Overlay and popover state.
 export const paletteOpen = signal(false);
@@ -74,10 +120,13 @@ export interface ControllerHooks {
   /** False for routes that cannot toggle (the shell is only mounted for skin/app routes). */
   isAppRoute: () => boolean;
   moodleLayout: () => void;
+  /** Open `url` in place when it is an app view (soft navigation); false when the caller must load it normally. */
+  navigate: (url: URL) => boolean;
 }
 export const hooks: ControllerHooks = {
   toggleOriginal: () => undefined,
   openOptions: () => undefined,
   isAppRoute: () => false,
   moodleLayout: () => undefined,
+  navigate: () => false,
 };

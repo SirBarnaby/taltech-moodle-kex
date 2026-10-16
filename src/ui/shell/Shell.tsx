@@ -1,7 +1,7 @@
 import { Component, type ComponentChildren } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { t } from '../../i18n';
-import { hash, headerCompact, helpOpen, paletteOpen, route, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
+import { activeCourseId, hash, headerCompact, helpOpen, paletteOpen, route, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
 import { CourseView } from '../views/Course';
 import { GradesOverviewView } from '../views/GradesOverview';
 import { MyCoursesView } from '../views/MyCourses';
@@ -90,7 +90,8 @@ function View() {
   const r = route.value;
   if (r?.effective === 'skin' && chromeKeys.has(r.key)) return <SkinChrome />;
   if (r?.effective !== 'app') return null;
-  if (r.key === 'course' || r.key === 'section') return <CourseView />;
+  // Keyed by course: a soft navigation from one course to another mounts a fresh view (state, hero, effects).
+  if (r.key === 'course' || r.key === 'section') return <CourseView key={activeCourseId.value ?? 0} />;
   if (r.key === 'workspace') return hash.value === '#pinned' ? <PinnedView /> : <WorkspaceView />;
   if (r.key === 'mycourses') return <MyCoursesView />;
   if (r.key === 'grades') return <GradesOverviewView />;

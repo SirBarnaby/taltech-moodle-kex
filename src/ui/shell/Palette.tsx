@@ -5,10 +5,10 @@ import { pinItem } from '../../actions/pins';
 import { searchCourses } from '../../data/repo/coursesearch';
 import type { Pin as PinModel } from '../../data/model';
 import { norm } from '../../search/fuzzy';
-import { t, type MessageKey } from '../../i18n';
+import { lang, t, type MessageKey } from '../../i18n';
 import { buildPaletteEntries } from '../../search/entries';
 import { parseQuery, search, type Entry, type GroupKey, type ResultGroup, type ResultRow } from '../../search';
-import { activeCourseId, pageInfo, paletteOpen, settings, sidebarCourses } from '../../state';
+import { activeCourseId, pageInfo, paletteOpen, sidebarCourses } from '../../state';
 import { Kbd } from '../components/Kbd';
 
 type IconType = LucideIcon;
@@ -78,7 +78,7 @@ export function Palette() {
     if (text.length < 3 || norm(text).length < 3) return;
     let live = true;
     const timer = window.setTimeout(() => {
-      searchCourses(text, root, settings.value.uiLanguage)
+      searchCourses(text, root, lang.value)
         .then((list) => live && setOthers(list.map((c) => ({
           id: `other:${c.id}`, type: 'course' as const, title: c.name, courseCode: c.code, courseId: c.id, url: c.url, keywords: [], meta: c.code,
         }))))

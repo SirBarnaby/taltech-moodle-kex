@@ -478,3 +478,20 @@
     color: #fff;
   }
 }
+
+/* First-class secondary rows (My courses, Calendar, Messages, Grades, Preferences): compact, so the course list keeps its room. */
+#kex-root {
+  .kex-sb__row--sub {
+    height: 40px;
+    gap: 22px;
+    padding-left: 17px;
+    font-size: 15.5px;
+    color: var(--kex-sb-text-2);
+    svg {
+      flex: none;
+    }
+  }
+  .kex-sb__row--sub .kex-sb__pill {
+    margin-left: auto;
+  }
+}

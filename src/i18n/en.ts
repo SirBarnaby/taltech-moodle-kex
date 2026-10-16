@@ -463,6 +463,23 @@ export const en = {
   'help.nf.move': 'Next / previous notification',
   'help.nf.read': 'Mark notification read',
   'help.nf.readAll': 'Mark all read',
+  'nav.participants': 'Participants',
+  'nav.search': 'Search',
+  'nav.login': 'Log in',
+  'nav.logout': 'Log out',
+  'nav.language': 'Language',
+  'common.all': 'All',
+  'hero.teachers': 'Teachers',
+  'hero.progress': 'Course progress',
+  'hero.next': 'Next deadline',
+  'ws.filterOn': 'Showing {name}',
+  'ws.filterCourse': 'Show only {name}',
+  'ws.coursesAll': 'All courses',
+  'ws.noneForCourse': 'Nothing due for this course',
+  'ext.langAuto': 'Follow Moodle',
+  'ext.langHint': "Follow Moodle uses the language Moodle itself is shown in. Moodle's own wording is used wherever Moodle has it.",
+  'ext.colourSchool': 'Colour courses by school',
+  'ext.colourSchoolHint': 'Course pages and heroes take a palette from the first letter of the course code (IT, engineering, science, business, maritime).',
 } as const;
 
 export type MessageKey = keyof typeof en;

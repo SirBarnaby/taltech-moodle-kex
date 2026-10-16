@@ -5,6 +5,8 @@ precision highp float;
 uniform vec2 uRes; uniform float uTime; uniform vec2 uPointer; uniform float uIntensity; uniform float uLeftFade; uniform float uSeed;
 // Window of the reference frame shown on the canvas: (x0, y0, x1, y1). Hero: (0,0,1339,253).
 uniform vec4 uWin;
+// School theme (src/lib/school.ts). Defaults are the identity: body (0,0,1), accent (1,0,0), hi (0,1,0), shape (1,1,1,1), sharp 0.
+uniform vec3 uBody; uniform vec3 uAccent; uniform vec3 uHi; uniform vec4 uShape; uniform float uSharp;
 out vec4 o;
 
 #define NP 24
@@ -43,6 +45,13 @@ float curve(const vec2 p[NP], float x){
   return (2.*t3-3.*t2+1.)*p1.y+(t3-2.*t2+t)*m1+(-2.*t3+3.*t2)*p2.y+(t3-t2)*m2;
 }
 
+// Curve with the school's shape: vertical scale about y=110 and a horizontal stretch about x=1000 (identity for the default).
+float cv(const vec2 p[NP], float x){
+  return 110.+(curve(p,1000.+(x-1000.)/uShape.y)-110.)*uShape.x;
+}
+
+float tri(float x){ return abs(fract(x)-.5)*4.-1.; }
+
 float g(float d,float w){return exp(-d*d/(w*w));}
 
 // One ribbon between two curves: translucent fill plus hairline strands. Returns the color to add.
@@ -72,13 +81,16 @@ void main(){
   float X=mix(uWin.x,uWin.z,uv.x);
   float Y=mix(uWin.y,uWin.w,1.-uv.y);
   float px=max((uWin.w-uWin.y)/uRes.y,(uWin.z-uWin.x)/uRes.x);
-  float t=uTime*.07+uSeed;
+  float t=uTime*.07*uShape.w+uSeed;
 
   // gentle drift of the curves
   float dy=3.2*sin(X*.0068+t*3.1)+1.8*sin(X*.0141-t*2.3)+uPointer.y*3.;
   float dy2=3.0*sin(X*.0057+t*2.6+1.7)+1.6*sin(X*.0123-t*2.9+.4)+uPointer.y*4.;
   float dy3=3.4*sin(X*.0075+t*2.2+3.1)+1.5*sin(X*.0160-t*3.3+2.2)+uPointer.y*2.;
-  float yA=curve(CA,X)+dy, yB=curve(CB,X)+dy2, yC=curve(CC,X)+dy3, yP=curve(CP,X)+dy*.7;
+  // The school's drift amplitude and its sharp, angular turns (a triangle wave instead of a sine).
+  dy*=uShape.z; dy2*=uShape.z; dy3*=uShape.z;
+  dy+=uSharp*tri(X*.0042+t*1.3); dy2+=uSharp*tri(X*.0038-t*1.1+.3); dy3+=uSharp*tri(X*.0046+t*.9+.6);
+  float yA=cv(CA,X)+dy, yB=cv(CB,X)+dy2, yC=cv(CC,X)+dy3, yP=cv(CP,X)+dy*.7;
 
   // base: dark violet field, brighter toward the upper right
   vec3 col=mix(mix(BG0,BG1,smoothstep(0.,.45,uv.x)),BG2,smoothstep(.55,1.,uv.x));
@@ -125,5 +137,7 @@ void main(){
 
   glow+=vec3(.88,.77,.91)*smoothstep(.9,2.2,dot(glow,vec3(.333)))*.5;
   col+=glow*K_GLOW*smoothstep(uLeftFade-.04,uLeftFade+.20,uv.x)*uIntensity;
+  // School palette: the blue channel carries the body of the ribbons, red the highlights, green the white.
+  col=col.r*uAccent+col.g*uHi+col.b*uBody;
   o=vec4(1.-exp(-col*K_GAIN),1.);
 }

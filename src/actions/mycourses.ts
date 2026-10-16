@@ -2,8 +2,8 @@ import { cache } from '../data/cache';
 import type { Course } from '../data/model';
 import { COURSE_TABS, invalidateCourseLists, loadLastAccess, setFavourite, setHidden, tabStore, type CoursesCtx, type CoursesTab } from '../data/repo/mycourses';
 import type { MyoverviewGrouping } from '../data/scrape/myoverview';
-import { t } from '../i18n';
-import { hash, pageInfo, settings } from '../state';
+import { lang, t } from '../i18n';
+import { hash, pageInfo } from '../state';
 import { mcFilter, mcHasArchived, mcSel } from '../state/mycourses';
 import { nowSec } from '../state/workspace';
 import { pushToast } from './toasts';
@@ -14,7 +14,7 @@ import { setUndo } from './undo';
 export function coursesCtx(): CoursesCtx {
   return {
     wwwroot: pageInfo.value?.wwwroot ?? '',
-    lang: () => settings.value.uiLanguage,
+    lang: () => lang.value,
     customFieldName: () => cache.peek<MyoverviewGrouping>('myoverview')?.data.customfieldname,
   };
 }

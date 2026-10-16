@@ -13,7 +13,7 @@ import { monoLabel, verbFor } from '../data/classify';
 import type { RowModel } from '../data/topics';
 import { ws } from '../data/ws';
 import { t } from '../i18n';
-import { hash, settings } from '../state';
+import { hash, search, settings } from '../state';
 import { feed, feedSel, feedTab, nowSec, wsPreview } from '../state/workspace';
 import { go } from './navigate';
 import { pinItem } from './pins';
@@ -61,6 +61,18 @@ export function setFeedTab(tab: 'all' | 'deadlines' | 'updates'): void {
   url.hash = tab === 'all' ? '' : `#${tab}`;
   history.replaceState(null, '', url);
   hash.value = location.hash;
+  touched = false;
+  feedSel.value = undefined;
+}
+
+/** Filter the Workspace to one course (or all of them) in place: the URL carries `?course=ID`, nothing is loaded. */
+export function setWsCourse(id: number | undefined): void {
+  const url = new URL(location.href);
+  if (id === undefined) url.searchParams.delete('course');
+  else url.searchParams.set('course', String(id));
+  if (url.href === location.href) return;
+  history.pushState({ kex: 1 }, '', url);
+  search.value = location.search;
   touched = false;
   feedSel.value = undefined;
 }

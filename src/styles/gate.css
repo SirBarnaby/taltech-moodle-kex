@@ -23,6 +23,17 @@
 :root:not([data-kex="off"]) {
   background: var(--kex-bg, #fbfbfd);
 }
+/* Before our script has chosen a theme (and on a dark system), never flash white. The script then sets data-kex-theme from the
+   cached setting (localStorage "kex.boot") at document_start, so a dark user who picked dark on a light system is covered too. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-kex="off"]):not([data-kex-theme]) {
+    background: var(--kex-bg, #0f0b1f);
+    color-scheme: dark;
+  }
+}
+:root:not([data-kex="off"])[data-kex-theme="dark"] {
+  background: var(--kex-bg, #0f0b1f);
+}
 /* Moodle overlays appended to <body> stay visible in app mode; tool tours are hidden. */
 :root[data-kex="app"] :is([data-flexitour], .flexitour) {
   display: none !important;
@@ -30,4 +41,20 @@
 /* Moodle's stylesheet normally zeroes the body margin; do not depend on it. */
 :root[data-kex="app"] body {
   margin: 0;
+}
+
+/* Shell snapshot (src/content/snapshot.ts): the previous page's chrome, painted before <body> exists. It reveals itself
+   away after the same 4 s as the gate, so a page that never runs our script cannot keep it. */
+:root:not([data-kex="off"]) #kex-root[data-kex-snapshot] {
+  visibility: visible;
+  pointer-events: none;
+  animation: kex-snap-out 0s linear 4s forwards;
+}
+:root[data-kex="off"] #kex-root[data-kex-snapshot] {
+  display: none;
+}
+@keyframes kex-snap-out {
+  to {
+    visibility: hidden;
+  }
 }

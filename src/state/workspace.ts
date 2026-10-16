@@ -5,7 +5,8 @@ import { eventsStore } from '../data/repo/events';
 import { notifsStore } from '../data/repo/notifs';
 import { recentStore } from '../data/repo/recent';
 import type { RowModel } from '../data/topics';
-import { hash } from './index';
+import { filterFeedByCourse, groupDeadlines } from '../lib/feedgroups';
+import { hash, search, sidebarCourses } from './index';
 
 /** Workspace state (page-designs §2). The tab lives in the URL hash. */
 
@@ -24,9 +25,18 @@ export const recentList = computed(() => recentStore().value.value ?? []);
 export const notifList = computed(() => notifsStore().value.value ?? []);
 export const unreadCount = computed(() => countsStore().value.value?.notifs ?? notifList.value.filter((n) => !n.read).length);
 
-export const feed = computed<FeedItem[]>(() =>
-  buildFeed(feedTab.value, { due: dueList.value, recent: recentList.value, notifs: notifList.value, now: nowSec.value }),
-);
+/** The course the Workspace is filtered to (`/my/?course=ID`), or undefined for all courses. The filter lives in the URL and never navigates. */
+export const wsCourse = computed<number | undefined>(() => {
+  const v = new URLSearchParams(search.value).get('course');
+  return v && /^\d+$/.test(v) ? Number(v) : undefined;
+});
+
+export const feed = computed<FeedItem[]>(() => {
+  const all = buildFeed(feedTab.value, { due: dueList.value, recent: recentList.value, notifs: notifList.value, now: nowSec.value });
+  const id = wsCourse.value;
+  const code = id === undefined ? undefined : sidebarCourses.value.find((c) => c.id === id)?.code;
+  return groupDeadlines(filterFeedByCourse(all, id, code));
+});
 
 export const feedLoading = computed(() => {
   const nothing = eventsStore().value.value === undefined && notifsStore().value.value === undefined;

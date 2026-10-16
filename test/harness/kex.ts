@@ -93,7 +93,8 @@ export function iter3Pins(): unknown[] {
 /** storage.local contents for the visual diff: frozen shader time, three pins; aliases and order are the shipped defaults. */
 export function iter3Seed(extra: Record<string, unknown> = {}): Seed {
   return {
-    'kex:settings': { enabled: true, effects: 'animated', motion: 'full', theme: 'light', debug: { freezeTime: 7.3 }, ...extra },
+    // The mock is the default look: no school colours, the lab's own language.
+    'kex:settings': { enabled: true, effects: 'animated', motion: 'full', theme: 'light', colourBySchool: false, debug: { freezeTime: 7.3 }, ...extra },
     [`kex:v1:${HOST}:${STUDENT_ID}:pins`]: envelope(iter3Pins()),
   };
 }

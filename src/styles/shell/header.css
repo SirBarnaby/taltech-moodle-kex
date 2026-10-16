@@ -302,3 +302,28 @@
     left: 0;
   }
 }
+
+/* Soft navigation in flight (the old view stays painted): a thin accent line under the header. */
+:root[data-kex-nav="loading"] #kex-root .kex-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--kex-accent-bar, var(--kex-accent));
+  transform-origin: left center;
+  animation: kex-navbar 1.6s var(--kex-ease) forwards;
+}
+@keyframes kex-navbar {
+  from {
+    transform: scaleX(0.05);
+  }
+  to {
+    transform: scaleX(0.9);
+  }
+}
+:root[data-kex-motion="reduced"][data-kex-nav="loading"] #kex-root .kex-header::after {
+  animation: none;
+  transform: scaleX(0.5);
+}

@@ -24,8 +24,10 @@ import { scrapeTtLinks, scrapeUser } from '../data/scrape/user';
 import { scrapeUserMenu } from '../data/scrape/usermenu';
 import { ws } from '../data/ws';
 import { SEL } from '../data/selectors';
-import { lang } from '../i18n';
+import { lang, langFromTag, resolveLang } from '../i18n';
+import { watchMoodleStrings } from '../i18n/moodle';
 import { qs, safeSessionStorage } from '../lib/dom';
+import { storageSet } from '../lib/storage';
 import { DEBUG, recordError } from '../lib/log';
 import { startFirstFrameProbe } from './probe';
 import {
@@ -35,8 +37,8 @@ import { applyShellAttrs, shellAttrs } from '../lib/theme';
 import { mountLogin, mountShell, unmountShell } from '../ui/mount';
 import { scrapeLogin } from '../data/scrape/login';
 import {
-  coursesLoading, coursesRaw, hash as hashSig, hooks, logoSrc, pageInfo, resolvedMotion, resolvedTheme, route as routeSig, settings, sidebarCourses, sidebarMode,
-  systemDark, ttLinks, user, userMenuItems, viewportWidth,
+  activeSchool, coursesLoading, coursesRaw, hash as hashSig, headerCompact, headerTitle, hooks, languages, logoSrc, pageDoc, pageInfo, resolvedMotion, resolvedTheme, route as routeSig,
+  search as searchSig, settings, sidebarCourses, sidebarMode, systemDark, ttLinks, user, userMenuItems, viewportWidth,
 } from '../state';
 import { updateSettings } from '../actions/settings';
 import { pushToast } from '../actions/toasts';
@@ -47,6 +49,9 @@ import { getMode, setMode } from './modes';
 import { hideOffPill, showOffPill } from './offpill';
 import { parsePageInfo, type PageInfo } from './pageinfo';
 import { effectiveMode, resolveRoute, stripBase, type EffectiveRoute } from './router';
+import { scrapeLanguages } from './langs';
+import { clickedLink, isPlainClick, PageLoader, prefetchSafe, routeOfDoc, softTarget, type SoftTarget } from './softnav';
+import { clearSnapshot, hasSnapshot, paintSnapshot, removeSnapshot, saveSnapshot } from './snapshot';
 
 /** Failsafe from architecture §5.2: if the shell has not mounted after 3 s, show plain Moodle. */
 const FAILSAFE_MS = 3000;
@@ -62,7 +67,16 @@ class Controller {
   private info: PageInfo | null = null;
   private failTimer: number | undefined;
   private stops: (() => void)[] = [];
+  /** Per-view subscriptions (key bindings, view attributes): replaced when a soft navigation swaps the view. */
+  private routeStops: (() => void)[] = [];
   private bindingsOff: (() => void) | null = null;
+  private loader = new PageLoader((url) => this.fetchText(url));
+  /** True once a soft navigation replaced the view: Moodle's own DOM (hidden behind the shell) is then the first page's, not the current one's. */
+  private softNavigated = false;
+  /** path + search of the view that is mounted (a hash change alone is not a navigation). */
+  private viewUrl = '';
+  private navSeq = 0;
+  private snapshotTimer: number | undefined;
   private booting = false;
   private mounted = false;
   private preload: Promise<void> | null = null;
@@ -77,6 +91,7 @@ class Controller {
     hooks.openOptions = () => {
       void browser.runtime.sendMessage({ type: 'kex:open-options' }).catch(() => undefined);
     };
+    hooks.navigate = (url) => this.trySoft(url);
     hooks.moodleLayout = () => {
       // Moodle's own content inside our shell: the app view goes away, the page comes back.
       if (this.route) {
@@ -112,6 +127,7 @@ class Controller {
     try {
       this.applyAttrs(readBootMirror());
       setMode('boot');
+      this.paintEarly();
       if (DEBUG) startFirstFrameProbe(this.html);
       window.clearTimeout(this.failTimer);
       this.failTimer = window.setTimeout(() => this.failOpen('timeout'), FAILSAFE_MS);
@@ -122,7 +138,7 @@ class Controller {
       const s = await (this.settingsLoaded ?? loadSettings());
       await this.preload;
       settings.value = s;
-      lang.value = s.uiLanguage;
+      this.syncLang(s);
       if (!s.enabled) return this.goDisabled(s);
 
       const info = parsePageInfo({ doc: document, pathname: location.pathname, search: location.search });
@@ -170,6 +186,7 @@ class Controller {
   /** Leave Moodle as it is. With `pill`, offer the way back. */
   private settleOff(pill: boolean, reason: OffReason = 'route'): void {
     window.clearTimeout(this.failTimer);
+    removeSnapshot();
     setMode('off');
     if (pill) {
       showOffPill({
@@ -182,11 +199,14 @@ class Controller {
 
   /** Login: wait for the finished page, then replace it with our view (Moodle's form and FAQ move into it). */
   private async mountLoginView(eff: EffectiveRoute, info: PageInfo): Promise<void> {
+    // The guest page has no shell, and what was stored belonged to a signed-in user.
+    removeSnapshot();
+    clearSnapshot();
     await this.dcl;
     this.syncAttrs();
     const root = document.createElement('div');
     root.id = 'kex-root';
-    root.lang = settings.value.uiLanguage;
+    root.lang = lang.value;
     document.body.insertBefore(root, document.body.firstChild);
     this.root = root;
     this.html.dataset.kexView = 'login';
@@ -208,25 +228,27 @@ class Controller {
   private async mount(eff: EffectiveRoute): Promise<void> {
     const info = this.info!;
     const body = document.body;
-    const s = settings.value;
     ws.configure(info.wwwroot, info.sesskey);
     cache.bind(location.host, info.userId);
     configureCounts(info.userId);
     configureNotifs(info.userId);
 
     this.syncAttrs();
+    // The painted snapshot gives way to the real shell in this same task: no frame without chrome in between.
+    removeSnapshot();
     const root = document.createElement('div');
     root.id = 'kex-root';
-    root.lang = s.uiLanguage;
+    root.lang = lang.value;
     body.insertBefore(root, body.firstChild);
     this.root = root;
+    this.viewUrl = location.pathname + location.search;
 
     user.value = cachedUser();
     const store = createCoursesStore(
       {
         userId: info.userId,
         wwwroot: info.wwwroot,
-        lang: () => settings.value.uiLanguage,
+        lang: () => lang.value,
         getCustomField: async () => {
           const onMy = eff.key === 'workspace' || eff.key === 'mycourses';
           if (onMy) await this.dcl;
@@ -257,71 +279,24 @@ class Controller {
         void resolvedMotion.value;
         void sidebarMode.value;
         this.syncAttrs();
-        lang.value = s2.uiLanguage;
-        if (this.root) this.root.lang = s2.uiLanguage;
+        this.syncLang(s2);
+        if (this.root) this.root.lang = lang.value;
       }),
+      effect(() => {
+        // The faculty theme of the course page: palette and accent follow the first letter of the course code.
+        const school = activeSchool.value;
+        if (school === 'default') delete this.html.dataset.kexSchool;
+        else this.html.dataset.kexSchool = school;
+      }),
+      () => delete this.html.dataset.kexSchool,
+      // Moodle's own wording for the labels it has (cached 7 days, applied at once from the cache).
+      watchMoodleStrings(() => langFromTag(document.documentElement.lang)),
     );
 
     mountShell(root, (e) => this.failOpen('shell', e));
     keyManager.attach();
     this.bindingsOff = keyManager.register(globalBindings());
-    if (eff.effective === 'app' && (eff.key === 'course' || eff.key === 'section')) {
-      const off = keyManager.register([...courseBindings(), ...previewBindings()]);
-      keyManager.setScope('course', true);
-      this.stops.push(
-        effect(() => keyManager.setScope('preview', previewCmId.value !== undefined)),
-        () => {
-          off();
-          keyManager.setScope('course', false);
-          keyManager.setScope('preview', false);
-        },
-      );
-    }
-    if (eff.effective === 'app' && (eff.key === 'workspace' || eff.key === 'mycourses')) {
-      // The Pinned page is the Workspace route with `#pinned`; its keys follow the hash (one set registered at a time).
-      const wsPrev = keyManager.register(workspacePreviewBindings());
-      this.stops.push(
-        effect(() => {
-          const view = eff.key === 'mycourses' ? 'mycourses' : hashSig.value === '#pinned' ? 'pinned' : 'workspace';
-          this.html.dataset.kexView = view;
-          keyManager.setScope('workspace', true);
-          return keyManager.register(view === 'mycourses' ? mycoursesBindings() : view === 'pinned' ? pinnedBindings() : workspaceBindings());
-        }),
-        effect(() => keyManager.setScope('preview', wsPreview.value !== undefined)),
-        () => {
-          wsPrev();
-          keyManager.setScope('workspace', false);
-          keyManager.setScope('preview', false);
-        },
-      );
-    }
-    if (eff.effective === 'app' && (eff.key === 'grades' || eff.key === 'notifications')) {
-      this.html.dataset.kexView = eff.key;
-      keyManager.setScope('workspace', true);
-      const off = keyManager.register(eff.key === 'grades' ? gradesBindings() : notificationsBindings());
-      this.stops.push(() => {
-        off();
-        keyManager.setScope('workspace', false);
-        delete this.html.dataset.kexView;
-      });
-    }
-    if (eff.effective === 'skin' && (chromeKeys.has(eff.key) || eff.key === 'quiz-focus')) {
-      const focus = eff.key === 'quiz-focus';
-      // Skin+ pages: our band replaces Moodle's #page-header; a quiz attempt is focus mode (rail sidebar, only Ctrl+K and Alt+Shift+O).
-      if (focus) this.html.dataset.kexFocus = 'true';
-      else this.html.dataset.kexChrome = eff.key;
-      const off = keyManager.register(focus ? focusBindings() : activityBindings());
-      keyManager.setScope('activity', !focus && eff.key === 'activity');
-      if (focus) keyManager.suspend(true);
-      else this.stops.push(attachEditorFrameKeys());
-      this.stops.push(() => {
-        off();
-        keyManager.setScope('activity', false);
-        keyManager.suspend(false);
-        delete this.html.dataset.kexFocus;
-        delete this.html.dataset.kexChrome;
-      });
-    }
+    this.mountRoute(eff);
     window.clearTimeout(this.failTimer);
     this.mounted = true;
     this.html.dataset.kexShell = 'ready';
@@ -344,23 +319,103 @@ class Controller {
     });
     await this.dcl;
     if (!this.mounted) return;
-    this.refreshFromDom(eff);
+    this.refreshShellFromDom();
+    this.refreshViewFromDoc(eff, document);
     if (eff.effective === 'skin') {
       setMode('skin');
-      if (chromeKeys.has(eff.key) || eff.key === 'quiz-focus') this.stops.push(watchSkinPage());
+      if (chromeKeys.has(eff.key) || eff.key === 'quiz-focus') this.routeStops.push(watchSkinPage());
     }
-    window.addEventListener('hashchange', () => {
+    const onHash = (): void => {
       hashSig.value = location.hash;
       routeSig.value = routeSig.value ? { ...routeSig.value } : null;
+    };
+    const onResize = (): void => void (viewportWidth.value = window.innerWidth);
+    window.addEventListener('hashchange', onHash);
+    window.addEventListener('resize', onResize, { passive: true });
+    this.stops.push(() => {
+      window.removeEventListener('hashchange', onHash);
+      window.removeEventListener('resize', onResize);
     });
-    window.addEventListener('resize', () => (viewportWidth.value = window.innerWidth), { passive: true });
+    this.watchNavigation();
+    this.scheduleSnapshot();
+    void storageSet({ 'kex:moodleLang': langFromTag(document.documentElement.lang) }).catch(() => undefined);
   }
 
-  /** Scrape what only the finished DOM has: breadcrumb, user, logo, user menu, utility links. */
-  private refreshFromDom(eff: EffectiveRoute): void {
+  /** Key bindings, view attributes and per-view keyboard scopes for the route in `eff`. Undone by `unmountRoute`. */
+  private mountRoute(eff: EffectiveRoute): void {
+    const stops = this.routeStops;
+    if (eff.effective === 'app' && (eff.key === 'course' || eff.key === 'section')) {
+      const off = keyManager.register([...courseBindings(), ...previewBindings()]);
+      keyManager.setScope('course', true);
+      stops.push(
+        effect(() => keyManager.setScope('preview', previewCmId.value !== undefined)),
+        () => {
+          off();
+          keyManager.setScope('course', false);
+          keyManager.setScope('preview', false);
+        },
+      );
+    }
+    if (eff.effective === 'app' && (eff.key === 'workspace' || eff.key === 'mycourses')) {
+      // The Pinned page is the Workspace route with `#pinned`; its keys follow the hash (one set registered at a time).
+      const wsPrev = keyManager.register(workspacePreviewBindings());
+      stops.push(
+        effect(() => {
+          const view = eff.key === 'mycourses' ? 'mycourses' : hashSig.value === '#pinned' ? 'pinned' : 'workspace';
+          this.html.dataset.kexView = view;
+          keyManager.setScope('workspace', true);
+          return keyManager.register(view === 'mycourses' ? mycoursesBindings() : view === 'pinned' ? pinnedBindings() : workspaceBindings());
+        }),
+        effect(() => keyManager.setScope('preview', wsPreview.value !== undefined)),
+        () => {
+          wsPrev();
+          keyManager.setScope('workspace', false);
+          keyManager.setScope('preview', false);
+          delete this.html.dataset.kexView;
+        },
+      );
+    }
+    if (eff.effective === 'app' && (eff.key === 'grades' || eff.key === 'notifications')) {
+      this.html.dataset.kexView = eff.key;
+      keyManager.setScope('workspace', true);
+      const off = keyManager.register(eff.key === 'grades' ? gradesBindings() : notificationsBindings());
+      stops.push(() => {
+        off();
+        keyManager.setScope('workspace', false);
+        delete this.html.dataset.kexView;
+      });
+    }
+    if (eff.effective === 'skin' && (chromeKeys.has(eff.key) || eff.key === 'quiz-focus')) {
+      const focus = eff.key === 'quiz-focus';
+      // Skin+ pages: our band replaces Moodle's #page-header; a quiz attempt is focus mode (rail sidebar, only Ctrl+K and Alt+Shift+O).
+      if (focus) this.html.dataset.kexFocus = 'true';
+      else this.html.dataset.kexChrome = eff.key;
+      const off = keyManager.register(focus ? focusBindings() : activityBindings());
+      keyManager.setScope('activity', !focus && eff.key === 'activity');
+      if (focus) keyManager.suspend(true);
+      else stops.push(attachEditorFrameKeys());
+      stops.push(() => {
+        off();
+        keyManager.setScope('activity', false);
+        keyManager.suspend(false);
+        delete this.html.dataset.kexFocus;
+        delete this.html.dataset.kexChrome;
+      });
+    }
+  }
+
+  private unmountRoute(): void {
+    this.routeStops.splice(0).forEach((s) => s());
+  }
+
+  /** Scrape what only the finished DOM of the *live* page has and that does not depend on the view: user, user menu, links, logo, languages. */
+  private refreshShellFromDom(): void {
     const info = parsePageInfo({ doc: document, pathname: location.pathname, search: location.search });
-    this.info = info;
-    pageInfo.value = info;
+    // A soft navigation may already have replaced the page context (course id, heading): keep ours then.
+    if (!this.softNavigated) {
+      this.info = info;
+      pageInfo.value = info;
+    }
     const scraped = scrapeUser(document, info.userId);
     if (scraped) {
       user.value = scraped;
@@ -377,15 +432,254 @@ class Controller {
     }
     userMenuItems.value = scrapeUserMenu(document);
     ttLinks.value = scrapeTtLinks(document);
+    languages.value = scrapeLanguages(document, document.documentElement.lang);
     const logo = qs<HTMLImageElement>(document, SEL.logo);
     logoSrc.value = logo?.getAttribute('src') ?? undefined;
-    if (eff.key === 'workspace' || eff.key === 'mycourses') void scrapeMyoverview(document);
-    if (eff.key === 'grades') gradeRows.value = scrapeGradeOverview(document);
+  }
+
+  /** The view's own data from a page document (the live one, or the one a soft navigation fetched). */
+  private refreshViewFromDoc(eff: EffectiveRoute, doc: Document): void {
+    if (eff.key === 'workspace' || eff.key === 'mycourses') void scrapeMyoverview(doc);
+    if (eff.key === 'grades') gradeRows.value = scrapeGradeOverview(doc);
     if (eff.key === 'course' || eff.key === 'section') {
-      const tiles = scrapeTiles(document);
+      const tiles = scrapeTiles(doc);
       if (tiles.length) setTileList(tiles);
-      summaries.value = scrapeSummaries(document);
+      summaries.value = scrapeSummaries(doc);
     }
+  }
+
+  /** The language the UI uses: the setting resolved against `<html lang>` (Moodle's own language). */
+  private syncLang(s: Pick<Settings, 'uiLanguage'>): void {
+    const next = resolveLang(s.uiLanguage, document.documentElement.lang);
+    if (lang.value !== next) lang.value = next;
+  }
+
+  // ---------------------------------------------------------------- shell snapshot, soft navigation
+
+  /** Paint the stored chrome of the previous page at once (document_start), unless this load will not get a shell. */
+  private paintEarly(): void {
+    if (hasSnapshot()) return;
+    const q = new URLSearchParams(location.search);
+    if (q.get('kex') === 'off') return;
+    const key = resolveRoute({ path: location.pathname, bodyId: '', bodyClasses: [] }).key;
+    if (key === 'login' || safeSessionStorage()?.getItem(offKey(key)) === '1') return;
+    paintSnapshot(this.html, location);
+  }
+
+  /** Keep the stored chrome current: once the page settled, and whenever the page is left (a hard load follows). */
+  private scheduleSnapshot(): void {
+    const save = (): void => {
+      if (this.root && this.mounted) saveSnapshot(this.root);
+    };
+    window.clearTimeout(this.snapshotTimer);
+    this.snapshotTimer = window.setTimeout(save, 2500);
+    const onHide = (): void => {
+      if (document.visibilityState === 'hidden') save();
+    };
+    window.addEventListener('pagehide', save);
+    document.addEventListener('visibilitychange', onHide);
+    this.stops.push(() => {
+      window.clearTimeout(this.snapshotTimer);
+      window.removeEventListener('pagehide', save);
+      document.removeEventListener('visibilitychange', onHide);
+    });
+  }
+
+  private softCtx() {
+    return { origin: location.origin, wwwroot: this.info?.wwwroot ?? '', routeModes: settings.value.routeModes };
+  }
+
+  /** Link clicks, hover warm-up and history traversal. Registered once the shell is up. */
+  private watchNavigation(): void {
+    const onClick = (e: MouseEvent): void => {
+      if (!isPlainClick(e) || !this.canSoft()) return;
+      const a = clickedLink(e.target);
+      if (!a || a.closest('#page-wrapper, .kex-offpill')) return;
+      let url: URL;
+      try {
+        url = new URL(a.href, location.href);
+      } catch {
+        return;
+      }
+      // Same page: let the browser handle anchors and reloads of the current URL.
+      if (url.pathname + url.search === location.pathname + location.search) return;
+      if (this.trySoft(url)) e.preventDefault();
+    };
+    let hoverTimer: number | undefined;
+    const warmed = new Set<string>();
+    const onOver = (e: Event): void => {
+      const a = clickedLink(e.target);
+      if (!a) return;
+      window.clearTimeout(hoverTimer);
+      hoverTimer = window.setTimeout(() => {
+        let url: URL;
+        try {
+          url = new URL(a.href, location.href);
+        } catch {
+          return;
+        }
+        const ctx = this.softCtx();
+        if (softTarget(url, ctx)) {
+          if (this.canSoft()) void this.loader.load(url).catch(() => undefined);
+        } else if (prefetchSafe(url, ctx) && !warmed.has(url.href)) {
+          warmed.add(url.href);
+          const link = document.createElement('link');
+          link.rel = 'prefetch';
+          link.href = url.href;
+          document.head?.appendChild(link);
+        }
+      }, 65);
+    };
+    const onOut = (): void => window.clearTimeout(hoverTimer);
+    const onPop = (): void => void this.onPopState();
+    document.addEventListener('click', onClick);
+    document.addEventListener('pointerover', onOver, { passive: true });
+    document.addEventListener('focusin', onOver, { passive: true });
+    document.addEventListener('pointerout', onOut, { passive: true });
+    window.addEventListener('popstate', onPop);
+    this.stops.push(() => {
+      document.removeEventListener('click', onClick);
+      document.removeEventListener('pointerover', onOver);
+      document.removeEventListener('focusin', onOver);
+      document.removeEventListener('pointerout', onOut);
+      window.removeEventListener('popstate', onPop);
+      window.clearTimeout(hoverTimer);
+    });
+  }
+
+  /** Soft navigation only starts from a mounted app view. */
+  private canSoft(): boolean {
+    return this.mounted && !!this.route && this.route.effective === 'app' && !!this.info && !this.html.dataset.kexFocus;
+  }
+
+  /** Open `url` in place when it is an app view. Returns true when the navigation was taken over (the caller must not load the page). */
+  private trySoft(url: URL): boolean {
+    if (!this.canSoft()) return false;
+    const target = softTarget(url, this.softCtx());
+    if (!target) return false;
+    // A course page with another query on the same course is one the page itself has to resolve (section, edit): a normal load.
+    if (target.key === 'course' && this.route?.key === 'course' && target.courseId === pageInfo.value?.courseId) return false;
+    void this.softNavigate(url, target, true);
+    return true;
+  }
+
+  private async softNavigate(url: URL, target: SoftTarget, push: boolean): Promise<void> {
+    const seq = ++this.navSeq;
+    const hard = (): void => {
+      if (seq !== this.navSeq) return;
+      this.html.removeAttribute('data-kex-nav');
+      if (push) window.location.assign(url.href);
+      else window.location.reload();
+    };
+    try {
+      // Only the query or hash of the Workspace or My courses changed (the course filter, the list tab): the same view, nothing to load.
+      if (this.route?.key === target.key && (target.key === 'workspace' || target.key === 'mycourses')) {
+        if (push) {
+          history.replaceState({ ...(history.state as object | null), kexScroll: window.scrollY }, '');
+          history.pushState({ kex: 1 }, '', url.href);
+        }
+        this.viewUrl = url.pathname + url.search;
+        searchSig.value = location.search;
+        hashSig.value = location.hash;
+        return;
+      }
+      this.html.dataset.kexNav = 'loading';
+      let doc: Document | null = null;
+      if (target.needsDoc) {
+        doc = await Promise.race([
+          this.loader.load(url),
+          new Promise<never>((_, rej) => window.setTimeout(() => rej(new Error('soft navigation timed out')), 8000)),
+        ]);
+        if (seq !== this.navSeq) return; // a newer click won
+        // The page says what it really is: editing mode, an embedded layout, or a route the user set to another mode.
+        const real = routeOfDoc(doc, target.path, settings.value.routeModes);
+        if (real.key !== target.key || real.effective !== 'app') return hard();
+      }
+      if (seq !== this.navSeq) return;
+      if (push) {
+        history.replaceState({ ...(history.state as object | null), kexScroll: window.scrollY }, '');
+        history.pushState({ kex: 1 }, '', url.href);
+      }
+      this.swapView(target, doc, url);
+      this.html.removeAttribute('data-kex-nav');
+      // Views that did not need the page up front read their scrape data from it as it arrives (and the title).
+      if (!doc) {
+        void this.loader.load(url).then((d) => {
+          if (seq !== this.navSeq || this.viewUrl !== url.pathname + url.search) return;
+          this.applyPageDoc(target.route, d);
+        }).catch(() => undefined);
+      }
+    } catch (e) {
+      recordError('softnav', e);
+      hard();
+    }
+  }
+
+  /** Replace the mounted view with the one `target` names. The shell (sidebar, header, overlays) is not touched. */
+  private swapView(target: SoftTarget, doc: Document | null, url: URL): void {
+    this.softNavigated = true;
+    this.unmountRoute();
+    keyManager.setScope('workspace', false);
+    keyManager.setScope('course', false);
+    keyManager.setScope('preview', false);
+    this.route = target.route;
+    this.viewUrl = url.pathname + url.search;
+    const prev = this.info!;
+    const courseId = target.courseId ?? 0;
+    const next: PageInfo = { ...prev, courseId, cmId: null, contextId: null, bodyId: '', breadcrumb: [], heading: '', kicker: '', format: '', pageLayout: '' };
+    this.info = next;
+    pageDoc.value = doc;
+    pageInfo.value = next;
+    searchSig.value = location.search;
+    hashSig.value = location.hash;
+    routeSig.value = target.route;
+    headerTitle.value = null;
+    headerCompact.value = false;
+    this.mountRoute(target.route);
+    if (doc) this.applyPageDoc(target.route, doc);
+    window.scrollTo(0, 0);
+    // Close what belongs to the old view.
+    void import('../state').then((m) => {
+      m.paletteOpen.value = false;
+      m.sidebarOverlay.value = false;
+    });
+  }
+
+  /** Title, heading, breadcrumb and the view's scrape data from the fetched page. */
+  private applyPageDoc(route: EffectiveRoute, doc: Document): void {
+    pageDoc.value = doc;
+    const parsed = parsePageInfo({ doc, pathname: location.pathname, search: location.search });
+    const cur = this.info;
+    if (cur) {
+      // M.cfg (course id, context) would come from the live page, not from this one: only what the fetched markup itself says.
+      const merged: PageInfo = {
+        ...cur,
+        bodyId: parsed.bodyId, pageLayout: parsed.pageLayout, format: parsed.format,
+        breadcrumb: parsed.breadcrumb, heading: parsed.heading, kicker: parsed.kicker,
+      };
+      this.info = merged;
+      pageInfo.value = merged;
+    }
+    if (doc.title) document.title = doc.title;
+    this.refreshViewFromDoc(route, doc);
+  }
+
+  /** Back and forward between the views of this page: swap in place, or reload when the entry is not one we can show. */
+  private async onPopState(): Promise<void> {
+    if (!this.canSoft()) return;
+    hashSig.value = location.hash;
+    searchSig.value = location.search;
+    if (location.pathname + location.search === this.viewUrl) return;
+    const url = new URL(location.href);
+    const target = softTarget(url, this.softCtx());
+    if (!target) {
+      window.location.reload();
+      return;
+    }
+    // Restore the scroll position of the entry we return to once the view is in.
+    const y = (history.state as { kexScroll?: number } | null)?.kexScroll;
+    await this.softNavigate(url, target, false);
+    if (typeof y === 'number') requestAnimationFrame(() => window.scrollTo(0, y));
   }
 
   private syncAttrs(): void {
@@ -405,6 +699,9 @@ class Controller {
 
   private unmount(): void {
     this.stops.splice(0).forEach((s) => s());
+    this.unmountRoute();
+    pageDoc.value = null;
+    this.html.removeAttribute('data-kex-nav');
     this.bindingsOff?.();
     this.bindingsOff = null;
     keyManager.detach();
@@ -415,6 +712,7 @@ class Controller {
     }
     delete this.html.dataset.kexShell;
     this.mounted = false;
+    removeSnapshot();
     // Overlays must not survive a remount.
     import('../state').then((m) => {
       m.paletteOpen.value = false;
@@ -429,6 +727,14 @@ class Controller {
   failOpen(reason: string, err?: unknown): void {
     if (err) recordError(reason, err);
     window.clearTimeout(this.failTimer);
+    if (this.softNavigated) {
+      // Moodle's own DOM behind the shell is the first page's: load the current URL as plain Moodle instead.
+      const u = new URL(location.href);
+      u.searchParams.set('kex', 'off');
+      this.unmount();
+      window.location.replace(u.href);
+      return;
+    }
     this.unmount();
     setMode('off');
     showOffPill({
@@ -442,9 +748,13 @@ class Controller {
 
   private goDisabled(s: Settings): void {
     window.clearTimeout(this.failTimer);
+    if (this.softNavigated) {
+      window.location.reload();
+      return;
+    }
     this.unmount();
     setMode('off');
-    lang.value = s.uiLanguage;
+    this.syncLang(s);
     if (s.showOffPill && document.body) {
       showOffPill({ variant: 'disabled', onPrimary: () => updateSettings({ enabled: true }) });
     } else if (!document.body) {
@@ -456,6 +766,10 @@ class Controller {
   private toggleOriginal(): void {
     if (this.mounted && this.route) {
       safeSessionStorage()?.setItem(offKey(this.route.key), '1');
+      if (this.softNavigated) {
+        window.location.reload();
+        return;
+      }
       this.unmount();
       this.settleOff(true, 'manual');
       return;

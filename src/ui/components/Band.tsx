@@ -1,6 +1,8 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 import { effects } from '../../fx/effects';
+import { SCHOOLS } from '../../lib/school';
+import { activeSchool } from '../../state';
 import { heroEffectMode } from '../../state/effects';
 import { Crosshair } from './Hero';
 import { SlideUpText } from './SlideUpText';
@@ -26,12 +28,13 @@ interface BandProps {
 export function Band({ label, title, size = 'page', actions, meta, seed = 0, testId = 'band' }: BandProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const mode = heroEffectMode.value;
+  const school = activeSchool.value;
   useEffect(() => {
     const c = canvas.current;
     if (!c) return;
-    const handle = effects.register(c, { seed, intensity: 0.4, leftFade: 0.46 }, (m) => (heroEffectMode.value = m));
+    const handle = effects.register(c, { seed, intensity: 0.4, leftFade: 0.46, style: SCHOOLS[school].ribbons }, (m) => (heroEffectMode.value = m));
     return () => handle.dispose();
-  }, [seed]);
+  }, [seed, school]);
   return (
     <section class={`kex-band kex-band--${size}${title.length > 44 ? ' kex-band--long' : ''}`} data-kex-test={testId} data-mode={mode}>
       <canvas class="kex-hero__canvas" ref={canvas} aria-hidden="true" />
