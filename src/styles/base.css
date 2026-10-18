@@ -111,7 +111,7 @@
   #kex-root *,
   #kex-root *::before,
   #kex-root *::after {
-    animation-duration: 0.01ms !important;
+    animation: none !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
@@ -134,7 +134,7 @@
 :root[data-kex-motion="reduced"] #kex-root *,
 :root[data-kex-motion="reduced"] #kex-root *::before,
 :root[data-kex-motion="reduced"] #kex-root *::after {
-  animation-duration: 0.01ms !important;
+  animation: none !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }

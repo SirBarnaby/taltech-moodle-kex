@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { NavTab } from '../../data/scrape/secondarynav';
+import { scrollBehavior } from '../../fx/motion';
 import { t } from '../../i18n';
 
 interface CourseNavProps {
@@ -13,15 +14,15 @@ interface CourseNavProps {
  */
 export function CourseNav({ tabs }: CourseNavProps) {
   const list = useRef<HTMLElement>(null);
-  const [bar, setBar] = useState({ left: 0, width: 0, ready: false });
+  const [bar, setBar] = useState({ left: 0, width: 0, ready: false, anim: false });
   const activeKey = tabs.find((x) => x.active)?.key;
 
   useLayoutEffect(() => {
     const place = (): void => {
       const el = list.current?.querySelector<HTMLElement>('[aria-current="page"]');
-      if (!el) return setBar((b) => (b.ready ? { ...b, ready: false } : b));
+      if (!el) return setBar((b) => (b.ready ? { ...b, ready: false, anim: false } : b));
       const text = el.querySelector<HTMLElement>('.kex-tab__label') ?? el;
-      setBar({ left: text.offsetLeft + el.offsetLeft - 9, width: text.offsetWidth + 18, ready: true });
+      setBar((b) => ({ left: text.offsetLeft + el.offsetLeft - 9, width: text.offsetWidth + 18, ready: true, anim: b.ready }));
     };
     place();
     const ro = new ResizeObserver(place);
@@ -30,7 +31,8 @@ export function CourseNav({ tabs }: CourseNavProps) {
     return () => ro.disconnect();
   }, [activeKey, tabs.length]);
 
-  if (!tabs.length) return null;
+  // The row keeps its height while the tabs are on their way, so the topics below do not drop when they arrive.
+  if (!tabs.length) return <div class="kex-tabs kex-coursenav kex-coursenav--empty" aria-hidden="true" />;
   return (
     <nav class="kex-tabs kex-coursenav" aria-label={t('course.tabs')} ref={list} data-kex-test="course-nav">
       {tabs.map((tb) => (
@@ -40,7 +42,7 @@ export function CourseNav({ tabs }: CourseNavProps) {
           href={tb.url}
           data-key={tb.key}
           aria-current={tb.active ? 'page' : undefined}
-          onClick={tb.active ? (e) => { e.preventDefault(); window.scrollTo({ top: 0 }); } : undefined}
+          onClick={tb.active ? (e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: scrollBehavior() }); } : undefined}
         >
           <span class="kex-tab__label">{tb.label}</span>
         </a>
@@ -49,7 +51,7 @@ export function CourseNav({ tabs }: CourseNavProps) {
         class="kex-tabs__bar"
         data-kex-test="tab-underline"
         aria-hidden="true"
-        style={{ left: `${bar.left}px`, width: `${bar.width}px`, opacity: bar.ready ? 1 : 0 }}
+        style={{ transform: `translateX(${bar.left}px) scaleX(${bar.width})`, opacity: bar.ready ? 1 : 0, transition: bar.anim ? undefined : 'none' }}
       />
     </nav>
   );

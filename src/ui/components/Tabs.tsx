@@ -30,7 +30,7 @@ interface TabsProps<K extends string = 'all' | 'lectures' | 'labs'> {
 export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, onChange, items, label, idPrefix = 'kex-tab', panelId = 'kex-tabpanel' }: TabsProps<K>) {
   const TABS = (items ?? COURSE_TABS) as readonly TabDef<K>[];
   const list = useRef<HTMLDivElement>(null);
-  const [bar, setBar] = useState({ left: 0, width: 0, ready: false });
+  const [bar, setBar] = useState({ left: 0, width: 0, ready: false, anim: false });
 
   useLayoutEffect(() => {
     const place = (): void => {
@@ -39,7 +39,7 @@ export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, on
       if (!el || !box) return;
       const text = el.querySelector<HTMLElement>('.kex-tab__label') ?? el;
       const left = text.offsetLeft + el.offsetLeft - 9;
-      setBar({ left, width: text.offsetWidth + 18, ready: true });
+      setBar((b) => ({ left, width: text.offsetWidth + 18, ready: true, anim: b.ready }));
     };
     place();
     const ro = new ResizeObserver(place);
@@ -82,7 +82,7 @@ export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, on
         class="kex-tabs__bar"
         data-kex-test="tab-underline"
         aria-hidden="true"
-        style={{ left: `${bar.left}px`, width: `${bar.width}px`, opacity: bar.ready ? 1 : 0 }}
+        style={{ transform: `translateX(${bar.left}px) scaleX(${bar.width})`, opacity: bar.ready ? 1 : 0, transition: bar.anim ? undefined : 'none' }}
       />
     </div>
   );

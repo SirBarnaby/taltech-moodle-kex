@@ -1,7 +1,9 @@
 import { Component, type ComponentChildren } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
+import { MOTION } from '../../fx/navigation';
+import { motionTier } from '../../fx/motion';
 import { t } from '../../i18n';
-import { activeCourseId, hash, headerCompact, helpOpen, paletteOpen, route, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
+import { activeCourseId, hash, headerCompact, helpOpen, paletteOpen, route, settings, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
 import { CourseView } from '../views/Course';
 import { GradesOverviewView } from '../views/GradesOverview';
 import { MyCoursesView } from '../views/MyCourses';
@@ -55,6 +57,29 @@ function useShellEffects(): void {
   }, []);
 }
 
+/**
+ * Sidebar full <-> rail (Ctrl+B): the page and the header land in their new place at once (no layout transition) and slide there
+ * with a transform, so both move together. Not on window resizes, and not with reduced motion.
+ */
+function useSidebarSlide(): void {
+  const mode = sidebarMode.value;
+  const width = viewportWidth.value;
+  const pinned = !settings.value.sidebarAutoHide;
+  const prev = useRef<{ width: number; main: number; header: number } | null>(null);
+  useLayoutEffect(() => {
+    const main = document.getElementById('kex-main');
+    const header = document.querySelector<HTMLElement>('.kex-header');
+    const now = { width, main: main?.getBoundingClientRect().left ?? 0, header: header?.getBoundingClientRect().left ?? 0 };
+    const before = prev.current;
+    prev.current = now;
+    if (!before || before.width !== width || motionTier() === 'none') return;
+    for (const [el, from, to] of [[main, before.main, now.main], [header, before.header, now.header]] as const) {
+      if (!el || typeof el.animate !== 'function' || Math.abs(from - to) < 1) continue;
+      el.animate([{ transform: `translateX(${from - to}px)` }, { transform: 'translateX(0)' }], { duration: 220, easing: MOTION.ease });
+    }
+  }, [mode, width, pinned]);
+}
+
 /** Debug-only hook for the fail-open test: `?kex-test-throw=shell` makes the shell throw while rendering. */
 function ThrowProbe(): null {
   if (__DEBUG__ && new URLSearchParams(location.search).get('kex-test-throw') === 'shell') {
@@ -104,6 +129,7 @@ function View() {
 
 export function Shell() {
   useShellEffects();
+  useSidebarSlide();
   return (
     <>
       <ThrowProbe />

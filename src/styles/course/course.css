@@ -222,13 +222,19 @@
   .kex-tab__label {
     display: block;
   }
+  .kex-fade-in {
+    animation: kex-fade 120ms var(--kex-ease) both;
+  }
   .kex-tabs__bar {
     position: absolute;
+    left: 0;
     bottom: 0;
+    width: 1px;
     height: 3px;
+    transform-origin: 0 50%;
     background: var(--kex-accent);
     pointer-events: none;
-    transition: left 220ms var(--kex-ease), width 220ms var(--kex-ease), opacity 120ms linear;
+    transition: transform 220ms var(--kex-ease), opacity 120ms linear;
   }
 
   /* Topics remain a single strip, leaving the full reading width to the selected section. */

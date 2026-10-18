@@ -1,5 +1,5 @@
 import { effect } from '@preact/signals';
-import { beginViewTransition } from '../fx/navigation';
+import { beginViewTransition, scrollInstant } from '../fx/navigation';
 import { cache } from '../data/cache';
 import type { Pin } from '../data/model';
 import type { NavTab } from '../data/scrape/secondarynav';
@@ -173,7 +173,23 @@ function onPop(): void {
     const enter = beginViewTransition(document.querySelector<HTMLElement>('.kex-detail'), 'topic');
     topicNumber.value = n;
     enter('.kex-detail');
+    revealDetailTop();
   }
+}
+
+/**
+ * Switching topic while scrolled down: the new topic starts at its top, right under the sticky strip, instead of wherever
+ * the old one happened to be. The jump happens under the copy of the old panel, which is fixed in place and fades out.
+ */
+function revealDetailTop(): void {
+  const detail = document.querySelector<HTMLElement>('.kex-detail');
+  const strip = document.querySelector<HTMLElement>('.kex-topics');
+  if (!detail) return;
+  const stuck = strip ? (Number.parseFloat(getComputedStyle(strip).top) || 0) + strip.getBoundingClientRect().height : 0;
+  const body = detail.parentElement;
+  const gap = Number.parseFloat(body ? getComputedStyle(body).rowGap : '') || 24;
+  const want = detail.getBoundingClientRect().top + window.scrollY - stuck - gap;
+  if (window.scrollY > want + 1) scrollInstant(Math.max(0, want));
 }
 
 function setTiles(entries: [number, string][]): void {
@@ -300,6 +316,7 @@ export function setTopic(n: number, opts: { push?: boolean; focus?: boolean } = 
   performance.mark('kex:topic-switch');
   topicNumber.value = n;
   enter('.kex-detail');
+  revealDetailTop();
   selectedCmId.value = undefined;
   writeCourseUi(courseId, { topic: n });
   const url = new URL(location.href);
@@ -334,7 +351,7 @@ export function moveRow(delta: 1 | -1): void {
 
 export function focusTopic(n: number): void {
   focusZone.value = 'topics';
-  requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-topic="${n}"]`)?.focus({ preventScroll: false }));
+  requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-topic="${n}"]`)?.focus({ preventScroll: true }));
 }
 
 export function focusRow(cmid: number): void {

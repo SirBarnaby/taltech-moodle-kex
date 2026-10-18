@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { effects } from '../../fx/effects';
+import { MOTION, sinceNavigation } from '../../fx/navigation';
 import { formatDate, t } from '../../i18n';
 import { nextByCourse } from '../../data/feed';
 import { eventsStore } from '../../data/repo/events';
@@ -116,9 +117,9 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
           testId="hero-title"
           text={text}
           split="words"
-          stagger={0.06}
-          duration={0.7}
-          delay={0.05}
+          stagger={MOTION.titleStagger / 1000}
+          duration={MOTION.title / 1000}
+          delay={Math.max(0, MOTION.titleDelay - sinceNavigation()) / 1000}
           gradient={lines[1] ? [1] : [0]}
         />
         <nav class="kex-hero__links" aria-label={aria}>

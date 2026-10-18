@@ -1,5 +1,13 @@
 import { animSettle, animTrack } from './anim';
-import { viewMotionAllowed } from './navigation';
+import { MOTION } from './navigation';
+import { motionTier } from './motion';
+
+/** The title moves only with full effects; with effects off or reduced motion it is simply there. */
+const titleMoves = (): boolean => motionTier() === 'full';
+
+/** Longest slide of one piece and longest total stagger (seconds): a title never takes longer than a page change. */
+const MAX_DURATION = 0.3;
+const MAX_STAGGER = 0.25;
 
 /** Slide Up Text (architecture §15): masked pieces slide up with a stagger. Screen readers get the full text once. */
 
@@ -7,6 +15,8 @@ export interface SlideUpOptions {
   split?: 'words' | 'characters' | 'lines';
   /** Seconds between pieces. */
   stagger?: number;
+  /** Cap for the whole stagger across all pieces (seconds); default 0.25. */
+  maxStagger?: number;
   delay?: number;
   from?: 'first' | 'last' | 'center';
   duration?: number;
@@ -31,7 +41,7 @@ export interface SlideUpHandle {
   finished: Promise<void>;
 }
 
-export const DEFAULT_EASE = 'cubic-bezier(0.625, 0.05, 0, 1)';
+export const DEFAULT_EASE = MOTION.ease;
 
 /** Words of a string (whitespace separated). */
 export function splitWords(text: string): string[] {
@@ -112,7 +122,10 @@ export function buildSlideUp(target: HTMLElement, text: string, opts: Pick<Slide
   return { items, lineItems };
 }
 
-/** After layout, make each item show its slice of one gradient spanning the whole line. */
+/**
+ * After layout, make each item show its slice of one gradient spanning the whole line. The gradient lives on a static inner
+ * `span.kex-su-ink`: the element that moves carries no background (background-clip:text on a moving layer is not reliably painted).
+ */
 function applyGradient(target: HTMLElement, lines: HTMLElement[][], which: true | number[]): void {
   const origin = target.getBoundingClientRect().left;
   lines.forEach((items, li) => {
@@ -120,15 +133,20 @@ function applyGradient(target: HTMLElement, lines: HTMLElement[][], which: true 
     const rects = items.map((i) => i.getBoundingClientRect());
     const lineWidth = Math.max(1, ...rects.map((r) => r.right - origin));
     items.forEach((item, idx) => {
-      item.classList.add('kex-su-item--grad');
-      item.style.backgroundSize = `${lineWidth}px 100%`;
-      item.style.backgroundPosition = `-${Math.max(0, (rects[idx]?.left ?? origin) - origin)}px 0`;
+      let ink = item.firstElementChild as HTMLElement | null;
+      if (!ink?.classList.contains('kex-su-ink')) {
+        ink = el('span', 'kex-su-ink', item.textContent ?? '');
+        item.replaceChildren(ink);
+      }
+      ink.style.backgroundSize = `${lineWidth}px 100%`;
+      ink.style.backgroundPosition = `-${Math.max(0, (rects[idx]?.left ?? origin) - origin)}px 0`;
     });
   });
 }
 
 export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions = {}): SlideUpHandle {
-  const o = { stagger: 0.1, delay: 0, from: 'first', duration: 0.5, ease: DEFAULT_EASE, autoStart: true, ...opts } as Required<Pick<SlideUpOptions, 'stagger' | 'delay' | 'from' | 'duration' | 'ease' | 'autoStart'>> & SlideUpOptions;
+  const o = { stagger: 0.1, delay: 0, from: 'first', duration: 0.3, ease: DEFAULT_EASE, autoStart: true, ...opts } as Required<Pick<SlideUpOptions, 'stagger' | 'delay' | 'from' | 'duration' | 'ease' | 'autoStart'>> & SlideUpOptions;
+  o.duration = Math.min(o.duration, MAX_DURATION);
   const { items, lineItems } = buildSlideUp(target, text, o);
   let animations: Animation[] = [];
   let observer: IntersectionObserver | undefined;
@@ -161,16 +179,18 @@ export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions 
     started = true;
     observer?.disconnect();
     o.onStart?.();
-    if (o.reduced || !viewMotionAllowed() || typeof items[0]?.animate !== 'function' || items.length === 0) {
+    if (o.reduced || !titleMoves() || typeof items[0]?.animate !== 'function' || items.length === 0) {
       items.forEach((item) => { item.style.transform = ''; });
       done();
       return;
     }
     const n = items.length;
+    // The whole stagger fits in the cap, however many pieces there are.
+    const gap = n > 1 ? Math.min(o.stagger, (o.maxStagger ?? MAX_STAGGER) / (n - 1)) : 0;
     animations = items.map((item, i) =>
       item.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], {
         duration: o.duration * 1000,
-        delay: (o.delay + staggerDelay(i, n, o.from, o.stagger)) * 1000,
+        delay: (o.delay + staggerDelay(i, n, o.from, gap)) * 1000,
         easing: o.ease,
         fill: 'both',
       }),
@@ -198,7 +218,7 @@ export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions 
     resolve();
   };
 
-  if (o.reduced || !viewMotionAllowed()) {
+  if (o.reduced || !titleMoves()) {
     done();
     started = true;
   } else if (o.inView && typeof IntersectionObserver !== 'undefined') {

@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { courseCode, closePreview, initCourse, openCm, openCmOriginal, previewCm, retryCourse, setTopic, togglePin, toggleDone } from '../../actions/course';
+import { MOTION, sinceNavigation } from '../../fx/navigation';
+import { softEntered } from '../../state/navigation';
 import { courseGradesStore } from '../../data/repo/grades';
 import { splitTitle } from '../../data/names';
 import { pinsStore, isPinned } from '../../data/repo/pins';
@@ -70,6 +72,9 @@ function useCompactTitle(code: string, courseName: string, topicLabel: { chip: s
 
 export function CourseView() {
   const gradeStore = useCourseInit();
+  // The topic title follows the hero when the view is new; later topic switches start it almost at once.
+  const born = useRef(performance.now());
+  const topicDelay = (performance.now() - born.current < 400 ? Math.max(0, MOTION.topicDelay - sinceNavigation()) : 30) / 1000;
   useEffectsConfig();
   useQuietFocus();
 
@@ -141,6 +146,10 @@ export function CourseView() {
 
   const loading = status === 'loading' && !st;
   const failed = status === 'error' && !st;
+  // Skeleton to content: the real thing fades in once instead of popping.
+  const waited = useRef(false);
+  if (loading) waited.current = true;
+  const arrived = waited.current && !loading && !failed;
 
   const renderRow = (row: RowModel, enter: number) => (
     <ResourceRow
@@ -172,10 +181,10 @@ export function CourseView() {
       <div class="kex-content">
         <PinnedRow pins={pinnedRow.value} courseId={id} />
         <div class="kex-matheader">
-          <SlideUpText as="h2" class="kex-matheader__title" text={t('course.materials')} split="words" stagger={0.08} duration={0.6} inView />
+          <SlideUpText as="h2" class="kex-matheader__title" text={t('course.materials')} split="words" stagger={0.06} duration={MOTION.title / 1000} still={softEntered.value} inView />
           <CourseNav tabs={secondaryNav.value} />
         </div>
-        <div class="kex-body">
+        <div class={`kex-body${arrived ? ' kex-fade-in' : ''}`}>
           {loading ? (
             <TopicSkeleton />
           ) : failed ? null : tps.length ? (
@@ -208,7 +217,7 @@ export function CourseView() {
                 </div>
                 <div class="kex-detail__head">
                   <div class="kex-detail__titles">
-                    <SlideUpText as="h3" class="kex-detail__title" testId="detail-title" text={detailTitle} split="characters" stagger={0.018} duration={0.45} />
+                    <SlideUpText as="h3" class="kex-detail__title" testId="detail-title" text={detailTitle} split="characters" stagger={0.018} maxStagger={MOTION.topicStagger / 1000} duration={MOTION.topic / 1000} delay={topicDelay} />
                     {topic?.isRange && <p class="kex-detail__range">{topic.title}</p>}
                   </div>
                 </div>

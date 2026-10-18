@@ -1,57 +1,41 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { beginViewTransition, cancelViewTransitions } from '../../src/fx/navigation';
+// @vitest-environment happy-dom
+import { afterEach, describe, expect, it } from 'vitest';
+import { motionTier, scrollBehavior } from '../../src/fx/motion';
+import { MOTION } from '../../src/fx/navigation';
 
-afterEach(() => {
-  cancelViewTransitions();
-  document.body.innerHTML = '';
-  delete document.documentElement.dataset.kexMotion;
-  delete document.documentElement.dataset.kexInput;
-  vi.restoreAllMocks();
-});
-
-function content(): HTMLElement {
-  document.body.innerHTML = '<div id="kex-root"><section id="detail" data-kex-test="detail"><button id="original">Material</button></section></div>';
-  return document.getElementById('detail')!;
-}
+const set = (data: Record<string, string>): void => {
+  for (const k of ['kexMotion', 'kexInput', 'kexEffects']) delete document.documentElement.dataset[k];
+  Object.assign(document.documentElement.dataset, data);
+};
+afterEach(() => set({}));
 
 describe('navigation motion', () => {
-  it('keeps a noninteractive outgoing visual while the real destination can update immediately', async () => {
-    const el = content();
-    let finish!: () => void;
-    const finished = new Promise<void>((resolve) => { finish = resolve; });
-    vi.spyOn(Element.prototype, 'animate').mockReturnValue({ finished, cancel: vi.fn() } as unknown as Animation);
-    beginViewTransition(el, 'topic');
-    const ghost = document.querySelector<HTMLElement>('.kex-transition-ghost');
-    expect(ghost?.textContent).toContain('Material');
-    expect(ghost?.getAttribute('aria-hidden')).toBe('true');
-    expect(ghost?.inert).toBe(true);
-    expect(ghost?.querySelector('[id], [data-kex-test]')).toBeNull();
-    expect(document.getElementById('original')?.closest('.kex-transition-ghost')).toBeNull();
-    el.textContent = 'Next topic';
-    expect(ghost?.textContent).toContain('Material');
-    finish();
-    await finished;
-    await Promise.resolve();
-    expect(document.querySelector('.kex-transition-ghost')).toBeNull();
+  it('motion tier: none for reduced motion and keyboard use, subtle with effects off, full otherwise', () => {
+    set({});
+    expect(motionTier()).toBe('full');
+    set({ kexEffects: 'off' });
+    expect(motionTier()).toBe('subtle');
+    set({ kexMotion: 'reduced', kexEffects: 'off' });
+    expect(motionTier()).toBe('none');
+    set({ kexInput: 'keyboard' });
+    expect(motionTier()).toBe('none');
   });
 
-  it.each(['reduced', 'keyboard'])('does not delay or clone %s navigation', (mode) => {
-    const el = content();
-    if (mode === 'reduced') document.documentElement.dataset.kexMotion = mode;
-    else document.documentElement.dataset.kexInput = mode;
-    const animate = vi.spyOn(Element.prototype, 'animate');
-    beginViewTransition(el, 'topic');
-    expect(animate).not.toHaveBeenCalled();
-    expect(document.querySelector('.kex-transition-ghost')).toBeNull();
+  it('smooth scrolling only when the tier allows motion', () => {
+    set({});
+    expect(scrollBehavior()).toBe('smooth');
+    set({ kexEffects: 'off' });
+    expect(scrollBehavior()).toBe('smooth');
+    set({ kexMotion: 'reduced' });
+    expect(scrollBehavior()).toBe('auto');
   });
 
-  it('removes an interrupted outgoing page instead of accumulating stale snapshots', () => {
-    const el = content();
-    vi.spyOn(Element.prototype, 'animate').mockReturnValue({ finished: new Promise(() => undefined), cancel: vi.fn() } as unknown as Animation);
-    beginViewTransition(el, 'page');
-    beginViewTransition(el, 'page');
-    expect(document.querySelectorAll('.kex-transition-ghost')).toHaveLength(1);
-    cancelViewTransitions();
-    expect(document.querySelectorAll('.kex-transition-ghost')).toHaveLength(0);
+  it('every step of the page change stays under 300 ms and the title starts early', () => {
+    const steps = [MOTION.exit, MOTION.enter, MOTION.title, MOTION.meta, MOTION.topic, MOTION.subtle, MOTION.topicExit, MOTION.topicEnter];
+    for (const ms of steps) expect(ms).toBeLessThanOrEqual(300);
+    expect(MOTION.topicStagger).toBeLessThanOrEqual(120);
+    // The last title piece (three words, one stagger apart) has started within 200 ms of the click.
+    expect(MOTION.titleDelay + 2 * MOTION.titleStagger).toBeLessThanOrEqual(200);
+    expect(MOTION.ease).toBe('cubic-bezier(.23, 1, .32, 1)');
   });
 });

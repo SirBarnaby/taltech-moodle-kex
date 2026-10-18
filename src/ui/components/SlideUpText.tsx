@@ -9,15 +9,17 @@ interface Props extends Omit<SlideUpOptions, 'reduced'> {
   class?: string;
   id?: string;
   testId?: string;
+  /** Render the final text at once (the caller decides the page is already on screen). */
+  still?: boolean;
 }
 
 /**
  * Slide Up Text. The element is owned by `slideUp` after mount (Preact renders no children), so the full text
  * lives once in a visually hidden span and the animated pieces are aria-hidden.
  */
-export function SlideUpText({ text, as = 'span', class: cls, id, testId, ...opts }: Props): ComponentChildren {
+export function SlideUpText({ text, as = 'span', class: cls, id, testId, still, ...opts }: Props): ComponentChildren {
   const ref = useRef<HTMLElement>(null);
-  const reduced = resolvedMotion.value === 'reduced';
+  const reduced = resolvedMotion.value === 'reduced' || !!still;
   const optsRef = useRef(opts);
   optsRef.current = opts;
   useLayoutEffect(() => {

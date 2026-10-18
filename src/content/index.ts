@@ -1,9 +1,9 @@
 import { batch, effect } from '@preact/signals';
 import { seedDetails } from '../data/repo/cmdetails';
 import { parseCmItems } from '../data/scrape/cm';
-import { scrapeSecondaryNav } from '../data/scrape/secondarynav';
-import { beginViewTransition, cancelViewTransitions } from '../fx/navigation';
-import { hardNavigating, navigationLoading } from '../state/navigation';
+import { scrapeSecondaryNav, type NavTab } from '../data/scrape/secondarynav';
+import { beginViewTransition, cancelViewTransitions, restoreScroll, scrollInstant } from '../fx/navigation';
+import { hardNavigating, navigationLoading, softEntered } from '../state/navigation';
 import { cache } from '../data/cache';
 import { createCoursesStore, loadCustomField } from '../data/repo/courses';
 import { cachedUser, fetchUser, storeUser } from '../data/repo/user';
@@ -594,10 +594,10 @@ class Controller {
    */
   private hardLoadFeedback(): void {
     if (hardNavigating.value) return;
-    const enter = beginViewTransition(this.root?.querySelector<HTMLElement>('.kex-main .kex-content') ?? null, 'page');
+    const enter = beginViewTransition(this.root?.querySelector<HTMLElement>('.kex-main') ?? null, 'page');
     this.html.dataset.kexNav = 'loading';
     hardNavigating.value = true;
-    enter('.kex-main .kex-content');
+    enter('.kex-main');
     // A cancelled load (Escape, a download) leaves the page as it was.
     window.clearTimeout(this.hardTimer);
     this.hardTimer = window.setTimeout(() => this.endHardLoadFeedback(), 10_000);
@@ -626,7 +626,7 @@ class Controller {
     return true;
   }
 
-  private async softNavigate(url: URL, target: SoftTarget, push: boolean): Promise<void> {
+  private async softNavigate(url: URL, target: SoftTarget, push: boolean, restoreY?: number): Promise<void> {
     const seq = ++this.navSeq;
     this.endHardLoadFeedback();
     const hard = (): void => {
@@ -650,7 +650,7 @@ class Controller {
         return;
       }
       this.html.dataset.kexNav = 'loading';
-      const enter = beginViewTransition(this.root?.querySelector<HTMLElement>('.kex-main .kex-content') ?? null, 'page');
+      const enter = beginViewTransition(this.root?.querySelector<HTMLElement>('.kex-main') ?? null, 'page');
       // Begin the request and mount the destination together. A detached empty document prevents the new course
       // from scraping the previous course's still-hidden Moodle DOM while its own HTML is in flight.
       const page = this.loader.load(url);
@@ -660,7 +660,8 @@ class Controller {
         history.pushState({ kex: 1 }, '', url.href);
       }
       this.swapView(target, document.implementation.createHTMLDocument(''), url);
-      enter('.kex-main .kex-content');
+      enter('.kex-main');
+      if (restoreY !== undefined) restoreScroll(restoreY, () => !navigationLoading.value && (target.key !== 'course' || courseStatus.value !== 'loading'));
       let timeout: number | undefined;
       try {
         const doc = await Promise.race([
@@ -686,6 +687,7 @@ class Controller {
   /** Replace the mounted view with the one `target` names. The shell (sidebar, header, overlays) is not touched. */
   private swapView(target: SoftTarget, doc: Document | null, url: URL): void {
     this.softNavigated = true;
+    softEntered.value = true;
     this.unmountRoute();
     keyManager.setScope('workspace', false);
     keyManager.setScope('course', false);
@@ -704,7 +706,8 @@ class Controller {
         courseStatus.value = 'loading';
         topicNumber.value = undefined;
         summaries.value = new Map();
-        secondaryNav.value = [];
+        // The tabs of a course seen before are there at once; the row never collapses and refills.
+        secondaryNav.value = cache.peek<NavTab[]>(`snav:${courseId}`)?.data ?? [];
       }
       pageInfo.value = next;
       searchSig.value = location.search;
@@ -715,7 +718,7 @@ class Controller {
     });
     this.mountRoute(target.route);
     if (doc) this.applyPageDoc(target.route, doc);
-    window.scrollTo(0, 0);
+    scrollInstant(0);
     // Close what belongs to the old view.
     void import('../state').then((m) => {
       m.paletteOpen.value = false;
@@ -756,8 +759,7 @@ class Controller {
     }
     // Restore the scroll position of the entry we return to once the view is in.
     const y = (history.state as { kexScroll?: number } | null)?.kexScroll;
-    await this.softNavigate(url, target, false);
-    if (typeof y === 'number') requestAnimationFrame(() => window.scrollTo(0, y));
+    await this.softNavigate(url, target, false, typeof y === 'number' ? y : undefined);
   }
 
   private syncAttrs(): void {

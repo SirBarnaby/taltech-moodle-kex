@@ -5,7 +5,6 @@
     padding-top: var(--kex-header-h);
     min-height: 100vh;
     background: var(--kex-bg);
-    transition: margin-left 200ms var(--kex-ease);
   }
 
   .kex-hero {
@@ -65,7 +64,7 @@
     letter-spacing: 0.14em;
     color: var(--kex-hero-label);
     margin-left: 1px;
-    animation: kex-fade 200ms var(--kex-ease) both;
+    animation: kex-fade 160ms var(--kex-ease) 140ms both;
   }
   .kex-hero__title {
     display: block;
@@ -154,6 +153,9 @@
       margin: 0;
       font-size: 11px;
       line-height: 14px;
+      /* One line is always reserved: teachers and the deadline arrive later and must not move the title. */
+      height: 16px;
+      min-height: 16px;
     }
     .kex-hero--course .kex-hero__links {
       display: none;
@@ -185,13 +187,14 @@
   }
   .kex-su-item {
     display: inline-block;
-    will-change: transform;
   }
   .kex-su-word {
     display: inline-block;
     white-space: nowrap;
   }
-  .kex-su-item--grad {
+  /* The gradient sits on this static inner span; the item around it is the one that moves. */
+  .kex-su-ink {
+    display: inline-block;
     /* The gradient box includes the descenders. */
     padding-bottom: 0.16em;
     margin-bottom: -0.16em;

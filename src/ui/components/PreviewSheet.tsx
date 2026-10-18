@@ -39,6 +39,9 @@ export function PreviewSheet({ row, pinned, onClose, onOpen, onPin }: PreviewShe
     closeTimer.current = window.setTimeout(() => close.current(), 140);
   };
 
+  const dismissRef = useRef(dismiss);
+  dismissRef.current = dismiss;
+
   useEffect(() => {
     let live = true;
     setLoaded(undefined);
@@ -88,7 +91,7 @@ export function PreviewSheet({ row, pinned, onClose, onOpen, onPin }: PreviewShe
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        close.current();
+        dismissRef.current();
       } else if (e.key === 'Tab') {
         const list = focusables();
         const first = list[0] ?? dialog;

@@ -112,7 +112,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     text-transform: uppercase;
-    animation: kex-fade 200ms var(--kex-ease) both;
+    animation: kex-fade 160ms var(--kex-ease) both;
   }
   .kex-hero__mi + .kex-hero__mi::before {
     content: "·";
