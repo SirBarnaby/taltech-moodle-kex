@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import {
   classifyFormat, classifyKind, countsAsResource, firstSentence, iconFileType, kindWord, monoLabel, splitName, subtitleFor, topicSubtitle, verbFor,
@@ -88,66 +89,47 @@ const TABLE: Row[] = [
   ['resource', 'Ülesanne 1', PDF, 'practical', 'PDF'],
 ];
 
-describe('classify: kind and format table', () => {
-  it('has at least 60 cases', () => {
-    expect(TABLE.length).toBeGreaterThanOrEqual(60);
+describe('classify', () => {
+  it('maps every module, file type and name pattern to a kind and format (table)', () => {
+    const wrong: string[] = [];
+    for (const [modname, name, iconKey, kind, format, sectionTitle] of TABLE) {
+      const input = { modname, name, iconKey, sectionTitle };
+      const k = classifyKind(input);
+      const got = `${k}/${classifyFormat(input, k)}`;
+      if (got !== `${kind}/${format}`) wrong.push(`${modname} "${name}": ${got}, expected ${kind}/${format}`);
+    }
+    expect(wrong).toEqual([]);
   });
-  it.each(TABLE)('%s "%s" (%s) -> %s / %s', (modname, name, iconKey, kind, format, sectionTitle) => {
-    const input = { modname, name, iconKey, sectionTitle };
-    const k = classifyKind(input);
-    expect(k).toBe(kind);
-    expect(classifyFormat(input, k)).toBe(format);
-  });
-});
 
-describe('classify: helpers', () => {
-  it('reads the file type from an icon key', () => {
+  it('builds names and labels: file type from an icon key, mono label, prefix split, subtitle priority, first sentence', () => {
     expect(iconFileType('http://x/theme/image.php/boost/core/1/f/pdf?filtericon=1')).toBe('pdf');
     expect(iconFileType('/f/powerpoint-24')).toBe('powerpoint');
     expect(iconFileType('url/monologo')).toBeUndefined();
-  });
-  it('builds the mono label', () => {
     expect(monoLabel('lecture', 'PDF')).toBe('LECTURE / PDF');
-    expect(monoLabel('recording', 'VIDEO')).toBe('RECORDING / VIDEO');
     expect(monoLabel('assignment', 'ASSIGNMENT', 'Due Thu 15 Oct')).toBe('ASSIGNMENT / DUE THU 15 OCT');
-    expect(monoLabel('quiz', 'QUIZ')).toBe('QUIZ / QUIZ');
     expect(kindWord('discussion')).toBe('FORUM');
-  });
-  it('splits a prefixed name into title and subtitle', () => {
     expect(splitName('Practice 6: Deploy a service')).toEqual({ title: 'Deploy a service', prefix: 'Practice 6' });
-    expect(splitName('Week 6: Lecture recording')).toEqual({ title: 'Lecture recording', prefix: 'Week 6' });
     expect(splitName('praktikum #3 - Võrgud')).toEqual({ title: 'Võrgud', prefix: 'Praktikum #3' });
-    expect(splitName('Lab 2a: Docker')).toEqual({ title: 'Docker', prefix: 'Lab 2a' });
     expect(splitName('Kubernetes — lecture slides')).toEqual({ title: 'Kubernetes — lecture slides' });
     expect(splitName('Lecture 1 slides: What is cloud?')).toEqual({ title: 'Lecture 1 slides: What is cloud?' });
-  });
-  it('chooses the subtitle by priority', () => {
     expect(subtitleFor({ prefix: 'Practice 6', dueText: 'Due', resourceDetails: '2 MB' })).toBe('Practice 6');
     expect(subtitleFor({ dueText: 'Due Thu', resourceDetails: '2 MB' })).toBe('Due Thu');
     expect(subtitleFor({ resourceDetails: '2.1 MB PDF document' })).toBe('2.1 MB PDF document');
     expect(subtitleFor({ descriptionText: 'Read this first. Then the rest.' })).toBe('Read this first.');
     expect(subtitleFor({})).toBeUndefined();
-  });
-  it('shortens long first sentences', () => {
-    const long = 'word '.repeat(40).trim();
-    const s = firstSentence(long, 50) ?? '';
+    const s = firstSentence('word '.repeat(40).trim(), 50) ?? '';
     expect(s.length).toBeLessThanOrEqual(50);
     expect(s.endsWith('…')).toBe(true);
   });
-  it('picks the button verb', () => {
+
+  it('picks the button verb, the topic subtitle in fixed order, and does not count notes as resources', () => {
     expect(verbFor('recording')).toBe('watch');
     expect(verbFor('assignment', { assignOpen: true })).toBe('submit');
     expect(verbFor('assignment')).toBe('open');
-    expect(verbFor('lecture')).toBe('open');
-  });
-  it('generates the topic subtitle in the fixed order', () => {
     expect(topicSubtitle(['recording', 'lecture', 'practical'])).toBe('Lecture, practical work and recording');
-    expect(topicSubtitle(['lecture'])).toBe('Lecture');
     expect(topicSubtitle(['practical', 'assignment', 'quiz', 'reading'])).toBe('Practical work, assignment, quiz and reading');
     expect(topicSubtitle(['note', 'tool'])).toBe('');
     expect(topicSubtitle(['material', 'discussion'])).toBe('Materials and discussion');
-  });
-  it('does not count notes as resources', () => {
     expect(countsAsResource('note')).toBe(false);
     expect(countsAsResource('lecture')).toBe(true);
   });

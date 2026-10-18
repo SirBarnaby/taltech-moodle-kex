@@ -1,20 +1,15 @@
 #!/usr/bin/env node
-// Visual runner.
-//   npm run test:visual                 the geometry specs of test/visual (Playwright)
-//   npm run test:visual -- --all        one Chromium screenshot per route of architecture §6, light and dark, in artifacts/pages/
-//   npm run test:visual -- --all --only=quiz --theme=dark
+// Screenshot runner: one Chromium screenshot per route of architecture §6, light and dark, in artifacts/pages/.
+//   npm run shots
+//   npm run shots -- --only=quiz --theme=dark
 // Needs the lab Moodle (http://localhost:8080) and a build: `npm run build:dev`.
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import { installKex, iter3Seed, LAB, login, root } from '../test/harness/kex.ts';
 
 const args = process.argv.slice(2);
-if (!args.includes('--all')) {
-  const r = spawnSync('npx', ['playwright', 'test', 'test/visual', ...args], { stdio: 'inherit', cwd: root });
-  process.exit(r.status ?? 1);
-}
 
 const only = args.find((a) => a.startsWith('--only='))?.slice(7);
 const themes = (args.find((a) => a.startsWith('--theme='))?.slice(8) ?? 'light,dark').split(',');

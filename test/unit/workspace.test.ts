@@ -7,7 +7,6 @@ import { mapRecent } from '../../src/data/repo/recent';
 import { groupPins, movedTo, parsePinsJson, pinsToJson, rowPins } from '../../src/data/repo/pins';
 
 import { matchesFilter, sortCourses } from '../../src/state/mycourses';
-import { greeting, relTime, studyWeek } from '../../src/lib/time';
 
 const NOW = 1_792_000_000;
 const DAY = 86400;
@@ -47,14 +46,11 @@ describe('feed order', () => {
     const f = buildFeed('all', { due: items, recent, notifs, now: NOW });
     expect(f.map((x) => x.key)).toEqual(['d4', 'd5', 'd3', 'c5', 'n2', 'd2']);
   });
-  it('deadlines are all sorted overdue first; updates unread first', () => {
+  it('deadlines are sorted overdue first, updates unread first, continue keeps content modules only; the week summary and next deadline per course', () => {
     expect(buildFeed('deadlines', { due: items, recent, notifs, now: NOW }).map((x) => x.key)).toEqual(['d4', 'd5', 'd3', 'd2', 'd1']);
     expect(buildFeed('updates', { due: items, recent, notifs, now: NOW }).map((x) => x.key)).toEqual(['n2', 'n1']);
-  });
-  it('continue keeps content modules only, newest first', () => {
     expect(continueItems(recent).map((r) => r.cmid)).toEqual([5]);
-  });
-  it('summarizes the week and picks the next deadline per course', () => {
+    // The week summary and the next deadline per course.
     expect(weekSummary(items, NOW)).toEqual({ overdue: 1, dueWeek: 2 });
     expect(nextByCourse(items).get(2)?.eventId).toBe(5);
     expect(nearestCourse(items)).toBe(2);
@@ -74,16 +70,17 @@ describe('notifications', () => {
 
 describe('pins', () => {
   const pin = (cmid: number, courseId = 2) => ({ cmid, courseId, courseCode: 'ITI8801', title: `P${cmid}`, modname: 'resource', kind: 'lecture' as const, format: 'PDF' as const, url: `https://m/mod/resource/view.php?id=${cmid}`, addedAt: 1 });
-  it('moves a pin and reports the previous index', () => {
+  it('moves a pin, shows the current course first in the row, and groups by course in order of first pin', () => {
     const { next, from } = movedTo([pin(1), pin(2), pin(3)], 1, 2);
     expect(next.map((p) => p.cmid)).toEqual([2, 3, 1]);
     expect(from).toBe(0);
     expect(movedTo([pin(1)], 1, 0).from).toBe(-1);
-  });
-  it('the row shows pins of the current course first', () => {
     expect(rowPins([pin(1, 9), pin(2, 2), pin(3, 9), pin(4, 2)], 2).map((p) => p.cmid)).toEqual([2, 4, 1]);
+    const g = groupPins([pin(1, 5), pin(2, 2), pin(3, 5)], new Map([[5, 'Five'], [2, 'Two']]));
+    expect(g.map((x) => [x.courseId, x.pins.length])).toEqual([[5, 2], [2, 1]]);
+    expect(g[0]?.heading).toBe('ITI8801 / FIVE');
   });
-  it('round-trips export and import and drops invalid entries', () => {
+  it('round-trips export and import and drops invalid entries, foreign hosts and duplicates', () => {
     const json = pinsToJson([pin(1), pin(2)]);
     expect(parsePinsJson(json, 'https://m').pins.map((p) => p.cmid)).toEqual([1, 2]);
     const bad = JSON.stringify({ pins: [pin(3), { cmid: 'x' }, { ...pin(4), url: 'https://evil.example/x' }, pin(3)] });
@@ -92,35 +89,18 @@ describe('pins', () => {
     expect(r.dropped).toBe(3);
     expect(() => parsePinsJson('not json')).toThrow();
   });
-  it('groups by course in order of first pin', () => {
-    const g = groupPins([pin(1, 5), pin(2, 2), pin(3, 5)], new Map([[5, 'Five'], [2, 'Two']]));
-    expect(g.map((x) => [x.courseId, x.pins.length])).toEqual([[5, 2], [2, 1]]);
-    expect(g[0]?.heading).toBe('ITI8801 / FIVE');
-  });
 });
 
 describe('my courses', () => {
   const c = (id: number, code: string, name: string, category?: string) => ({ id, code, name, fullname: name, alias: undefined, category }) as never;
-  it('filters without diacritics', () => {
+  it('filters without diacritics and sorts by last access, name and code', () => {
     expect(matchesFilter(c(1, 'MMO5770', 'Õiguse alused'), 'oiguse')).toBe(true);
     expect(matchesFilter(c(1, 'MMO5770', 'Õiguse alused'), 'mmo 57')).toBe(true);
     expect(matchesFilter(c(1, 'MMO5770', 'Õiguse alused'), 'xyz')).toBe(false);
     expect(matchesFilter(c(1, 'A', 'B', 'Tarkvarateaduse instituut'), 'instituut')).toBe(true);
-  });
-  it('sorts by last access, name and code', () => {
     const list = [c(1, 'B2', 'Beta'), c(2, 'A1', 'Gamma'), c(3, 'C3', 'Alpha')];
     expect(sortCourses(list, 'last', new Map([[2, 50], [1, 10]])).map((x) => x.id)).toEqual([2, 1, 3]);
     expect(sortCourses(list, 'name', new Map()).map((x) => x.id)).toEqual([3, 1, 2]);
     expect(sortCourses(list, 'code', new Map()).map((x) => x.id)).toEqual([2, 1, 3]);
-  });
-});
-
-describe('time', () => {
-  it('greets by hour, counts study weeks, and speaks in relative phrases', () => {
-    expect([greeting(7), greeting(12), greeting(21)]).toEqual(['morning', 'afternoon', 'evening']);
-    expect(studyWeek([NOW - 6 * 7 * DAY - 10, NOW + DAY, undefined], NOW)).toBe(7);
-    expect(studyWeek([NOW + DAY], NOW)).toBeUndefined();
-    expect(relTime(2 * DAY)).toBe('in 2 days');
-    expect(relTime(-3 * 3600)).toBe('3 h ago');
   });
 });

@@ -35,7 +35,7 @@ afterEach(() => {
 });
 
 describe('material opening', () => {
-  it('opens a readable course material immediately without navigation, preserving explicit new tabs and native activities', () => {
+  it('opens a readable course material immediately without navigation, preserving explicit new tabs and native activities; Continue materials open in the Workspace reader', () => {
     const material = row();
     openCm(material);
     expect(previewCmId.value).toBe(material.cm.id);
@@ -46,9 +46,8 @@ describe('material opening', () => {
     expect(go).toHaveBeenLastCalledWith('/mod/assign/view.php?id=7', false);
     openCmOriginal(material);
     expect(go).toHaveBeenLastCalledWith(material.cm.url, false);
-  });
-
-  it('opens Continue materials in the Workspace reader without changing the course reader', () => {
+    vi.mocked(go).mockClear();
+    previewCmId.value = undefined;
     openFeedItem({ type: 'continue', key: 'c9', item: { cmid: 9, courseId: 2, courseCode: 'ITI8801', courseName: 'Cloud', title: 'Slides', modname: 'resource', url: '/mod/resource/view.php?id=9', accessedAt: 1 } });
     expect(wsPreview.value?.cm.id).toBe(9);
     expect(previewCmId.value).toBeUndefined();

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { beforeEach, describe, expect, it } from 'vitest';
 import { scrub, stripSesskey } from '../../src/data/cache';
 import { applyAliases, currentSemester, groupingFromPrefs, mapCourse, orderCourses } from '../../src/data/repo/courses';
@@ -22,26 +23,20 @@ describe('courses repo helpers', () => {
     mapCourse(raw(3, 'EMT0140', 'Asjade internet tööstusele (2026 sügis) (EMT0140)')),
     mapCourse(raw(4, 'IAS0230', 'Basics of Embedded Systems (2026 autumn) (IAS0230)')),
   ];
-  it('maps raw courses (url fallback, no data: images)', () => {
+  it('maps raw courses (url fallback, no data: images) and orders them by frozen order, then the default order, then code', () => {
     const c = mapCourse({ ...raw(9, 'ABC1234', 'Name (ABC1234)'), courseimage: 'data:image/svg+xml;base64,AA' }, 'en', 'http://l:8080');
     expect(c.url).toBe('http://l:8080/course/view.php?id=9');
     expect(c.image).toBeUndefined();
-  });
-  it('orders by frozen order, then the default (mock) order, then code', () => {
     expect(orderCourses(courses, []).map((c) => c.code)).toEqual(['ITI8801', 'EMT0140', 'IAS0230']);
     expect(orderCourses(courses, [4, 2]).map((c) => c.code)).toEqual(['IAS0230', 'ITI8801', 'EMT0140']);
     const extra = [...courses, mapCourse(raw(9, 'AAA0001', 'Other (AAA0001)')), mapCourse(raw(10, 'ZZZ9999', 'Last (ZZZ9999)'))];
     expect(orderCourses(extra, []).map((c) => c.code)).toEqual(['ITI8801', 'EMT0140', 'IAS0230', 'AAA0001', 'ZZZ9999']);
   });
-  it('ships default English aliases; a user alias wins; unknown codes have none', () => {
+  it('ships default English aliases (a user alias wins, unknown codes have none), picks the most common semester and mirrors the myoverview grouping', () => {
     const a = applyAliases(courses, { '3': 'My IoT' });
     expect(a.map((c) => c.alias)).toEqual(['Cloud & DevOps', 'My IoT', 'Embedded Systems']);
     expect(applyAliases([mapCourse(raw(9, 'AAA0001', 'Other (AAA0001)'))], {})[0]?.alias).toBeUndefined();
-  });
-  it('semester label is the most common one', () => {
     expect(currentSemester(courses)).toEqual({ season: 'autumn', year: 2026 });
-  });
-  it('mirrors the myoverview grouping preference', () => {
     expect(groupingFromPrefs([])).toEqual({ grouping: 'all' });
     expect(groupingFromPrefs([{ name: 'block_myoverview_user_grouping_preference', value: 'inprogress' }])).toEqual({ grouping: 'inprogress' });
     expect(groupingFromPrefs([{ name: 'block_myoverview_user_grouping_preference', value: 'past' }])).toEqual({ grouping: 'inprogress' });
@@ -67,14 +62,12 @@ describe('ws client', () => {
       return new Response(JSON.stringify(body.map((b) => (b.methodname === 'bad' ? { error: true, exception: { errorcode: 'nope', message: 'no' } } : { error: false, data: b.methodname }))));
     });
   });
-  it('batches calls from the same macrotask into one POST and dedupes identical calls', async () => {
+  it('batches calls from the same macrotask into one POST, dedupes identical calls, and rejects only the failing call', async () => {
     const [a, b, c] = await Promise.all([ws.call('m1', { x: 1 }), ws.call('m2'), ws.call('m1', { x: 1 })]);
     expect([a, b, c]).toEqual(['m1', 'm2', 'm1']);
     expect(calls).toHaveLength(1);
     expect(calls[0]?.body).toHaveLength(2);
     expect(calls[0]?.url).toContain('/lib/ajax/service.php?sesskey=SK&info=m1%2Cm2');
-  });
-  it('rejects only the failing call', async () => {
     const [ok, bad] = await Promise.allSettled([ws.call('good'), ws.call('bad')]);
     expect(ok.status).toBe('fulfilled');
     expect(bad.status).toBe('rejected');

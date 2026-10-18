@@ -1,5 +1,6 @@
 // Firefox smoke test for the real extension (M0 + M1).
-//   node test/e2e-firefox/smoke.mjs [--variant dev|probe] [--only m0|m1|m2|m3|m6|failopen|cssonly|prod|lab45]
+//   node test/e2e-firefox/smoke.mjs [--variant dev|probe] [--only quick|m0|m1|m2|m3|m6|failopen|cssonly|prod|lab45]
+// `quick` (<= 90 s, `npm run test:ff`): shell, topic switch and preview, course to course and back, a 960 px pass, the login page under TalTech's width rule, `?kex=off`.
 // `lab45` runs against the Moodle 4.5 lab (:8081, Bootstrap 4 markup, language et): guest header, skin surfaces in dark mode, House Rules, subsections.
 // Builds + packs the variant, installs it on the Selenium grid and asserts the acceptance checks.
 import { execFileSync } from 'node:child_process';
@@ -340,7 +341,92 @@ async function lab45() {
   failed += r.summary();
 }
 
+/**
+ * The pre-commit group: one browser, a handful of pages, the things that broke for real.
+ * Login page first (signed out), then the shell on /my/, a course, soft navigation, 960 px, and `?kex=off`.
+ */
+async function quick() {
+  const r = createReporter('firefox quick');
+  console.log('\n== quick ==');
+  const driver = await openFirefox(pack('dev'));
+  const shell = (label) => waitFor(driver, `document.documentElement.dataset.kexShell === 'ready' && !!document.querySelector('[data-kex-test=sidebar]')`, 25000, `shell ${label}`);
+  try {
+    await r.check("login page under TalTech's body.pagelayout-login{width:calc(100% - 640px)}: the body is as wide as the window", async () => {
+      await driver.get(`${LAB}/login/index.php`);
+      await waitFor(driver, `document.documentElement.dataset.kex === 'app' && !!document.querySelector('[data-kex-test=login]')`, 25000, 'login view');
+      await driver.executeScript(`const s = document.createElement('style'); s.textContent = 'body.pagelayout-login{width:calc(100% - 640px)}'; document.head.append(s);`);
+      await sleep(300);
+      const d = await driver.executeScript(`return { body: Math.round(document.body.getBoundingClientRect().width), view: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth }`);
+      if (d.body !== d.view || d.scroll > d.view) throw new Error(JSON.stringify(d));
+      return JSON.stringify(d);
+    });
+
+    await login(driver);
+    await r.check('/my/: shell mounted, six courses in the sidebar, Moodle navbar hidden', async () => {
+      await driver.get(`${LAB}/my/`);
+      await shell('/my/');
+      await waitFor(driver, `document.querySelectorAll('.kex-sb__course').length === 6`, 20000, '6 courses');
+      const v = await driver.executeScript(`const nb = document.querySelector('nav.navbar, .navbar.fixed-top'); if (!nb) return 'absent'; const b = nb.getBoundingClientRect(); return (getComputedStyle(nb).display === 'none' || getComputedStyle(nb).visibility === 'hidden' || b.height === 0 || b.bottom <= 0) ? 'hidden' : 'VISIBLE'`);
+      if (v === 'VISIBLE') throw new Error('navbar visible');
+      return v;
+    });
+
+    await r.check('course: k switches topic and the hash; Space opens the preview, Esc closes it', async () => {
+      await driver.get(`${LAB}/course/view.php?id=2#topic-6`);
+      await waitFor(driver, `document.querySelector('[data-kex-test=course] [data-kex-topic="6"][aria-current=true]') && document.querySelectorAll('[data-kex-row]').length > 0`, 30000, 'course page');
+      await driver.executeScript(`document.querySelector('[data-kex-topic="6"]').focus()`);
+      await driver.actions().sendKeys('k').perform();
+      await waitFor(driver, `location.hash === '#topic-5' && document.querySelector('[data-kex-test=detail-kicker]').textContent.trim() === 'TOPIC 05'`, 8000, 'topic 05');
+      await driver.executeScript(`document.querySelector('[data-kex-row]').focus()`);
+      await driver.actions().sendKeys(' ').perform();
+      await waitFor(driver, `!!document.querySelector('[data-kex-test=preview]')`, 8000, 'preview');
+      await driver.actions().sendKeys(Key.ESCAPE).perform();
+      await waitFor(driver, `!document.querySelector('[data-kex-test=preview]')`, 8000, 'preview closed');
+      return 'ok';
+    });
+
+    await r.check('course to course through the sidebar, then Back returns to the first course', async () => {
+      await driver.get(`${LAB}/course/view.php?id=2`);
+      await shell('course 2');
+      await waitFor(driver, `!!document.querySelector('[data-kex-test=course]')`, 30000, 'course view');
+      const first = await driver.executeScript(`return document.querySelector('[data-kex-test=sb-active-course]')?.dataset.courseId ?? null`);
+      const other = await driver.executeScript(`const a = [...document.querySelectorAll('.kex-sb__course[data-course-id]')].find((e) => !e.matches('[data-kex-test=sb-active-course]')); return a ? a.dataset.courseId : null`);
+      if (!first || !other) throw new Error(`first ${first}, other ${other}`);
+      await driver.executeScript(`document.querySelector('.kex-sb__course[data-course-id="${other}"]').click()`);
+      await waitFor(driver, `document.querySelector('[data-kex-test=sb-active-course]')?.dataset.courseId === ${JSON.stringify(other)} && !!document.querySelector('[data-kex-test=course]')`, 30000, 'second course');
+      await driver.navigate().back();
+      await waitFor(driver, `document.querySelector('[data-kex-test=sb-active-course]')?.dataset.courseId === ${JSON.stringify(first)} && !!document.querySelector('[data-kex-test=course]')`, 30000, 'back to first course');
+      return `${first} -> ${other} -> ${first}`;
+    });
+
+    await r.check('960 px: workspace and course fit the window without horizontal scroll', async () => {
+      await driver.manage().window().setRect({ width: 960, height: 992, x: 0, y: 0 });
+      for (const p of ['/my/', '/course/view.php?id=2']) {
+        await driver.get(`${LAB}${p}`);
+        await shell(p);
+        await sleep(2500);
+        const d = await driver.executeScript(`return { sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }`);
+        if (d.sw > d.cw) throw new Error(`${p}: ${JSON.stringify(d)}`);
+      }
+      await driver.manage().window().setRect({ width: 1585, height: 992, x: 0, y: 0 });
+      return 'ok';
+    });
+
+    await r.check('?kex=off shows plain Moodle and the pill brings KEX back', async () => {
+      await driver.get(`${LAB}/my/?kex=off`);
+      await waitFor(driver, `document.documentElement.dataset.kex === 'off' && !!document.querySelector('#kex-offpill')`, 15000, 'off + pill');
+      await driver.executeScript(`document.querySelector('#kex-offpill .kex-offpill__main').click()`);
+      await waitFor(driver, `document.documentElement.dataset.kex === 'app'`, 15000, 'app mode after turning on');
+      return 'ok';
+    });
+  } finally {
+    await driver.quit();
+  }
+  failed += r.summary();
+}
+
 try {
+  if (only === 'quick') await quick();
   if (only === 'lab45' || only === 'all') await lab45();
   if (only === 'prod') await prodSmoke();
   if (only === 'all' || only === 'm0' || only === 'm1') await m0AndM1(variant);

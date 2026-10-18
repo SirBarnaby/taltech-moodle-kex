@@ -14,13 +14,11 @@ const report = (rows: string): string => `<table class="user-grade"><thead><tr><
 const activity = (id: number, grade: string, range = '', percentage = '', attrs = ''): string => `<tr ${attrs}><th class="column-itemname"><a href="/mod/assign/view.php?id=${id}">Lab ${id}</a></th><td class="column-grade">${grade}</td><td class="column-range">${range}</td><td class="column-percentage">${percentage}</td></tr>`;
 
 describe('grade quantities from Moodle text', () => {
-  it('retains zero, points, and decimal commas', () => {
+  it('retains zero, points and decimal commas, and uses an explicit percentage without guessing a denominator', () => {
     expect(gradeStatFromText('0.0/2.0')).toMatchObject({ grade: '0.0/2.0', earned: 0, maximum: 2, percentage: 0 });
     expect(gradeStatFromText('2,0 / 2,0')).toMatchObject({ earned: 2, maximum: 2, percentage: 100 });
     expect(gradeStatFromText('1,5', '0–2,0')).toMatchObject({ earned: 1.5, maximum: 2, percentage: 75 });
-  });
 
-  it('uses an explicit percentage without guessing a denominator', () => {
     expect(gradeStatFromText('81,25 %')).toMatchObject({ grade: '81,25 %', percentage: 81.25 });
     expect(gradeStatFromText('5')).toEqual({ grade: '5' });
     expect(gradeStatFromText('5', '', '80.00 %')).toMatchObject({ grade: '5', percentage: 80 });
@@ -49,12 +47,9 @@ describe('Moodle user grade report', () => {
     expect(Object.keys(result?.activities ?? {})).toEqual(['27', '28']);
   });
 
-  it('ignores decorative hidden icons while reading the visible grade', () => {
-    const result = scrapeCourseGrades(html(report(activity(27, '<span aria-hidden="true">✓</span>2,0', '0–2'))));
-    expect(result?.activities['27']).toMatchObject({ grade: '2,0', earned: 2, maximum: 2, percentage: 100 });
-  });
-
-  it('ignores hidden percentage cells and accepts a visible percentage when the grade column is disabled', () => {
+  it('ignores decorative hidden icons and hidden percentage cells, and accepts a visible percentage when the grade column is disabled', () => {
+    const icon = scrapeCourseGrades(html(report(activity(27, '<span aria-hidden="true">✓</span>2,0', '0–2'))));
+    expect(icon?.activities['27']).toMatchObject({ grade: '2,0', earned: 2, maximum: 2, percentage: 100 });
     const doc = html(report(
       '<tr><th class="column-itemname"><a href="/mod/quiz/view.php?id=29">Quiz</a></th><td class="column-grade">2</td><td class="column-percentage" hidden>5%</td></tr>' +
       '<tr><th class="column-itemname"><a href="/mod/quiz/view.php?id=30">Quiz</a></th><td class="column-percentage">70,5 %</td></tr>',
@@ -72,10 +67,21 @@ describe('Moodle user grade report', () => {
     expect(scrapeCourseGrades(html('<form id="login"></form>'))).toBeUndefined();
   });
 
-  it('reads percentages already present in the overview without inventing them for a scale', () => {
-    const result = scrapeGradeOverview(html('<table id="overview-grade"><tbody><tr><td><a href="/grade/report/user/index.php?id=7">Course</a></td><td>0,0/2,0</td></tr><tr><td><a href="/grade/report/user/index.php?id=8">Another</a></td><td>5</td></tr></tbody></table>'));
-    expect(result[0]).toMatchObject({ courseId: 7, earned: 0, maximum: 2, percentage: 0 });
-    expect(result[1]?.percentage).toBeUndefined();
+  it('reads the overview: course id, code, name, grade and report link; skips empty rows; percentages only when present, never invented for a scale', () => {
+    const row = (id: number, text: string, grade: string): string =>
+      `<tr><td class="cell c0"><a href="http://localhost:8080/course/user.php?mode=grade&amp;id=${id}&amp;user=3">${text}</a></td><td class="cell c1">${grade}</td></tr>`;
+    const rows = scrapeGradeOverview(html(
+      `<table id="overview-grade" class="generaltable"><thead><tr><th>Course name</th><th>Grade</th></tr></thead><tbody>${row(7, 'Tarkade asjade võrgud (2026 sügis) (IEE2630)', '281.00')}${row(2, 'Cloud Architectures and DevOps (2026 autumn) (ITI8801)', '-')}
+       <tr class="emptyrow"><td class="cell c0"></td><td class="cell c1"></td></tr></tbody></table>`,
+    ));
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({ courseId: 7, code: 'IEE2630', name: 'Tarkade asjade võrgud (2026 sügis)', grade: '281.00', graded: true });
+    expect(rows[0]?.href).toContain('/course/user.php?mode=grade&id=7&user=3');
+    expect(rows[1]).toMatchObject({ courseId: 2, code: 'ITI8801', grade: '-', graded: false });
+    expect(scrapeGradeOverview(html('<p>nothing</p>'))).toEqual([]);
+    const pct = scrapeGradeOverview(html('<table id="overview-grade"><tbody><tr><td><a href="/grade/report/user/index.php?id=7">Course</a></td><td>0,0/2,0</td></tr><tr><td><a href="/grade/report/user/index.php?id=8">Another</a></td><td>5</td></tr></tbody></table>'));
+    expect(pct[0]).toMatchObject({ courseId: 7, earned: 0, maximum: 2, percentage: 0 });
+    expect(pct[1]?.percentage).toBeUndefined();
   });
 });
 
@@ -89,7 +95,7 @@ describe('cached course grade reports', () => {
     cache.reset();
   });
 
-  it('shares a single request across rows and keeps the cached report', async () => {
+  it('shares a single request across rows, keeps the cached report, and runs at most two requests at once', async () => {
     const fetcher = vi.spyOn(ws, 'fetchText').mockResolvedValue(report(activity(27, '2', '0–2')));
     const one = courseGradesStore(7);
     const two = courseGradesStore(7);
@@ -99,6 +105,16 @@ describe('cached course grade reports', () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
     expect(fetcher).toHaveBeenCalledWith('/grade/report/user/index.php?id=7');
     expect(one.value.value?.activities['27']?.percentage).toBe(100);
+
+    fetcher.mockReset();
+    let release!: (html: string) => void;
+    const firstResponse = new Promise<string>((resolve) => (release = resolve));
+    fetcher.mockReturnValueOnce(firstResponse).mockReturnValueOnce(firstResponse).mockResolvedValue(report(''));
+    const pending = [11, 12, 13].map((id) => courseGradesStore(id).refresh());
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    release(report(''));
+    await Promise.all(pending);
+    expect(fetcher).toHaveBeenCalledTimes(3);
   });
 
   it('separates user scopes and preserves stale data when a login page is returned', async () => {
@@ -112,17 +128,6 @@ describe('cached course grade reports', () => {
     cache.bind('moodle.taltech.ee', 4);
     expect(courseGradesStore(8)).not.toBe(old);
     expect(courseGradesStore(8).value.value).toBeUndefined();
-  });
-
-  it('limits report enrichment to two concurrent requests', async () => {
-    let release!: (html: string) => void;
-    const firstResponse = new Promise<string>((resolve) => (release = resolve));
-    const fetcher = vi.spyOn(ws, 'fetchText').mockReturnValueOnce(firstResponse).mockReturnValueOnce(firstResponse).mockResolvedValue(report(''));
-    const pending = [11, 12, 13].map((id) => courseGradesStore(id).refresh());
-    expect(fetcher).toHaveBeenCalledTimes(2);
-    release(report(''));
-    await Promise.all(pending);
-    expect(fetcher).toHaveBeenCalledTimes(3);
   });
 
   it('does not persist a pending report after the signed-in account changes', async () => {
@@ -150,7 +155,7 @@ describe('GradeMeter semantics', () => {
     host.remove();
   });
 
-  it('shows points including zero, with an accessible bounded meter', () => {
+  it('shows points including zero with an accessible bounded meter, omits it for a scale, and bounds extra credit', () => {
     render(h(GradeMeter, { grade: gradeStatFromText('0.0/2.0'), label: 'Hinne' }), host);
     const meter = host.querySelector('[role="meter"]');
     expect(meter?.getAttribute('aria-label')).toBe('Hinne');
@@ -159,9 +164,7 @@ describe('GradeMeter semantics', () => {
     expect(meter?.getAttribute('aria-valuemax')).toBe('100');
     expect(meter?.getAttribute('aria-valuetext')).toContain('0.0/2.0');
     expect(host.textContent).toContain('0.0/2.0');
-  });
-
-  it('omits meters for a scale and bounds extra-credit fill without hiding the actual grade', () => {
+    // A scale gets no meter; extra credit is bounded without hiding the actual grade.
     render(h(GradeMeter, { grade: gradeStatFromText('Pass'), label: 'Hinne' }), host);
     expect(host.querySelector('[role="meter"]')).toBeNull();
     render(h(GradeMeter, { grade: gradeStatFromText('12/10'), label: 'Hinne' }), host);

@@ -18,14 +18,24 @@ Needs Node 22 or newer. From the source root:
 - `npm run build`: writes the production add-on to `dist/firefox/`. It matches only `https://moodle.taltech.ee/*`.
 - `npm run pack`: writes the unsigned `dist/packages/kex.xpi`.
 - `npm run build:dev`: also matches the local test Moodle labs.
-- `npx vitest run`: unit tests (285 pass).
+- `npm test` (`vitest run`): about 110 unit tests in 17 files, under 5 s. See "Tests" below.
 - `npm run typecheck`, `npm run lint:eslint`.
-- `npm run test:ff`: smoke test in real Firefox through Selenium, against the test Moodle labs. Needs docker.
-- `npx playwright test` (Chromium) and `npm run test:visual` (pixel diff against `ai_generated_enhanced_drafts/iteration3.png`).
+- `npm run test:ff`: the quick Firefox smoke group (`--only quick`, up to 90 s) through Selenium, against the test Moodle labs. Needs docker.
+- `npm run test:ff:full`: every smoke group; run it before a release.
+- `npm run test:e2e`: the Chromium specs `activities`, `pages` (has the axe pass) and `workspace`, on demand.
+- `npm run shots`: a light and dark Chromium screenshot of every route into `artifacts/pages/`.
 
 Load it by hand: `about:debugging#/runtime/this-firefox`, "Load Temporary Add-on…", pick `dist/firefox/manifest.json`. Alt+Shift+O shows plain Moodle; `?kex=off` disables it for a page.
 
+## Tests
+
+- Unit tests (`test/unit`) run in one shared worker context (`isolate: false` in `vitest.config.ts`), so a file resets what it changes (document, storage, module-level stores) in `afterEach`. Files that never touch `document` start with `// @vitest-environment node`.
+- Captures: `test/fixtures/load.ts` parses each `captures/pages` file once per test file (`captureDoc`; clone it before mutating). `captures-course` and `captures-pages` are split so the two big parses run in parallel.
+- What earns a test: a bug we shipped (named after the symptom, added with the fix); reading Moodle markup or web-service data against a real capture, one test per markup shape; security and privacy invariants (sesskey scrub, sanitising, hidden grades, account switch); completeness of the Moodle string mapping. Not: CSS values, class names, DOM snapshots, timings, one test per table row, views still being redesigned. Budget: at most 120 tests and 5 s. To add one over budget, delete one.
+- The login width bug (TalTech's `body.pagelayout-login{width:calc(100% - 640px)}`) can only show in a real browser, so the Firefox quick group covers it.
+
 ## Layout
+
 
 - `src/content/`: boot gate, router, soft navigation, shell snapshot, page info, skin and guest skin.
 - `src/data/`: Moodle web-service calls (`ws.ts`), course state, scrapers for tiles, summaries, secondary nav, grades.

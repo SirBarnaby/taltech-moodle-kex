@@ -99,9 +99,10 @@ npm ci
 npm run build:dev        # dist/firefox-dev with debug hooks
 npm run watch            # rebuild on change
 npm test                 # unit tests (vitest + happy-dom)
-npm run test:e2e         # Playwright (Chromium) against the lab Moodle on http://localhost:8080
-npm run test:ff          # real Firefox 158 through Selenium (http://localhost:4444)
-npm run test:visual -- --all   # a light and dark screenshot of every route into artifacts/pages/
+npm run test:e2e         # Playwright (Chromium) specs on demand, against the lab Moodle on http://localhost:8080
+npm run test:ff          # quick real-Firefox smoke through Selenium (http://localhost:4444)
+npm run test:ff:full     # every smoke group, before a release
+npm run shots            # a light and dark screenshot of every route into artifacts/pages/
 npm run lint             # eslint, tsc and web-ext lint
 npm run pack             # dist/packages/kex.xpi
 ```
