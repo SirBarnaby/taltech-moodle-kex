@@ -1,5 +1,5 @@
 import {
-  ArrowUpRight, BookMarked, CalendarDays, ChevronRight, GraduationCap, House, LibraryBig, MessageSquare, Settings as SettingsIcon, SlidersHorizontal,
+  BookMarked, CalendarDays, ChevronRight, GraduationCap, House, LibraryBig, Mail, MessageSquare, Settings as SettingsIcon, SlidersHorizontal,
   SquareArrowOutUpRight, type LucideIcon,
 } from 'lucide-preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
@@ -176,6 +176,8 @@ export function Sidebar() {
   const r = route.value;
   const u = user.value;
   const [editing, setEditing] = useState<number | null>(null);
+  // Opened by the pointer alone (hover-peek): shown over the page without the dim backdrop.
+  const [peek, setPeek] = useState(false);
   const settingsBtn = useRef<HTMLButtonElement>(null);
   const userBtn = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -200,6 +202,7 @@ export function Sidebar() {
     if (e.pointerType === 'touch') return;
     cancelClose();
     sidebarInstant.value = false;
+    if (!sidebarOverlay.peek()) setPeek(true);
     sidebarOverlay.value = true;
   };
   useEffect(() => () => window.clearTimeout(closeTimer.current), [autoHide]);
@@ -212,6 +215,9 @@ export function Sidebar() {
     else if (hadPopover.current) scheduleClose();
     hadPopover.current = quickOpen || userOpen;
   }, [quickOpen, userOpen]);
+  useEffect(() => {
+    if (!overlayOpen) setPeek(false);
+  }, [overlayOpen]);
   useEffect(() => {
     if (overlayOpen && sidebarInstant.peek()) navRef.current?.querySelector<HTMLAnchorElement>('a[href]')?.focus();
   }, [overlayOpen]);
@@ -239,7 +245,7 @@ export function Sidebar() {
   return (
     <>
       {autoHide && mode !== 'drawer' && <div class="kex-sb-edge" data-kex-test="sidebar-edge" aria-hidden="true" onPointerEnter={reveal} onPointerLeave={scheduleClose} />}
-      {(autoHide || mode !== 'full') && overlayOpen && <div class="kex-sb-backdrop" onClick={() => {
+      {(autoHide || mode !== 'full') && overlayOpen && (mode === 'drawer' || !peek) && <div class="kex-sb-backdrop" onClick={() => {
         sidebarInstant.value = false;
         quickSettingsOpen.value = false;
         userMenuOpen.value = false;
@@ -252,6 +258,7 @@ export function Sidebar() {
         data-kex-test="sidebar"
         data-mode={mode}
         data-open={overlayOpen ? 'true' : 'false'}
+        data-peek={overlayOpen && peek && mode !== 'drawer' ? 'true' : undefined}
         data-auto-hide={autoHide ? 'true' : 'false'}
         data-instant={sidebarInstant.value ? 'true' : 'false'}
         inert={inert}
@@ -273,8 +280,8 @@ export function Sidebar() {
         <div class="kex-sb__divider" />
         <ul class="kex-sb__nav">
           <li>
-            <a class="kex-sb__row" href={homeUrl(PAGES.workspace)} aria-current={isHome ? 'page' : undefined} data-tip={t('nav.workspace')} data-kex-test="sb-workspace" onClick={(e) => here(e, PAGES.workspace)}>
-              <House size={24} strokeWidth={1.5} aria-hidden="true" />
+            <a class="kex-sb__row kex-sb__row--sub" href={homeUrl(PAGES.workspace)} aria-current={isHome ? 'page' : undefined} data-tip={t('nav.workspace')} data-kex-test="sb-workspace" onClick={(e) => here(e, PAGES.workspace)}>
+              <House size={22} strokeWidth={1.5} aria-hidden="true" />
               <span class="kex-sb__rowlabel">{t('nav.workspace')}</span>
               {unread > 0 && (
                 <span class="kex-sb__pill kex-mono" data-kex-test="sb-unread" aria-label={t('sidebar.unread', { n: unread })}>{unread > 99 ? '99+' : unread}</span>
@@ -282,8 +289,8 @@ export function Sidebar() {
             </a>
           </li>
           <li>
-            <a class="kex-sb__row" href={homeUrl(PAGES.pinned)} aria-current={isPinned ? 'page' : undefined} data-tip={t('nav.pinned')} onClick={(e) => here(e, PAGES.pinned)}>
-              <BookMarked size={24} strokeWidth={1.5} aria-hidden="true" />
+            <a class="kex-sb__row kex-sb__row--sub" href={homeUrl(PAGES.pinned)} aria-current={isPinned ? 'page' : undefined} data-tip={t('nav.pinned')} onClick={(e) => here(e, PAGES.pinned)}>
+              <BookMarked size={22} strokeWidth={1.5} aria-hidden="true" />
               <span class="kex-sb__rowlabel">{t('nav.pinned')}</span>
             </a>
           </li>
@@ -313,14 +320,14 @@ export function Sidebar() {
           <ul class="kex-sb__links">
             <li>
               <a class="kex-sb__row kex-sb__row--foot" href={links.ois ?? OIS_FALLBACK} target="_blank" rel="noopener noreferrer" data-tip={t('sidebar.ois')}>
-                <SquareArrowOutUpRight size={21} strokeWidth={1.5} aria-hidden="true" />
-                <span class="kex-sb__rowlabel">{t('sidebar.ois')}<ArrowUpRight class="kex-sb__ext" size={17} strokeWidth={1.75} aria-hidden="true" /></span>
+                <SquareArrowOutUpRight size={18} strokeWidth={1.5} aria-hidden="true" />
+                <span class="kex-sb__rowlabel">{t('sidebar.ois')}</span>
               </a>
             </li>
             <li>
               <a class="kex-sb__row kex-sb__row--foot" href={links.mail ?? MAIL_FALLBACK} target="_blank" rel="noopener noreferrer" data-tip={t('sidebar.email')}>
-                <SquareArrowOutUpRight size={21} strokeWidth={1.5} aria-hidden="true" />
-                <span class="kex-sb__rowlabel">{t('sidebar.email')}<ArrowUpRight class="kex-sb__ext" size={17} strokeWidth={1.75} aria-hidden="true" /></span>
+                <Mail size={18} strokeWidth={1.5} aria-hidden="true" />
+                <span class="kex-sb__rowlabel">{t('sidebar.email')}</span>
               </a>
             </li>
             <li>
@@ -337,7 +344,7 @@ export function Sidebar() {
                   quickSettingsOpen.value = !quickSettingsOpen.value;
                 }}
               >
-                <SettingsIcon size={21} strokeWidth={1.5} aria-hidden="true" />
+                <SettingsIcon size={18} strokeWidth={1.5} aria-hidden="true" />
                 <span class="kex-sb__rowlabel">{t('sidebar.settings')}</span>
               </button>
             </li>

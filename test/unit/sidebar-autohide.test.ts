@@ -63,13 +63,44 @@ describe('sidebar auto-hide', () => {
     expect(sidebar().getAttribute('data-mode')).toBe('full');
   });
 
+  it('does not dim the page for a pointer reveal, but does for a click or keyboard open', () => {
+    act(() => render(h(Sidebar, {}), host));
+    pointer(edge(), 'pointerenter');
+    expect(sidebarOverlay.value).toBe(true);
+    expect(host.querySelector('.kex-sb-backdrop')).toBeNull();
+    expect(sidebar().getAttribute('data-peek')).toBe('true');
+    pointer(sidebar(), 'pointerleave');
+    act(() => { vi.advanceTimersByTime(300); });
+    expect(sidebarOverlay.value).toBe(false);
+    act(() => { sidebarOverlay.value = true; });
+    expect(host.querySelector('.kex-sb-backdrop')).not.toBeNull();
+    expect(sidebar().getAttribute('data-peek')).toBeNull();
+  });
+
+  it('keeps the dim backdrop in drawer mode even for a pointer reveal', () => {
+    viewportWidth.value = 600;
+    act(() => render(h(Sidebar, {}), host));
+    act(() => { sidebarOverlay.value = true; });
+    expect(host.querySelector('.kex-sb-backdrop')).not.toBeNull();
+  });
+
+  it('gives every nav row the compact style and lays the footer links out in one row before the user row', () => {
+    act(() => render(h(Sidebar, {}), host));
+    const rows = [...sidebar().querySelectorAll<HTMLElement>('.kex-sb__nav .kex-sb__row')];
+    expect(rows).toHaveLength(7);
+    expect(rows.every((r) => r.classList.contains('kex-sb__row--sub'))).toBe(true);
+    const links = sidebar().querySelectorAll('.kex-sb__foot > .kex-sb__links > li');
+    expect(links).toHaveLength(3);
+    expect(sidebar().querySelector('.kex-sb__foot > .kex-sb__links + .kex-sb__user')).not.toBeNull();
+  });
+
   it('lets a touch user open the menu explicitly instead of treating a tap as hover', () => {
     act(() => render(h(Sidebar, {}), host));
     pointer(edge(), 'pointerenter', 'touch');
     expect(sidebarOverlay.value).toBe(false);
     act(() => { sidebarOverlay.value = true; });
     pointer(sidebar(), 'pointerleave', 'touch');
-    act(() => vi.advanceTimersByTime(300));
+    act(() => { vi.advanceTimersByTime(300); });
     expect(sidebarOverlay.value).toBe(true);
   });
 
@@ -78,13 +109,13 @@ describe('sidebar auto-hide', () => {
     pointer(edge(), 'pointerenter');
     pointer(sidebar(), 'pointerenter');
     pointer(sidebar(), 'pointerleave');
-    act(() => vi.advanceTimersByTime(100));
+    act(() => { vi.advanceTimersByTime(100); });
     expect(sidebarOverlay.value).toBe(true);
     pointer(sidebar(), 'pointerenter');
-    act(() => vi.advanceTimersByTime(300));
+    act(() => { vi.advanceTimersByTime(300); });
     expect(sidebarOverlay.value).toBe(true);
     pointer(sidebar(), 'pointerleave');
-    act(() => vi.advanceTimersByTime(300));
+    act(() => { vi.advanceTimersByTime(300); });
     expect(sidebarOverlay.value).toBe(false);
   });
 
@@ -94,10 +125,10 @@ describe('sidebar auto-hide', () => {
     const link = sidebar().querySelector<HTMLAnchorElement>('a')!;
     act(() => link.focus());
     pointer(sidebar(), 'pointerleave');
-    act(() => vi.advanceTimersByTime(300));
+    act(() => { vi.advanceTimersByTime(300); });
     expect(sidebarOverlay.value).toBe(true);
     act(() => link.blur());
-    act(() => vi.advanceTimersByTime(300));
+    act(() => { vi.advanceTimersByTime(300); });
     expect(sidebarOverlay.value).toBe(false);
   });
 
@@ -106,10 +137,10 @@ describe('sidebar auto-hide', () => {
     pointer(edge(), 'pointerenter');
     act(() => { quickSettingsOpen.value = true; });
     pointer(sidebar(), 'pointerleave');
-    act(() => vi.advanceTimersByTime(300));
+    act(() => { vi.advanceTimersByTime(300); });
     expect(sidebarOverlay.value).toBe(true);
     act(() => { quickSettingsOpen.value = false; });
-    act(() => vi.advanceTimersByTime(300));
+    act(() => { vi.advanceTimersByTime(300); });
     expect(sidebarOverlay.value).toBe(false);
   });
 

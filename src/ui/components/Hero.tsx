@@ -104,7 +104,7 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
   const text = lines[1] ? `${lines[0]}\n${lines[1]}` : lines[0];
   const aria = courseId ? lines.filter(Boolean).join(' ') : (label ?? '');
   return (
-    <section class={`kex-hero${cls ? ` ${cls}` : ''}`} ref={root} data-kex-test="hero" data-mode={mode} data-school={school === 'default' ? undefined : school}>
+    <section class={`kex-hero${courseId ? ' kex-hero--course' : ''}${cls ? ` ${cls}` : ''}`} ref={root} data-kex-test="hero" data-mode={mode} data-school={school === 'default' ? undefined : school}>
       <canvas class="kex-hero__canvas" ref={canvas} aria-hidden="true" />
       <Crosshair class="kex-cross--a" />
       <Crosshair class="kex-cross--b" />

@@ -91,6 +91,7 @@
   --kex-header-h: 67px;
   --kex-header-h-compact: 52px;
   --kex-hero-h: clamp(232px, 15.96vw, 340px);
+  --kex-hero-h-compact: 120px;
   --kex-topics-w: clamp(300px, 20.7vw, 400px);
   --kex-r-xs: 2px;
   --kex-r-s: 3px;

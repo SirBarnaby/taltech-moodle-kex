@@ -89,7 +89,7 @@ describe('fullscreen material reader', () => {
     expect(tab.defaultPrevented).toBe(true);
     expect(dialog.contains(document.activeElement)).toBe(true);
     expect(document.activeElement).not.toBe(close);
-    await act(async () => dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })));
+    await act(async () => { dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); });
     expect(onClose).toHaveBeenCalledOnce();
     expect(main.hasAttribute('inert')).toBe(false);
     expect(document.body.style.overflow).toBe('clip');
@@ -114,7 +114,7 @@ describe('fullscreen material reader', () => {
     expect(body.getAttribute('aria-busy')).toBe('true');
     const frame = document.querySelector<HTMLIFrameElement>('[data-kex-test="preview-frame"]')!;
     expect(document.activeElement).not.toBe(frame);
-    await act(async () => frame.dispatchEvent(new Event('load')));
+    await act(async () => { frame.dispatchEvent(new Event('load')); });
     expect(body.getAttribute('aria-busy')).toBe('false');
     expect(document.querySelector('[data-kex-test="reader-skeleton"]')).toBeNull();
     const original = document.querySelector<HTMLAnchorElement>('.kex-btn--sheet')!;

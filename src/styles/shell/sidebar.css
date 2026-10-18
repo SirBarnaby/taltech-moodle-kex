@@ -64,27 +64,30 @@
     background: var(--kex-sb-divider);
   }
   .kex-sb__divider--2 {
-    margin-top: 15px;
+    margin-top: 10px;
   }
 
   /* ---- nav and footer rows ---- */
   .kex-sb__nav {
     flex: none;
     margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
   }
   .kex-sb__row {
     position: relative;
     display: flex;
     align-items: center;
     gap: 14px;
-    height: 50px;
+    height: 38px;
     margin: 0 12px;
     padding: 0 12px;
     width: calc(100% - 24px);
     border-radius: var(--kex-r-xs);
     color: var(--kex-sb-text);
-    font-size: 16px;
-    line-height: 22px;
+    font-size: 15px;
+    line-height: 20px;
     text-align: left;
     transition: background 120ms var(--kex-ease), transform 120ms var(--kex-ease);
     &:active {
@@ -111,22 +114,40 @@
     min-width: 0;
     white-space: normal;
   }
-  .kex-sb__row--foot {
-    height: 40px;
-    gap: 15px;
-    padding-left: 13px;
-    font-size: 15px;
-    color: var(--kex-sb-text-2);
+  /* Footer links (ÖIS, Email, Settings): one horizontal row of icon + label, like the blueprint. */
+  .kex-sb__links {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+    margin: 0 8px 0 10px;
+    padding-top: 10px;
+    li {
+      display: flex;
+      min-width: 0;
+    }
   }
-  .kex-sb__ext {
-    margin-left: 12px;
-    opacity: 0.9;
+  .kex-sb__row--foot {
+    width: auto;
+    height: 34px;
+    margin: 0;
+    gap: 6px;
+    padding: 0 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--kex-sb-text-2);
+    .kex-sb__rowlabel {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
   }
 
   /* ---- section label ---- */
   .kex-sb__label {
     flex: none;
-    margin: 24px 16px 0 24px;
+    margin: 16px 16px 0 24px;
     font-family: var(--kex-font-mono);
     font-size: 11px;
     line-height: 14px;
@@ -141,9 +162,10 @@
 
   /* ---- course list ---- */
   .kex-sb__courses {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 0;
-    margin-top: 19px;
+    margin-top: 10px;
+    margin-bottom: 4px;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none;
@@ -255,10 +277,7 @@
   /* ---- footer ---- */
   .kex-sb__foot {
     flex: none;
-    padding-bottom: 34px;
-  }
-  .kex-sb__links {
-    padding-top: 19px;
+    padding-bottom: 14px;
   }
   .kex-sb__user {
     display: flex;
@@ -266,7 +285,7 @@
     gap: 14px;
     width: 100%;
     height: 44px;
-    margin-top: 18px;
+    margin-top: 8px;
     padding: 0 14px 0 20px;
     text-align: left;
     color: #f0eef5;
@@ -394,8 +413,18 @@
     justify-content: center;
     padding: 0;
   }
+  .kex-sb__links {
+    flex-direction: column;
+    margin: 0;
+  }
+  .kex-sb__row--foot {
+    width: calc(100% - 16px);
+    margin: 0 8px;
+    padding: 0;
+    justify-content: center;
+  }
   .kex-sb__foot {
-    padding-bottom: 20px;
+    padding-bottom: 14px;
   }
   /* Tooltips (300 ms delay) */
   [data-tip] {
@@ -534,17 +563,11 @@
   }
 }
 
-/* First-class secondary rows (My courses, Calendar, Messages, Grades, Preferences): compact, so the course list keeps its room. */
+/* Every first-class row (Workspace ... Preferences) shares the compact base height; --sub only sets the secondary colour. */
 #kex-root {
   .kex-sb__row--sub {
-    height: 40px;
-    gap: 14px;
     padding-left: 13px;
-    font-size: 15px;
     color: var(--kex-sb-text-2);
-    svg {
-      flex: none;
-    }
   }
   .kex-sb__row--sub .kex-sb__pill {
     margin-left: auto;
