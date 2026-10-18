@@ -29,9 +29,9 @@ export function RowSkeleton({ n = 3 }: { n?: number }) {
   );
 }
 
-export function TopicSkeleton({ n = 6 }: { n?: number }) {
+export function TopicSkeleton({ n = 8 }: { n?: number }) {
   return (
-    <div class="kex-topics kex-topics--skel" aria-hidden="true">
+    <div class="kex-topics kex-topics--grid kex-topics--skel" aria-hidden="true">
       <p class="kex-topics__label kex-mono">&nbsp;</p>
       <ol class="kex-topics__list">
         {Array.from({ length: n }, (_, i) => (
