@@ -16,6 +16,7 @@ import {
   ttLinks, user, userMenuOpen,
 } from '../../state';
 import { QuickSettings } from './QuickSettings';
+import { RailTip } from './RailTip';
 import { UserMenu } from './UserMenu';
 
 const OIS_FALLBACK = 'https://ois2.ttu.ee';
@@ -206,13 +207,31 @@ export function Sidebar() {
     sidebarOverlay.value = true;
   };
   useEffect(() => () => window.clearTimeout(closeTimer.current), [autoHide]);
+  // Turning auto-hide off ends any hover-peek or overlay; while a popover is still open it waits for that to close.
+  const clearPending = useRef(false);
+  const settleOverlay = (): void => {
+    if (!clearPending.current || quickSettingsOpen.peek() || userMenuOpen.peek()) return;
+    clearPending.current = false;
+    cancelClose();
+    setPeek(false);
+    sidebarInstant.value = false;
+    sidebarOverlay.value = false;
+  };
   useEffect(() => {
-    if (autoHide && (quickSettingsOpen.peek() || userMenuOpen.peek())) sidebarOverlay.value = true;
-    else if (!autoHide && mode === 'full') sidebarOverlay.value = false;
+    if (autoHide) {
+      clearPending.current = false;
+      if (quickSettingsOpen.peek() || userMenuOpen.peek()) sidebarOverlay.value = true;
+    } else if (mode !== 'drawer') {
+      clearPending.current = true;
+      settleOverlay();
+    }
   }, [autoHide]);
   useEffect(() => {
     if (quickOpen || userOpen) cancelClose();
-    else if (hadPopover.current) scheduleClose();
+    else if (hadPopover.current) {
+      scheduleClose();
+      settleOverlay();
+    }
     hadPopover.current = quickOpen || userOpen;
   }, [quickOpen, userOpen]);
   useEffect(() => {
@@ -375,6 +394,7 @@ export function Sidebar() {
           </button>
         </div>
       </nav>
+      {!autoHide && mode === 'rail' && !overlayOpen && <RailTip container={navRef} />}
       {quickSettingsOpen.value && <QuickSettings anchor={settingsBtn.current} />}
       {userMenuOpen.value && <UserMenu anchor={userBtn.current} />}
     </>
