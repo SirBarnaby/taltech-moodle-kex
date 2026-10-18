@@ -8,7 +8,8 @@ interface CourseNavProps {
 
 /**
  * The course's own secondary navigation (Course, Participants, Grades, Competencies, …) with Moodle's labels and URLs.
- * The active entry (the course page we are on) stays here; the others are plain links to Moodle's pages.
+ * The active entry (the course page we are on) stays here; the others are links to pages Moodle renders itself. They load normally,
+ * but the content controller shows the navigation skeleton at once (see `hardLoadFeedback`) so the click is answered immediately.
  */
 export function CourseNav({ tabs }: CourseNavProps) {
   const list = useRef<HTMLElement>(null);

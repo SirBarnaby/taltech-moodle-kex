@@ -41,40 +41,67 @@
     }
   }
   .kex-mclist {
-    padding-top: 6px;
+    padding-top: 18px;
   }
+  /* The courses are a card grid: as many columns as fit at 260 px or more. */
   .kex-mcrows {
     margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
   }
   .kex-mc {
+    --kex-mc-accent: var(--kex-accent);
     position: relative;
     display: flex;
-    align-items: center;
-    height: 64px;
-    border-bottom: 1px solid var(--kex-border);
-    transition: background 120ms var(--kex-ease);
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--kex-border-card, var(--kex-border));
+    border-radius: var(--kex-r-l);
+    background: var(--kex-bg);
+    transition: background-color 120ms var(--kex-ease), border-color 120ms var(--kex-ease);
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 3px;
+      z-index: 1;
+      background: var(--kex-mc-accent);
+      pointer-events: none;
+    }
     &:hover,
     &:focus-within {
       background: var(--kex-hover);
+      border-color: var(--kex-mc-accent);
     }
     &:focus-visible {
       outline: 2px solid var(--kex-focus);
-      outline-offset: -2px;
-      border-radius: var(--kex-r-s);
+      outline-offset: 2px;
     }
   }
+  .kex-mc[data-school="it"] { --kex-mc-accent: #0aa0c4; }
+  .kex-mc[data-school="eng"] { --kex-mc-accent: #d9760a; }
+  .kex-mc[data-school="sci"] { --kex-mc-accent: #14a07a; }
+  .kex-mc[data-school="biz"] { --kex-mc-accent: #4a4fd0; }
+  .kex-mc[data-school="sea"] { --kex-mc-accent: #0d78c8; }
+  :root[data-kex-theme="dark"] & .kex-mc[data-school="it"] { --kex-mc-accent: #3cd0ee; }
+  :root[data-kex-theme="dark"] & .kex-mc[data-school="eng"] { --kex-mc-accent: #f5a43c; }
+  :root[data-kex-theme="dark"] & .kex-mc[data-school="sci"] { --kex-mc-accent: #46d8a0; }
+  :root[data-kex-theme="dark"] & .kex-mc[data-school="biz"] { --kex-mc-accent: #8f94ff; }
+  :root[data-kex-theme="dark"] & .kex-mc[data-school="sea"] { --kex-mc-accent: #4cb8f0; }
   .kex-mc--hidden {
     opacity: 0.7;
   }
   .kex-mc__main {
     flex: 1 1 auto;
     min-width: 0;
-    display: grid;
-    grid-template-columns: 64px minmax(0, 1fr) 140px 200px;
-    align-items: center;
-    column-gap: 20px;
-    height: 100%;
-    padding: 0 6px 0 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 14px;
     color: var(--kex-text);
     &:hover .kex-mc__name {
       color: var(--kex-violet);
@@ -82,9 +109,8 @@
   }
   .kex-mc__img {
     display: block;
-    width: 64px;
-    height: 40px;
-    border-radius: var(--kex-r-s);
+    width: 100%;
+    height: 92px;
     object-fit: cover;
     background: var(--kex-border);
   }
@@ -93,19 +119,17 @@
     place-items: center;
     background: linear-gradient(135deg, hsl(calc(255deg + var(--kex-ph) * 1deg) 62% 30%), hsl(calc(285deg + var(--kex-ph) * 1deg) 72% 40%));
     color: rgba(255, 255, 255, 0.82);
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 0.08em;
   }
   .kex-mc__text {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: 14px 22px;
-    row-gap: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
     min-width: 0;
-    align-content: center;
+    padding: 0 16px;
   }
   .kex-mc__code {
-    grid-column: 1 / -1;
     font-size: 11px;
     line-height: 14px;
     font-weight: 500;
@@ -113,20 +137,17 @@
     color: var(--kex-mono);
   }
   .kex-mc__name {
-    grid-column: 1;
     font-size: 17px;
     line-height: 22px;
     font-weight: 500;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100%;
+    min-height: 44px;
     transition: color 120ms var(--kex-ease);
   }
   .kex-mc__cat {
-    grid-column: 2;
-    align-self: center;
-    margin-left: 14px;
     font-size: 13.5px;
     line-height: 18px;
     color: var(--kex-text-3);
@@ -138,16 +159,19 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    min-height: 14px;
+    padding: 0 16px;
   }
   .kex-mc__bar {
     flex: 1 1 auto;
-    max-width: 90px;
-    height: 2px;
+    height: 3px;
+    border-radius: 3px;
+    overflow: hidden;
     background: var(--kex-border);
     i {
       display: block;
       height: 100%;
-      background: linear-gradient(90deg, #6d4dff, #c114fe);
+      background: var(--kex-mc-accent);
     }
   }
   .kex-mc__pct {
@@ -160,28 +184,37 @@
     font-variant-numeric: tabular-nums;
   }
   .kex-mc__access {
+    padding: 0 16px;
     font-size: 11px;
     line-height: 14px;
     font-weight: 500;
     letter-spacing: 0.08em;
     color: var(--kex-mono-soft);
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
+  /* Star and hide sit on the image corner. */
   .kex-mc__tools {
-    flex: none;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 0 8px 0 4px;
+    gap: 2px;
+    padding: 2px;
+    border-radius: var(--kex-r-l);
+    background: color-mix(in srgb, var(--kex-bg) 88%, transparent);
   }
   .kex-mc__tool {
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     border-radius: var(--kex-r-s);
     color: var(--kex-iconbtn-fg);
-    transition: background 120ms var(--kex-ease), color 120ms var(--kex-ease);
+    transition: background-color 120ms var(--kex-ease), color 120ms var(--kex-ease), transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
     &:hover {
       background: var(--kex-tint);
       color: var(--kex-violet);
@@ -190,21 +223,37 @@
   .kex-mc__tool--on {
     color: var(--kex-violet);
   }
+  .kex-mc--skel {
+    min-height: 210px;
+    padding: 12px;
+  }
   .kex-skel--mc {
     display: block;
     width: 100%;
-    height: 40px;
-    margin: 0 8px;
+    height: 100%;
+    min-height: 184px;
   }
   .kex-mcrows--skel .kex-mc {
     pointer-events: none;
   }
 }
-@media (max-width: 1100px) {
-  #kex-root .kex-mc__main {
-    grid-template-columns: 64px minmax(0, 1fr) 120px;
+/* Cards come in one after another (30 ms apart, the first eight). Only on first paint of a card: filtering does not replay it. */
+@keyframes kex-mc-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  #kex-root .kex-mc__access {
-    display: none;
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+:root[data-kex-effects="animated"]:not([data-kex-motion="reduced"]) #kex-root .kex-mcrows:not(.kex-mcrows--skel) > .kex-mc {
+  animation: kex-mc-in 240ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  animation-delay: calc(var(--kex-i, 0) * 30ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  #kex-root .kex-mcrows > .kex-mc {
+    animation: none !important;
   }
 }

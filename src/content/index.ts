@@ -3,7 +3,7 @@ import { seedDetails } from '../data/repo/cmdetails';
 import { parseCmItems } from '../data/scrape/cm';
 import { scrapeSecondaryNav } from '../data/scrape/secondarynav';
 import { beginViewTransition, cancelViewTransitions } from '../fx/navigation';
-import { navigationLoading } from '../state/navigation';
+import { hardNavigating, navigationLoading } from '../state/navigation';
 import { cache } from '../data/cache';
 import { createCoursesStore, loadCustomField } from '../data/repo/courses';
 import { cachedUser, fetchUser, storeUser } from '../data/repo/user';
@@ -536,6 +536,7 @@ class Controller {
       // Same page: let the browser handle anchors and reloads of the current URL.
       if (url.pathname + url.search === location.pathname + location.search) return;
       if (this.trySoft(url)) e.preventDefault();
+      else if (a.closest('.kex-coursenav')) this.hardLoadFeedback();
     };
     let hoverTimer: number | undefined;
     const warmed = new Set<string>();
@@ -564,6 +565,11 @@ class Controller {
     };
     const onOut = (): void => window.clearTimeout(hoverTimer);
     const onPop = (): void => void this.onPopState();
+    // Back to a page restored from the back/forward cache: the skeleton shown for the load we left must not stay.
+    const onShow = (e: PageTransitionEvent): void => {
+      if (e.persisted) this.endHardLoadFeedback();
+    };
+    window.addEventListener('pageshow', onShow);
     document.addEventListener('click', onClick);
     document.addEventListener('pointerover', onOver, { passive: true });
     document.addEventListener('focusin', onOver, { passive: true });
@@ -575,8 +581,33 @@ class Controller {
       document.removeEventListener('focusin', onOver);
       document.removeEventListener('pointerout', onOut);
       window.removeEventListener('popstate', onPop);
+      window.removeEventListener('pageshow', onShow);
       window.clearTimeout(hoverTimer);
     });
+  }
+
+  private hardTimer: number | undefined;
+
+  /**
+   * A page Moodle has to render itself (Participants, Grades, …) is about to load. The view leaves and the skeleton enters with the
+   * soft-navigation transition, and the header line runs, so the wait is not a frozen page; the next load paints the shell snapshot.
+   */
+  private hardLoadFeedback(): void {
+    if (hardNavigating.value) return;
+    const enter = beginViewTransition(this.root?.querySelector<HTMLElement>('.kex-main .kex-content') ?? null, 'page');
+    this.html.dataset.kexNav = 'loading';
+    hardNavigating.value = true;
+    enter('.kex-main .kex-content');
+    // A cancelled load (Escape, a download) leaves the page as it was.
+    window.clearTimeout(this.hardTimer);
+    this.hardTimer = window.setTimeout(() => this.endHardLoadFeedback(), 10_000);
+  }
+
+  private endHardLoadFeedback(): void {
+    window.clearTimeout(this.hardTimer);
+    if (!hardNavigating.value) return;
+    hardNavigating.value = false;
+    if (!navigationLoading.value) this.html.removeAttribute('data-kex-nav');
   }
 
   /** Soft navigation only starts from a mounted app view. */
@@ -597,6 +628,7 @@ class Controller {
 
   private async softNavigate(url: URL, target: SoftTarget, push: boolean): Promise<void> {
     const seq = ++this.navSeq;
+    this.endHardLoadFeedback();
     const hard = (): void => {
       if (seq !== this.navSeq) return;
       cancelViewTransitions();
@@ -746,6 +778,7 @@ class Controller {
   private unmount(): void {
     this.navSeq++;
     navigationLoading.value = false;
+    this.endHardLoadFeedback();
     cancelViewTransitions();
     this.stops.splice(0).forEach((s) => s());
     this.unmountRoute();

@@ -1,0 +1,108 @@
+/* Microinteractions: one small set shared by every view (press, lift, fills, check pop, segment slide, focus ring).
+   Transform and opacity only, under 300 ms, strong ease-out. Decoration needs the effects setting on "animated"; press feedback needs it
+   not "off". Reduced motion (system or KEX's own choice) removes all of it. */
+#kex-root {
+  --kex-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* ---- focus ring: the same everywhere, also on cards and rows that take focus themselves ---- */
+  :where([tabindex], a, button, input, select, textarea, summary, [role="switch"], [role="radio"], [role="tab"], [role="option"]):focus-visible {
+    outline: 2px solid var(--kex-focus);
+    outline-offset: 2px;
+  }
+  .kex-sidebar :where([tabindex], a, button, input, [role="switch"], [role="radio"]):focus-visible,
+  .kex-popover :where([tabindex], a, button, input, [role="switch"], [role="radio"]):focus-visible {
+    outline-color: var(--kex-sb-focus);
+  }
+
+  /* ---- segmented highlight that slides (Segmented with `slide`) ---- */
+  .kex-segmented--slide {
+    position: relative;
+    isolation: isolate;
+  }
+  .kex-segmented--slide .kex-segmented__opt[aria-checked="true"] {
+    background: transparent;
+  }
+  .kex-segmented--slide .kex-segmented__opt {
+    position: relative;
+    z-index: 1;
+  }
+  .kex-segmented__thumb {
+    position: absolute;
+    z-index: 0;
+    inset: 0 auto 0 0;
+    width: 1px;
+    transform-origin: 0 0;
+    background: var(--kex-tint);
+    pointer-events: none;
+    transition: transform 200ms var(--kex-ease-out);
+  }
+}
+
+/* ---- press feedback ---- */
+:root:not([data-kex-effects="off"]):not([data-kex-motion="reduced"]) #kex-root {
+  :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt) {
+    transition: transform 120ms var(--kex-ease-out), background-color 120ms var(--kex-ease-out), color 120ms var(--kex-ease-out), border-color 120ms var(--kex-ease-out);
+  }
+  :is(.kex-mc, .kex-wc, .kex-row, .kex-groupcard) {
+    transition: transform 120ms var(--kex-ease-out), box-shadow 160ms var(--kex-ease-out), background-color 120ms var(--kex-ease-out), border-color 120ms var(--kex-ease-out);
+  }
+  :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc):active {
+    transform: scale(0.97);
+  }
+  /* Full-width rows would visibly shrink at .97: they take a smaller step. */
+  :is(.kex-row, .kex-groupcard):active {
+    transform: scale(0.99);
+  }
+}
+:root:is([data-kex-input="keyboard"]) #kex-root :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc, .kex-row, .kex-groupcard):active {
+  transform: none;
+}
+
+/* ---- hover lift: cards only, and only where hovering exists ---- */
+@media (hover: hover) and (pointer: fine) {
+  :root[data-kex-effects="animated"]:not([data-kex-motion="reduced"]) #kex-root .kex-mc:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--kex-shadow-compact);
+  }
+  :root[data-kex-effects="animated"]:not([data-kex-motion="reduced"]) #kex-root .kex-mc:hover:active {
+    transform: translateY(0) scale(0.97);
+  }
+}
+
+/* ---- fills grow in when they mount (scaleX from the left; the width stays the real value) ---- */
+@keyframes kex-fill-in {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes kex-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+:root[data-kex-effects="animated"]:not([data-kex-motion="reduced"]) #kex-root {
+  :is(.kex-grade-meter__fill, .kex-mc__bar > i, .kex-wc__bar > i, .kex-hero__bar > b, .kex-groupcard__bar > span) {
+    transform-origin: left center;
+    animation: kex-fill-in 260ms var(--kex-ease-out) 80ms backwards;
+  }
+  /* A step marked done: the check pops in. */
+  .kex-act--done svg {
+    animation: kex-pop-in 220ms var(--kex-ease-out) backwards;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #kex-root :is(.kex-grade-meter__fill, .kex-mc__bar > i, .kex-wc__bar > i, .kex-hero__bar > b, .kex-groupcard__bar > span, .kex-act--done svg) {
+    animation: none !important;
+  }
+  #kex-root :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc, .kex-row, .kex-groupcard):active {
+    transform: none !important;
+  }
+}

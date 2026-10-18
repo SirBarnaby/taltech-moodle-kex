@@ -22,6 +22,7 @@
 @import "./views/login.css";
 @import "./views/grades.css";
 @import "./views/notifications.css";
+@import "./components/micro.css";
 @import "./offpill.css";
 @import "./skin/base.css";
 @import "./skin/chrome.css";

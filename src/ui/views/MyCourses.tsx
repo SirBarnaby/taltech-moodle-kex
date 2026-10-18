@@ -8,7 +8,8 @@ import { COURSE_TABS, lastAccess, type CoursesTab } from '../../data/repo/mycour
 import { currentSemester, displayName } from '../../data/repo/courses';
 import { t, type MessageKey } from '../../i18n';
 import { relTime } from '../../lib/time';
-import { sidebarCourses } from '../../state';
+import { schoolFor } from '../../lib/school';
+import { settings, sidebarCourses } from '../../state';
 import { mcFilter, mcHasArchived, mcSel, mcSort, mcTab, matchesFilter, setMcSort, sortCourses, type McSort } from '../../state/mycourses';
 import { nowSec } from '../../state/workspace';
 import { Band } from '../components/Band';
@@ -31,7 +32,8 @@ function CourseTile({ course }: { course: Course }) {
   );
 }
 
-function CourseRow({ course, selected, index, access, now }: { course: Course; selected: boolean; index: number; access: number | undefined; now: number }) {
+/** One course card of the grid. The school (first letter of the code) sets the accent line; the card is the row of the list. */
+function CourseRow({ course, selected, index, access, now, bySchool }: { course: Course; selected: boolean; index: number; access: number | undefined; now: number; bySchool: boolean }) {
   const name = displayName(course);
   const pct = course.progress === null ? undefined : Math.max(0, Math.min(100, Math.round(course.progress)));
   return (
@@ -39,6 +41,8 @@ function CourseRow({ course, selected, index, access, now }: { course: Course; s
       class={`kex-mc${selected ? ' kex-mc--selected' : ''}${course.hidden ? ' kex-mc--hidden' : ''}`}
       data-kex-mc={course.id}
       data-kex-test={`mc-row-${index + 1}`}
+      data-school={schoolFor(course.code, bySchool)}
+      style={{ '--kex-i': String(Math.min(index, 7)) }}
       tabIndex={selected ? 0 : -1}
       aria-label={`${course.code} ${name}`}
       onFocus={() => (mcSel.value = course.id)}
@@ -110,6 +114,7 @@ export function MyCoursesView() {
   const access = lastAccess.value;
   const now = nowSec.value;
   const sel = mcSel.value;
+  const bySchool = settings.value.colourBySchool;
   const input = useRef<HTMLInputElement>(null);
 
   // Opening a tab loads it (the current one is usually warm from the sidebar).
@@ -160,7 +165,7 @@ export function MyCoursesView() {
                 }}
               />
             </label>
-            <Segmented<McSort> value={sort} options={sortOptions} onChange={setMcSort} label={t('mc.sort')} />
+            <Segmented<McSort> value={sort} options={sortOptions} onChange={setMcSort} label={t('mc.sort')} slide />
           </div>
         </div>
         <section id="kex-mc-panel" role="tabpanel" aria-labelledby={`kex-mc-tab-${tab}`} class="kex-mclist" data-kex-test="mc-panel">
@@ -171,7 +176,7 @@ export function MyCoursesView() {
           ) : loading ? (
             <ul class="kex-mcrows kex-mcrows--skel" aria-hidden="true">
               {Array.from({ length: 5 }, (_, i) => (
-                <li class="kex-mc" key={i}>
+                <li class="kex-mc kex-mc--skel" key={i}>
                   <span class="kex-skel kex-skel--mc" />
                 </li>
               ))}
@@ -183,7 +188,7 @@ export function MyCoursesView() {
           ) : (
             <ul class="kex-mcrows" key={`${tab}:${sort}`} data-kex-test="mc-rows">
               {list.map((c, i) => (
-                <CourseRow key={c.id} course={c} index={i} selected={c.id === current} access={access.get(c.id)} now={now} />
+                <CourseRow key={c.id} course={c} index={i} selected={c.id === current} access={access.get(c.id)} now={now} bySchool={bySchool} />
               ))}
             </ul>
           )}

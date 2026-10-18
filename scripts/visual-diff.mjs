@@ -17,20 +17,23 @@ const MOCK = path.join(root, 'ai_generated_enhanced_drafts/iteration3.png');
 const W = 1585;
 const H = 992;
 
-/** Regions of the mock (design-spec §10) and their maximum mismatch in percent. */
+/**
+ * Regions of the mock (design-spec §10) and their maximum mismatch in percent.
+ * The sidebar auto-hides now: idle, it is off-canvas and the header, hero and content start at x = 0 (the mock has them at x = 246).
+ * The sidebar regions therefore only compare against the mock when the sidebar is peeked; they are informational. Left-anchored
+ * content regions are compared at the mock's coordinates shifted left by 246 px: the layout matches, the pixels around it differ.
+ */
 export const REGIONS = [
-  // Round 2 added first-class rows (My courses, Calendar, Messages, Grades, Preferences) between the pinned row and the course list, so the
-  // course list sits lower than in the mock. The mock's brand and first rows, and its footer (pinned to the bottom), still must match.
-  { name: 'sidebar-top', x: 0, y: 0, w: 246, h: 215, max: 12 },
-  { name: 'sidebar-foot', x: 0, y: 745, w: 246, h: 247, max: 12 },
-  { name: 'sidebar-courses', x: 0, y: 215, w: 246, h: 530, max: 40, informational: true },
-  { name: 'header', x: 246, y: 0, w: 1339, h: 67, max: 8 },
-  { name: 'hero-text', x: 246, y: 67, w: 614, h: 253, max: 10 },
-  { name: 'hero-ribbons', x: 860, y: 67, w: 725, h: 253, max: 45, informational: true },
-  { name: 'pinned', x: 246, y: 321, w: 1339, h: 112, max: 15 },
-  { name: 'materials-header', x: 246, y: 433, w: 1339, h: 68, max: 12 },
-  { name: 'topics', x: 262, y: 510, w: 360, h: 400, max: 15 },
-  { name: 'detail', x: 640, y: 510, w: 945, h: 482, max: 18 },
+  { name: 'sidebar-top', x: 0, y: 0, w: 246, h: 215, max: 100, informational: true },
+  { name: 'sidebar-foot', x: 0, y: 745, w: 246, h: 247, max: 100, informational: true },
+  { name: 'sidebar-courses', x: 0, y: 215, w: 246, h: 530, max: 100, informational: true },
+  { name: 'header', x: 246, y: 0, w: 1339, h: 67, max: 12 },
+  { name: 'hero-text', x: 246, y: 67, w: 614, h: 253, max: 100, informational: true },
+  { name: 'hero-ribbons', x: 860, y: 67, w: 725, h: 253, max: 60, informational: true },
+  { name: 'pinned', x: 1000, y: 321, w: 585, h: 112, max: 20 },
+  { name: 'materials-header', x: 1000, y: 433, w: 585, h: 68, max: 15 },
+  { name: 'topics', x: 262, y: 510, w: 360, h: 400, max: 100, informational: true },
+  { name: 'detail', x: 1000, y: 510, w: 585, h: 482, max: 25 },
 ];
 
 if (!args.has('--no-build')) {

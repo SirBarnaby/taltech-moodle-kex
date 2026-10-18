@@ -157,11 +157,19 @@ function visibleCourses() {
   return sortCourses(raw.filter((c) => matchesFilter(c, mcFilter.value)), mcSort.value, lastAccess.value);
 }
 
-function moveCourse(delta: 1 | -1): void {
+/** Cards per row of the course grid (cards on the first row share their top edge). */
+export function gridColumns(items: readonly { offsetTop: number }[]): number {
+  const first = items[0];
+  if (!first) return 1;
+  const n = items.findIndex((el) => el.offsetTop !== first.offsetTop);
+  return n < 0 ? items.length : Math.max(1, n);
+}
+
+function moveCourse(delta: 1 | -1, step = 1): void {
   const list = visibleCourses();
   if (!list.length) return;
   const i = list.findIndex((c) => c.id === mcSel.value);
-  const next = list[Math.max(0, Math.min(list.length - 1, i < 0 ? 0 : i + delta))];
+  const next = list[Math.max(0, Math.min(list.length - 1, i < 0 ? 0 : i + delta * step))];
   if (!next) return;
   mcSel.value = next.id;
   focusRow('data-kex-mc', next.id);
@@ -173,8 +181,11 @@ export function mycoursesBindings(): Binding[] {
   const out: Binding[] = [
     b('j', d('help.ws.move'), () => moveCourse(1)),
     b('k', d('help.ws.move'), () => moveCourse(-1)),
-    b('arrowdown', d('help.ws.move'), () => moveCourse(1), (e) => !interactive(e.target) && !!(e.target as Element | null)?.closest?.('.kex-mc')),
-    b('arrowup', d('help.ws.move'), () => moveCourse(-1), (e) => !interactive(e.target) && !!(e.target as Element | null)?.closest?.('.kex-mc')),
+    // The courses are a grid: up and down move a row, left and right a card.
+    b('arrowdown', d('help.ws.move'), () => moveCourse(1, gridColumns(Array.from(document.querySelectorAll<HTMLElement>('[data-kex-mc]')))), (e) => !interactive(e.target) && !!(e.target as Element | null)?.closest?.('.kex-mc')),
+    b('arrowup', d('help.ws.move'), () => moveCourse(-1, gridColumns(Array.from(document.querySelectorAll<HTMLElement>('[data-kex-mc]')))), (e) => !interactive(e.target) && !!(e.target as Element | null)?.closest?.('.kex-mc')),
+    b('arrowright', d('help.ws.move'), () => moveCourse(1), (e) => !interactive(e.target) && !!(e.target as Element | null)?.closest?.('.kex-mc')),
+    b('arrowleft', d('help.ws.move'), () => moveCourse(-1), (e) => !interactive(e.target) && !!(e.target as Element | null)?.closest?.('.kex-mc')),
     b('enter', d('help.ws.open'), () => {
       const c = cur();
       if (c) go(c.url);
