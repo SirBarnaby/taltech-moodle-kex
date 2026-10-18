@@ -1,9 +1,9 @@
+import { motionTier } from './motion';
 /** Short, interruptible view changes. Visual copies never delay the real route or receive input. */
 const running = new Map<string, () => void>();
 
 export function viewMotionAllowed(): boolean {
-  const { kexMotion, kexInput } = document.documentElement.dataset;
-  return kexMotion !== 'reduced' && kexInput !== 'keyboard';
+  return motionTier() !== 'none';
 }
 
 export function cancelViewTransitions(): void {
