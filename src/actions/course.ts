@@ -1,4 +1,5 @@
 import { effect } from '@preact/signals';
+import { beginViewTransition } from '../fx/navigation';
 import { cache } from '../data/cache';
 import type { Pin } from '../data/model';
 import type { NavTab } from '../data/scrape/secondarynav';
@@ -6,6 +7,7 @@ import { hydrateDetails, loadDetails, seedDetails, setManualDone, staleIds } fro
 import { courseEventsStore } from '../data/repo/courseevents';
 import { cmsOfSection, courseStateStore, subsectionMap, topicNumberOfCm, topicSections, type CourseState } from '../data/repo/coursestate';
 import { hydrateModNames, loadModNames } from '../data/repo/modnames';
+import { isReadableMaterial } from '../data/repo/preview';
 import { readCourseUi, writeCourseUi } from '../data/repo/ui';
 import { parseCmItems } from '../data/scrape/cm';
 import { scrapeSecondaryNav } from '../data/scrape/secondarynav';
@@ -168,7 +170,9 @@ function onPop(): void {
   if (!st) return;
   const n = parseTopicHash(location.hash);
   if (n !== undefined && topics.value.some((x) => x.section.number === n)) {
+    const enter = beginViewTransition(document.querySelector<HTMLElement>('.kex-detail'), 'topic');
     topicNumber.value = n;
+    enter('.kex-detail');
   }
 }
 
@@ -288,8 +292,14 @@ function idle(fn: () => void): void {
 /** Switch topic. `user` navigations add a history entry (coalesced while the user keeps pressing j/k). */
 export function setTopic(n: number, opts: { push?: boolean; focus?: boolean } = {}): void {
   if (!topics.value.some((x) => x.section.number === n)) return;
+  if (topicNumber.value === n) {
+    if (opts.focus) focusTopic(n);
+    return;
+  }
+  const enter = beginViewTransition(document.querySelector<HTMLElement>('.kex-detail'), 'topic');
   performance.mark('kex:topic-switch');
   topicNumber.value = n;
+  enter('.kex-detail');
   selectedCmId.value = undefined;
   writeCourseUi(courseId, { topic: n });
   const url = new URL(location.href);
@@ -352,8 +362,17 @@ export function currentRow(): RowModel | undefined {
 
 // -------------------------------------------------------------------- row actions
 
-/** URL modules open in a new tab by default (settings.openInNewTab). */
 export function openCm(row: RowModel, newTab = false): void {
+  if (row.locked || row.kind === 'note') return;
+  if (!newTab && settings.value.openInNewTab !== 'always' && isReadableMaterial(row)) {
+    previewCm(row);
+    return;
+  }
+  openCmOriginal(row, newTab);
+}
+
+/** Explicit escape to Moodle's original page; reader controls must not reopen the reader. */
+export function openCmOriginal(row: RowModel, newTab = false): void {
   const external = row.cm.modname === 'url';
   const pref = settings.value.openInNewTab;
   const tabbed = newTab || pref === 'always' || (pref === 'external' && external);
@@ -366,9 +385,7 @@ export function previewCm(row: RowModel): void {
 }
 
 export function closePreview(): void {
-  const id = previewCmId.value;
   previewCmId.value = undefined;
-  if (id !== undefined) focusRow(id);
 }
 
 /** Next or previous material in the current list (preview navigation). */

@@ -1,5 +1,6 @@
 import { sanitizeHtml } from '../../lib/sanitize';
 import { ws } from '../ws';
+import type { RowModel } from '../topics';
 
 /** What the preview sheet can show for a material (design-spec §7). */
 export type PreviewContent =
@@ -11,6 +12,26 @@ export type PreviewContent =
 const FRAMEABLE = /^(application\/pdf|image\/|video\/|audio\/|text\/plain)/;
 
 const cache = new Map<number, PreviewContent>();
+
+/** Reading stays in context; activities that submit work keep Moodle's own page. */
+export const isReadableMaterial = (row: RowModel): boolean => !row.locked && row.kind !== 'note' && ['resource', 'page', 'url'].includes(row.cm.modname);
+
+function linkContent(href: string, base: string): PreviewContent {
+  try {
+    const u = new URL(href, base);
+    return /^https?:$/.test(u.protocol) ? { kind: 'link', href: u.href, domain: domainOf(u.href) } : { kind: 'none' };
+  } catch {
+    return { kind: 'none' };
+  }
+}
+
+function frameContent(src: string, base: string, type: string): PreviewContent {
+  const link = linkContent(src, base);
+  if (link.kind !== 'link' || new URL(link.href).origin !== new URL(base).origin) return link;
+  const inline = new URL(link.href);
+  if (inline.searchParams.has('forcedownload')) inline.searchParams.set('forcedownload', '0');
+  return { kind: 'frame', src: inline.href, download: downloadUrl(link.href), type };
+}
 
 const withParam = (url: string, k: string, v: string): string => {
   const u = new URL(url, location.href);
@@ -38,13 +59,12 @@ export function previewFromHtml(modname: string, html: string, base: string): Pr
   }
   if (modname === 'url') {
     const href = doc.querySelector<HTMLAnchorElement>('.urlworkaround a, #urlobject, .url-workaround a')?.getAttribute('href');
-    return href ? { kind: 'link', href, domain: domainOf(href) } : { kind: 'none' };
+    return href ? linkContent(href, base) : { kind: 'none' };
   }
   if (modname === 'resource') {
     const src = doc.querySelector('iframe#resourceobject')?.getAttribute('src') ?? doc.querySelector('object#resourceobject')?.getAttribute('data') ?? doc.querySelector('.resourceworkaround a')?.getAttribute('href');
     if (src) {
-      const abs = new URL(src, base).href;
-      return { kind: 'frame', src: abs, download: downloadUrl(abs), type: 'application/pdf' };
+      return frameContent(src, base, 'application/pdf');
     }
   }
   return { kind: 'none' };
@@ -53,14 +73,19 @@ export function previewFromHtml(modname: string, html: string, base: string): Pr
 export async function loadPreview(cmid: number, modname: string, url: string): Promise<PreviewContent> {
   const hit = cache.get(cmid);
   if (hit) return hit;
+  const original = linkContent(url, location.href);
+  if (original.kind !== 'link') return { kind: 'none' };
+  if (new URL(original.href).origin !== location.origin) return original;
   let out: PreviewContent = { kind: 'none' };
   if (modname === 'resource') {
-    const r = await ws.probe(withParam(url, 'redirect', '1'));
-    if (r.html) out = previewFromHtml(modname, r.html, r.url);
-    else if (FRAMEABLE.test(r.type)) out = { kind: 'frame', src: r.url, download: downloadUrl(r.url), type: r.type };
+    const r = await ws.probe(withParam(original.href, 'redirect', '1'));
+    if (new URL(r.url).origin !== location.origin) out = linkContent(r.url, url);
+    else if (r.html) out = previewFromHtml(modname, r.html, r.url);
+    else if (FRAMEABLE.test(r.type)) out = frameContent(r.url, original.href, r.type);
   } else if (modname === 'page' || modname === 'url') {
-    const r = await ws.probe(url);
-    if (r.html) out = previewFromHtml(modname, r.html, r.url);
+    const r = await ws.probe(original.href);
+    if (new URL(r.url).origin !== location.origin) out = linkContent(r.url, url);
+    else if (r.html) out = previewFromHtml(modname, r.html, r.url);
   }
   cache.set(cmid, out);
   return out;

@@ -1,9 +1,22 @@
 /* Login (page-designs §1): full-height canvas on the left, the sign-in panel (sidebar gradient) on the right. */
+:root[data-kex="app"][data-kex-view="login"] body.pagelayout-login {
+  width: 100%;
+  min-width: 0;
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--kex-sb-bg);
+}
+:root[data-kex="app"][data-kex-view="login"] #kex-root {
+  width: 100%;
+  min-height: 100dvh;
+}
 #kex-root {
   .kex-login {
     display: grid;
     grid-template-columns: 58fr 42fr;
     min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
     background: var(--kex-sb-bg);
     color: var(--kex-sb-text);
   }

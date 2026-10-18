@@ -1,10 +1,12 @@
 import { CircleCheck, Eye } from 'lucide-preact';
 import type { RowModel } from '../../data/topics';
+import type { GradeStat } from '../../data/scrape/grades';
 import { t } from '../../i18n';
 import { sanitizeHtml } from '../../lib/sanitize';
 import { Button } from './Button';
 import { PinGlyph } from './Glyphs';
 import { Thumb, thumbVariant } from './Thumb';
+import { GradeMeter } from './GradeMeter';
 
 interface ResourceRowProps {
   row: RowModel;
@@ -17,6 +19,8 @@ interface ResourceRowProps {
   selected: boolean;
   /** Stagger index for the entry animation (rows past 8 appear instantly). */
   enter?: number;
+  /** Grade from Moodle's user report, keyed by this activity's cmid. */
+  grade?: GradeStat;
   onSelect: (cmid: number) => void;
   onOpen: (row: RowModel, newTab: boolean) => void;
   onPreview: (row: RowModel) => void;
@@ -27,7 +31,7 @@ interface ResourceRowProps {
 const isModified = (e: MouseEvent): boolean => e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0;
 
 /** One material (design-spec §4.9): thumb, mono label, title, subtitle, actions, primary button. */
-export function ResourceRow({ row, index, topicNumber, pinned, primary, selected, enter, onSelect, onOpen, onPreview, onPin, onDone }: ResourceRowProps) {
+export function ResourceRow({ row, index, topicNumber, pinned, primary, selected, enter, grade, onSelect, onOpen, onPreview, onPin, onDone }: ResourceRowProps) {
   if (row.kind === 'note') {
     return (
       <li class="kex-row kex-row--note" data-kex-note={row.cm.id}>
@@ -82,6 +86,7 @@ export function ResourceRow({ row, index, topicNumber, pinned, primary, selected
           )}
         </h4>
         {subtitle && <p class="kex-row__sub">{subtitle}</p>}
+        {!row.locked && grade && <GradeMeter grade={grade} />}
         {!row.locked && (
           <div class="kex-row__actions" role="group" aria-label={t('row.actions', { title: row.title })}>
             <button type="button" class="kex-act" data-act="preview" onClick={() => onPreview(row)}>

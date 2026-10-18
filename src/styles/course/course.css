@@ -231,31 +231,36 @@
     transition: left 220ms var(--kex-ease), width 220ms var(--kex-ease), opacity 120ms linear;
   }
 
-  /* ---- two columns ---- */
+  /* Topics remain a single strip, leaving the full reading width to the selected section. */
   .kex-body {
     position: relative;
     display: grid;
-    grid-template-columns: var(--kex-topics-w) minmax(0, 1fr);
-    column-gap: 63px;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 24px;
     padding-top: 22px;
     align-items: start;
-    &::before {
-      content: "";
-      position: absolute;
-      left: calc(var(--kex-topics-w) + 29px);
-      top: 22px;
-      bottom: 0;
-      width: 1px;
-      background: var(--kex-divider-v);
-    }
   }
 
   /* ---- TOPICS ---- */
   .kex-topics {
     position: sticky;
-    top: calc(var(--kex-header-h-compact) + 24px);
-    padding-top: 5px;
+    top: var(--kex-header-h-compact);
+    z-index: 12;
+    padding: 12px 0 8px;
+    background: var(--kex-bg);
     min-width: 0;
+  }
+  .kex-topics__list {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--kex-border-card) transparent;
+    scroll-padding-inline: 4px;
+    padding: 3px 2px 8px;
+    margin: 0;
+    > li { flex: 0 0 clamp(180px, 22vw, 280px); min-width: 0; }
   }
   .kex-topics__label {
     height: 16px;
@@ -270,10 +275,11 @@
     position: relative;
     display: flex;
     align-items: center;
-    height: 52px;
-    padding: 0 17px 0 19px;
-    border-bottom: 1px solid var(--kex-border);
-    font-size: 19.25px;
+    height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--kex-border);
+    border-radius: var(--kex-r-s);
+    font-size: 16px;
     line-height: 24px;
     color: var(--kex-text-2);
     transition: background 140ms var(--kex-ease), color 140ms var(--kex-ease);
@@ -438,6 +444,7 @@
     font-size: 16px;
     line-height: 24px;
     color: var(--kex-text-2);
+    overflow-wrap: anywhere;
     a {
       color: var(--kex-violet);
       text-decoration: underline;
@@ -510,8 +517,8 @@
     opacity: 0.55;
   }
   .kex-row--enter {
-    animation: kex-row-in 220ms var(--kex-ease) both;
-    animation-delay: calc(var(--kex-enter, 0) * 40ms);
+    animation: kex-row-in 160ms cubic-bezier(.23, 1, .32, 1) both;
+    animation-delay: calc(var(--kex-enter, 0) * 16ms);
   }
   .kex-row--note {
     display: block;
@@ -736,10 +743,10 @@
     margin: 6px 0;
   }
   .kex-skel--w1 {
-    width: 260px;
+    width: min(260px, 100%);
   }
   .kex-skel--w2 {
-    width: 140px;
+    width: min(140px, 75%);
   }
   .kex-skel--btn {
     width: 148px;
@@ -764,7 +771,7 @@
     transform: none;
   }
 }
-:root[data-kex-motion="reduced"] #kex-root .kex-row--enter {
+:root:is([data-kex-motion="reduced"], [data-kex-input="keyboard"]) #kex-root .kex-row--enter {
   animation: none;
 }
 #kex-root[data-quiet] :focus-visible {
@@ -902,4 +909,38 @@
       right: 12px;
     }
   }
+}
+
+/* Reading and actions stay useful when the browser occupies half a desktop. */
+#kex-root .kex-course .kex-pinned:not(:has(.kex-pin:not(.kex-pin--empty))) { display: none; }
+#kex-root .kex-course .kex-detail { position: relative; }
+#kex-root .kex-navigation-skeleton { padding-top: 64px; }
+#kex-root .kex-row__title a { overflow-wrap: anywhere; }
+#kex-root .kex-row__actions { flex-wrap: wrap; height: auto; min-height: 24px; row-gap: 10px; }
+#kex-root :is(.kex-btn, .kex-iconbtn, .kex-act) { transition: transform 120ms cubic-bezier(.23,1,.32,1), background-color 120ms ease, color 120ms ease; }
+#kex-root :is(.kex-btn, .kex-iconbtn, .kex-act):active { transform: scale(.97); }
+:root[data-kex-input="keyboard"] #kex-root :is(.kex-btn, .kex-iconbtn, .kex-act) { transition: none; }
+@media (max-width: 1100px) {
+  #kex-root .kex-course .kex-matheader { flex-wrap: wrap; gap: 8px; }
+  #kex-root .kex-course .kex-matheader__title { font-size: 32px; line-height: 1.15; }
+  #kex-root .kex-course .kex-coursenav { min-width: 0; }
+  #kex-root .kex-row { grid-template-columns: 96px minmax(0, 1fr) auto; column-gap: 20px; }
+  #kex-root .kex-row > .kex-thumb { width: 96px; height: 66px; }
+  #kex-root .kex-row > .kex-btn { width: 112px; height: 40px; font-size: 16px; }
+  #kex-root .kex-row__note { margin-left: 116px; }
+  #kex-root .kex-act { gap: 8px; }
+  #kex-root .kex-act + .kex-act { margin-left: 14px; padding-left: 14px; }
+  #kex-root .kex-groupcard { padding-inline: 16px; }
+}
+@media (max-width: 700px) {
+  #kex-root .kex-content { padding-inline: 20px; }
+  #kex-root .kex-row { grid-template-columns: 72px minmax(0, 1fr); gap: 10px 16px; }
+  #kex-root .kex-row > .kex-thumb { width: 72px; height: 50px; }
+  #kex-root .kex-row > .kex-btn { grid-column: 2; justify-self: start; width: auto; min-width: 112px; padding-inline: 16px; }
+  #kex-root .kex-row__note { margin-left: 0; }
+  #kex-root .kex-topic { font-size: 15px; }
+  #kex-root .kex-detail__summary { font-size: 16px; line-height: 1.6; }
+  #kex-root .kex-detail__title { font-size: 32px; line-height: 1.2; }
+  #kex-root .kex-course .kex-pinned__box { overflow-x: auto; }
+  #kex-root .kex-course .kex-pin { min-width: 220px; }
 }

@@ -7,7 +7,7 @@ import { lang } from '../i18n';
 import { schoolFor, type SchoolId } from '../lib/school';
 import type { UserMenuItem } from '../data/scrape/usermenu';
 import { DEFAULT_SETTINGS, type Settings } from '../lib/settings';
-import { prefersDark, resolveMotion, resolveTheme, sidebarModeFor } from '../lib/theme';
+import { prefersDark, prefersReducedMotion, resolveMotion, resolveTheme, sidebarModeFor } from '../lib/theme';
 
 /** Central signal stores (architecture §11.4). Views read signals; actions are plain functions in src/actions. */
 
@@ -24,6 +24,7 @@ export const coursesRaw = signal<Course[]>([]);
 export const coursesLoading = signal(true);
 
 export const systemDark = signal(prefersDark());
+export const systemReducedMotion = signal(prefersReducedMotion());
 /** `location.hash`, kept in a signal so views (tabs, Pinned) follow hash changes. */
 export const hash = signal(typeof location === 'undefined' ? '' : location.hash);
 export const viewportWidth = signal(typeof window === 'undefined' ? 1585 : window.innerWidth);
@@ -32,7 +33,10 @@ export const resolvedTheme = computed(() => {
   void systemDark.value; // re-evaluate when the OS preference flips
   return resolveTheme(settings.value.theme);
 });
-export const resolvedMotion = computed(() => resolveMotion(settings.value.motion));
+export const resolvedMotion = computed(() => {
+  void systemReducedMotion.value;
+  return resolveMotion(settings.value.motion);
+});
 export const sidebarMode = computed(() =>
   sidebarModeFor(viewportWidth.value, settings.value.sidebarCollapsed || (route.value?.key === 'quiz-focus' && route.value.effective === 'skin')),
 );
@@ -98,6 +102,8 @@ export const quickSettingsOpen = signal(false);
 export const userMenuOpen = signal(false);
 /** Rail sidebar expanded as an overlay, or the drawer opened (narrow viewports). */
 export const sidebarOverlay = signal(false);
+/** Keyboard-triggered sidebar changes are immediate. Pointer changes use the drawer transition. */
+export const sidebarInstant = signal(false);
 
 /** Header is in its compact (scrolled) state. */
 export const headerCompact = signal(false);

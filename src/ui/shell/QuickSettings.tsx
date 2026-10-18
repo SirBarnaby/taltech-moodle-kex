@@ -46,6 +46,10 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
         />
       </div>
       <div class="kex-pop__row">
+        <label class="kex-pop__rowlabel" for="kex-qs-sidebar">{t('settings.sidebarAutoHide')}</label>
+        <Switch id="kex-qs-sidebar" label={t('settings.sidebarAutoHide')} checked={s.sidebarAutoHide} onChange={(sidebarAutoHide) => updateSettings({ sidebarAutoHide })} />
+      </div>
+      <div class="kex-pop__row">
         <label class="kex-pop__rowlabel" for="kex-qs-on">{t('settings.kexOnPage')}</label>
         <Switch
           id="kex-qs-on"

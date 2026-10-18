@@ -16,6 +16,8 @@ import { Palette } from './Palette';
 import { SessionBanner } from './SessionBanner';
 import { Sidebar } from './Sidebar';
 import { Toasts } from './Toasts';
+import { navigationLoading } from '../../state/navigation';
+import { NavigationSkeleton } from '../components/NavigationSkeleton';
 
 /** Scroll thresholds with hysteresis (design-spec §8.2): compact above 24px, expanded again at 8px or less. */
 export const COMPACT_ON = 24;
@@ -90,6 +92,7 @@ function View() {
   const r = route.value;
   if (r?.effective === 'skin' && chromeKeys.has(r.key)) return <SkinChrome />;
   if (r?.effective !== 'app') return null;
+  if (r.key === 'grades' && navigationLoading.value) return <NavigationSkeleton />;
   // Keyed by course: a soft navigation from one course to another mounts a fresh view (state, hero, effects).
   if (r.key === 'course' || r.key === 'section') return <CourseView key={activeCourseId.value ?? 0} />;
   if (r.key === 'workspace') return hash.value === '#pinned' ? <PinnedView /> : <WorkspaceView />;

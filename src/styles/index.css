@@ -4,6 +4,7 @@
 @import "./tokens.css";
 @import "./base.css";
 @import "./components/controls.css";
+@import "./components/grade-meter.css";
 @import "./shell/sidebar.css";
 @import "./shell/header.css";
 @import "./shell/popover.css";

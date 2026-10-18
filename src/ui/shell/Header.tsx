@@ -1,10 +1,10 @@
 import { Menu, Moon, Search, Sun } from 'lucide-preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { stripBase } from '../../content/router';
-import { toggleTheme } from '../../actions/theme';
+import { toggleSidebar, toggleTheme } from '../../actions/theme';
 import { t } from '../../i18n';
 import {
-  hash, headerCompact, headerTitle, pageInfo, paletteOpen, resolvedTheme, sidebarCourses, sidebarMode, sidebarOverlay,
+  hash, headerCompact, headerTitle, pageInfo, paletteOpen, resolvedTheme, settings, sidebarCourses, sidebarMode, sidebarOverlay,
 } from '../../state';
 import { IconButton } from '../components/IconButton';
 import { buildBreadcrumb, collapseBreadcrumb, type ShellCrumb } from './breadcrumb';
@@ -92,11 +92,15 @@ export function Header() {
 
   return (
     <header class="kex-header" role="banner" data-kex-test="header" data-compact={compact ? 'true' : 'false'}>
-      {mode === 'drawer' && (
-        <IconButton label={t('sidebar.open')} class="kex-header__menu" expanded={sidebarOverlay.value} onClick={() => (sidebarOverlay.value = !sidebarOverlay.value)}>
+      <IconButton
+        label={settings.value.sidebarAutoHide || mode === 'drawer' ? (sidebarOverlay.value ? t('sidebar.close') : t('sidebar.open')) : t('sidebar.toggle')}
+        testId="sidebar-toggle"
+        class="kex-header__menu"
+        expanded={settings.value.sidebarAutoHide || mode === 'drawer' ? sidebarOverlay.value : mode === 'full' || sidebarOverlay.value}
+        onClick={(e) => toggleSidebar(e.detail === 0)}
+      >
           <Menu size={20} strokeWidth={1.75} aria-hidden="true" />
-        </IconButton>
-      )}
+      </IconButton>
       <Crumbs crumbs={crumbs} />
       <div class="kex-header__title" data-kex-test="header-title" aria-live="polite">
         {title && (

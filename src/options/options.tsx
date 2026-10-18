@@ -203,6 +203,9 @@ function Options() {
       </Section>
 
       <Section id="o-sidebar" title={t('ext.sidebar')}>
+        <Row label={t('settings.sidebarAutoHide')} hint={t('ext.sidebarAutoHideHint')} htmlFor="o-autohide">
+          <Switch id="o-autohide" label={t('settings.sidebarAutoHide')} checked={s.sidebarAutoHide} onChange={(sidebarAutoHide) => update({ sidebarAutoHide })} />
+        </Row>
         <Row label={t('ext.sidebarSource')} hint={t('ext.sidebarSourceHint')} htmlFor="o-source">
           <select id="o-source" class="ext-select" value={s.sidebarSource} onChange={(e) => update({ sidebarSource: e.currentTarget.value as typeof s.sidebarSource })}>
             <option value="moodle">{t('ext.source.moodle')}</option>
@@ -211,9 +214,9 @@ function Options() {
             <option value="all">{t('ext.source.all')}</option>
           </select>
         </Row>
-        <Row label={t('ext.collapsed')} htmlFor="o-collapsed">
+        {!s.sidebarAutoHide && <Row label={t('ext.collapsed')} htmlFor="o-collapsed">
           <Switch id="o-collapsed" label={t('ext.collapsed')} checked={s.sidebarCollapsed} onChange={(sidebarCollapsed) => update({ sidebarCollapsed })} />
-        </Row>
+        </Row>}
         <div class="ext-block">
           <div class="ext-label">{t('ext.aliases')}</div>
           {aliasRows.length === 0 ? (

@@ -152,6 +152,11 @@ describe('preview content', () => {
     expect(downloadUrl('http://l/p.pdf')).toBe('http://l/p.pdf?forcedownload=1');
     expect(domainOf('not a url')).toBe('not a url');
   });
+  it('offers external resource objects as safe links and rejects executable URL cards', () => {
+    expect(previewFromHtml('resource', '<iframe id="resourceobject" src="https://external.example/notes.pdf"></iframe>', base)).toEqual({ kind: 'link', href: 'https://external.example/notes.pdf', domain: 'external.example' });
+    expect(previewFromHtml('url', '<div class="urlworkaround"><a href="javascript:alert(1)">open</a></div>', base)).toEqual({ kind: 'none' });
+    expect(previewFromHtml('url', '<div class="urlworkaround"><a href="/read">open</a></div>', base)).toEqual({ kind: 'link', href: 'http://l:8080/read', domain: 'l' });
+  });
 });
 
 describe('Slide Up Text splitting', () => {

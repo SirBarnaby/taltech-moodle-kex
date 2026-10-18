@@ -1,4 +1,9 @@
-import { effect } from '@preact/signals';
+import { batch, effect } from '@preact/signals';
+import { seedDetails } from '../data/repo/cmdetails';
+import { parseCmItems } from '../data/scrape/cm';
+import { scrapeSecondaryNav } from '../data/scrape/secondarynav';
+import { beginViewTransition, cancelViewTransitions } from '../fx/navigation';
+import { navigationLoading } from '../state/navigation';
 import { cache } from '../data/cache';
 import { createCoursesStore, loadCustomField } from '../data/repo/courses';
 import { cachedUser, fetchUser, storeUser } from '../data/repo/user';
@@ -19,7 +24,7 @@ import { configureCounts, countsStore } from '../data/repo/counts';
 import { configureNotifs } from '../data/repo/notifs';
 import { prefetchStates } from '../data/repo/prefetch';
 import { wsPreview } from '../state/workspace';
-import { previewCmId, summaries } from '../state/course';
+import { courseState, courseStatus, previewCmId, secondaryNav, summaries, topicNumber } from '../state/course';
 import { scrapeTtLinks, scrapeUser } from '../data/scrape/user';
 import { scrapeUserMenu } from '../data/scrape/usermenu';
 import { ws } from '../data/ws';
@@ -38,7 +43,7 @@ import { mountLogin, mountShell, unmountShell } from '../ui/mount';
 import { scrapeLogin } from '../data/scrape/login';
 import {
   activeSchool, coursesLoading, coursesRaw, hash as hashSig, headerCompact, headerTitle, hooks, languages, logoSrc, pageDoc, pageInfo, resolvedMotion, resolvedTheme, route as routeSig,
-  search as searchSig, settings, sidebarCourses, sidebarMode, systemDark, ttLinks, user, userMenuItems, viewportWidth,
+  search as searchSig, settings, sidebarCourses, sidebarMode, systemDark, systemReducedMotion, ttLinks, user, userMenuItems, viewportWidth,
 } from '../state';
 import { updateSettings } from '../actions/settings';
 import { pushToast } from '../actions/toasts';
@@ -106,6 +111,12 @@ class Controller {
     this.settingsLoaded = loadSettings().catch(() => DEFAULT_SETTINGS);
     watchSettings((s) => this.onRemoteSettings(s));
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => (systemDark.value = e.matches));
+    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
+      systemReducedMotion.value = e.matches;
+      if (e.matches) cancelViewTransitions();
+    });
+    document.addEventListener('pointerdown', () => { this.html.dataset.kexInput = 'pointer'; }, true);
+    window.addEventListener('keydown', () => { this.html.dataset.kexInput = 'keyboard'; }, true);
 
     if (!readBootMirror().enabled) {
       void this.settingsLoaded.then((s) => this.goDisabled(s));
@@ -117,7 +128,7 @@ class Controller {
 
   // ---------------------------------------------------------------- boot
 
-  private applyAttrs(s: Pick<Settings, 'theme' | 'effects' | 'motion' | 'sidebarCollapsed'>): void {
+  private applyAttrs(s: Pick<Settings, 'theme' | 'effects' | 'motion' | 'sidebarCollapsed' | 'sidebarAutoHide'>): void {
     const focus = this.route?.key === 'quiz-focus' && this.route.effective === 'skin';
     applyShellAttrs(this.html, shellAttrs(focus ? { ...s, sidebarCollapsed: true } : s, window.innerWidth));
   }
@@ -459,6 +470,13 @@ class Controller {
       const tiles = scrapeTiles(doc);
       if (tiles.length) setTileList(tiles);
       summaries.value = scrapeSummaries(doc);
+      const nav = scrapeSecondaryNav(doc);
+      secondaryNav.value = nav;
+      const id = this.info?.courseId;
+      if (id) {
+        seedDetails(id, parseCmItems(doc));
+        if (nav.length) void cache.write(`snav:${id}`, nav);
+      }
     }
   }
 
@@ -581,13 +599,15 @@ class Controller {
     const seq = ++this.navSeq;
     const hard = (): void => {
       if (seq !== this.navSeq) return;
+      cancelViewTransitions();
+      navigationLoading.value = false;
       this.html.removeAttribute('data-kex-nav');
       if (push) window.location.assign(url.href);
       else window.location.reload();
     };
     try {
       // Only the query or hash of the Workspace or My courses changed (the course filter, the list tab): the same view, nothing to load.
-      if (this.route?.key === target.key && (target.key === 'workspace' || target.key === 'mycourses')) {
+      if (!navigationLoading.value && this.route?.key === target.key && (target.key === 'workspace' || target.key === 'mycourses')) {
         if (push) {
           history.replaceState({ ...(history.state as object | null), kexScroll: window.scrollY }, '');
           history.pushState({ kex: 1 }, '', url.href);
@@ -598,30 +618,32 @@ class Controller {
         return;
       }
       this.html.dataset.kexNav = 'loading';
-      let doc: Document | null = null;
-      if (target.needsDoc) {
-        doc = await Promise.race([
-          this.loader.load(url),
-          new Promise<never>((_, rej) => window.setTimeout(() => rej(new Error('soft navigation timed out')), 8000)),
+      const enter = beginViewTransition(this.root?.querySelector<HTMLElement>('.kex-main .kex-content') ?? null, 'page');
+      // Begin the request and mount the destination together. A detached empty document prevents the new course
+      // from scraping the previous course's still-hidden Moodle DOM while its own HTML is in flight.
+      const page = this.loader.load(url);
+      navigationLoading.value = true;
+      if (push) {
+        history.replaceState({ ...(history.state as object | null), kexScroll: window.scrollY }, '');
+        history.pushState({ kex: 1 }, '', url.href);
+      }
+      this.swapView(target, document.implementation.createHTMLDocument(''), url);
+      enter('.kex-main .kex-content');
+      let timeout: number | undefined;
+      try {
+        const doc = await Promise.race([
+          page,
+          new Promise<never>((_, rej) => { timeout = window.setTimeout(() => rej(new Error('soft navigation timed out')), 8000); }),
         ]);
         if (seq !== this.navSeq) return; // a newer click won
         // The page says what it really is: editing mode, an embedded layout, or a route the user set to another mode.
         const real = routeOfDoc(doc, target.path, settings.value.routeModes);
         if (real.key !== target.key || real.effective !== 'app') return hard();
-      }
-      if (seq !== this.navSeq) return;
-      if (push) {
-        history.replaceState({ ...(history.state as object | null), kexScroll: window.scrollY }, '');
-        history.pushState({ kex: 1 }, '', url.href);
-      }
-      this.swapView(target, doc, url);
-      this.html.removeAttribute('data-kex-nav');
-      // Views that did not need the page up front read their scrape data from it as it arrives (and the title).
-      if (!doc) {
-        void this.loader.load(url).then((d) => {
-          if (seq !== this.navSeq || this.viewUrl !== url.pathname + url.search) return;
-          this.applyPageDoc(target.route, d);
-        }).catch(() => undefined);
+        this.applyPageDoc(target.route, doc);
+        navigationLoading.value = false;
+        this.html.removeAttribute('data-kex-nav');
+      } finally {
+        window.clearTimeout(timeout);
       }
     } catch (e) {
       recordError('softnav', e);
@@ -640,15 +662,25 @@ class Controller {
     this.viewUrl = url.pathname + url.search;
     const prev = this.info!;
     const courseId = target.courseId ?? 0;
-    const next: PageInfo = { ...prev, courseId, cmId: null, contextId: null, bodyId: '', breadcrumb: [], heading: '', kicker: '', format: '', pageLayout: '' };
+    const course = sidebarCourses.value.find((c) => c.id === courseId);
+    const next: PageInfo = { ...prev, courseId, cmId: null, contextId: null, bodyId: '', breadcrumb: [], heading: course?.name ?? '', kicker: '', format: '', pageLayout: '' };
     this.info = next;
-    pageDoc.value = doc;
-    pageInfo.value = next;
-    searchSig.value = location.search;
-    hashSig.value = location.hash;
-    routeSig.value = target.route;
-    headerTitle.value = null;
-    headerCompact.value = false;
+    batch(() => {
+      pageDoc.value = doc;
+      if (target.key === 'course') {
+        courseState.value = undefined;
+        courseStatus.value = 'loading';
+        topicNumber.value = undefined;
+        summaries.value = new Map();
+        secondaryNav.value = [];
+      }
+      pageInfo.value = next;
+      searchSig.value = location.search;
+      hashSig.value = location.hash;
+      routeSig.value = target.route;
+      headerTitle.value = null;
+      headerCompact.value = false;
+    });
     this.mountRoute(target.route);
     if (doc) this.applyPageDoc(target.route, doc);
     window.scrollTo(0, 0);
@@ -669,7 +701,7 @@ class Controller {
       const merged: PageInfo = {
         ...cur,
         bodyId: parsed.bodyId, pageLayout: parsed.pageLayout, format: parsed.format,
-        breadcrumb: parsed.breadcrumb, heading: parsed.heading, kicker: parsed.kicker,
+        breadcrumb: parsed.breadcrumb, heading: parsed.heading || cur.heading, kicker: parsed.kicker,
       };
       this.info = merged;
       pageInfo.value = merged;
@@ -712,6 +744,9 @@ class Controller {
   // ---------------------------------------------------------------- unmount, off, errors
 
   private unmount(): void {
+    this.navSeq++;
+    navigationLoading.value = false;
+    cancelViewTransitions();
     this.stops.splice(0).forEach((s) => s());
     this.unmountRoute();
     pageDoc.value = null;

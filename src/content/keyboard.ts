@@ -1,9 +1,8 @@
 import { go, homeUrl, PAGES } from '../actions/navigate';
-import { toggleTheme } from '../actions/theme';
-import { updateSettings } from '../actions/settings';
+import { toggleSidebar, toggleTheme } from '../actions/theme';
 import type { MessageKey } from '../i18n';
 import { KeyManager, type Binding } from '../lib/keys';
-import { helpOpen, hooks, paletteOpen, quickSettingsOpen, sidebarCourses, sidebarMode, sidebarOverlay, userMenuOpen } from '../state';
+import { helpOpen, hooks, paletteOpen, quickSettingsOpen, sidebarCourses, sidebarOverlay, userMenuOpen } from '../state';
 
 /** The one keydown listener for the whole page (architecture §11.5). */
 export const keyManager = new KeyManager(window);
@@ -20,7 +19,7 @@ function closeTopOverlay(): void {
   const top = topOverlay();
   if (top === 'palette') paletteOpen.value = false;
   else if (top === 'help') helpOpen.value = false;
-  else if (top === 'sidebar') sidebarOverlay.value = false;
+  else if (top === 'sidebar') toggleSidebar(true);
 }
 
 function nthCourse(n: number): void {
@@ -37,14 +36,7 @@ function stepCourse(delta: 1 | -1): void {
   if (c) go(c.url);
 }
 
-/** Sidebar collapse (wide) or overlay (rail and drawer). */
-export function toggleSidebar(): void {
-  if (sidebarMode.value === 'full' || (sidebarMode.value === 'rail' && !sidebarOverlay.value && window.innerWidth >= 1100)) {
-    updateSettings({ sidebarCollapsed: sidebarMode.value === 'full' });
-    return;
-  }
-  sidebarOverlay.value = !sidebarOverlay.value;
-}
+export { toggleSidebar } from '../actions/theme';
 
 const openPalette = (e: KeyboardEvent): void => {
   e.preventDefault();
@@ -73,7 +65,7 @@ export function globalBindings(): Binding[] {
     { keys: 't', scope: 'global', group: 'General', description: d('help.theme'), run: toggleTheme },
     { keys: 'ctrl+b', scope: 'global', group: 'General', description: d('help.sidebar'), allowInInput: true, run: (e) => {
       e.preventDefault();
-      toggleSidebar();
+      toggleSidebar(true);
     } },
     { keys: 'escape', scope: 'global', group: 'General', description: d('help.escape'), allowInInput: true, when: () => topOverlay() !== null,
       run: closeTopOverlay },

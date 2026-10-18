@@ -41,14 +41,16 @@ export interface ShellAttrs {
   effects: EffectsSetting;
   motion: 'reduced' | 'full';
   sidebar: SidebarMode;
+  sidebarAutoHide: boolean;
 }
 
-export function shellAttrs(m: Pick<BootMirror, 'theme' | 'effects' | 'motion' | 'sidebarCollapsed'>, width: number): ShellAttrs {
+export function shellAttrs(m: Pick<BootMirror, 'theme' | 'effects' | 'motion' | 'sidebarCollapsed'> & Partial<Pick<BootMirror, 'sidebarAutoHide'>>, width: number): ShellAttrs {
   return {
     theme: resolveTheme(m.theme),
     effects: m.effects,
     motion: resolveMotion(m.motion),
     sidebar: sidebarModeFor(width, m.sidebarCollapsed),
+    sidebarAutoHide: m.sidebarAutoHide ?? true,
   };
 }
 
@@ -57,4 +59,5 @@ export function applyShellAttrs(html: HTMLElement, a: ShellAttrs): void {
   html.dataset.kexEffects = a.effects;
   html.dataset.kexMotion = a.motion;
   html.dataset.kexSidebar = a.sidebar;
+  html.dataset.kexSidebarAutoHide = String(a.sidebarAutoHide);
 }

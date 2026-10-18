@@ -1,15 +1,18 @@
 import { ArrowRight } from 'lucide-preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
 import { go } from '../../actions/navigate';
 import { setGradesTab } from '../../actions/grades';
 import { seasonLabel } from '../../data/names';
 import { currentSemester, displayName } from '../../data/repo/courses';
+import { courseGradesStore } from '../../data/repo/grades';
+import type { GradeRow } from '../../data/scrape/grades';
 import { t, type MessageKey } from '../../i18n';
 import { sidebarCourses } from '../../state';
 import { gradeRows, grSel, grTab, visibleGrades, type GradesTab } from '../../state/grades';
 import { Band } from '../components/Band';
 import { useEffectsConfig, useQuietFocus } from '../components/hooks';
 import { EmptyState } from '../components/States';
+import { GradeMeter } from '../components/GradeMeter';
 import { Tabs, type TabDef } from '../components/Tabs';
 
 const TAB_DEFS: TabDef<GradesTab>[] = [
@@ -17,7 +20,36 @@ const TAB_DEFS: TabDef<GradesTab>[] = [
   { key: 'all', label: 'gr.tab.all' as MessageKey, digit: '2' },
 ];
 
-/** Grades overview (page-designs §8): one 56 px row per course, the grade right-aligned in mono. */
+/** Enrich only visible, graded courses; a long transcript never triggers a request per course at mount. */
+function CourseGrade({ row }: { row: GradeRow }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const store = courseGradesStore(row.courseId);
+  const courseGrade = store.value.value?.course;
+  const grade = row.percentage !== undefined ? row : courseGrade ?? row;
+  useEffect(() => {
+    if (!row.graded || row.percentage !== undefined || !ref.current) return;
+    let mounted = true;
+    if (typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver((entries) => {
+      if (!mounted || !entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      void store.refresh();
+    });
+    observer.observe(ref.current);
+    return () => {
+      mounted = false;
+      observer.disconnect();
+    };
+  }, [row.courseId, row.graded, row.percentage, store]);
+  return (
+    <span ref={ref} class="kex-gr__grade kex-mono" data-kex-test="gr-grade">
+      <span>{row.graded ? row.grade : '–'}</span>
+      {row.graded && <GradeMeter grade={grade} compact />}
+    </span>
+  );
+}
+
+/** Grades overview: Moodle's raw grade and, when available, its percentage in a compact course row. */
 export function GradesOverviewView() {
   useEffectsConfig();
   useQuietFocus();
@@ -71,7 +103,7 @@ export function GradesOverviewView() {
                     >
                       <span class="kex-gr__code kex-mono">{code}</span>
                       <span class="kex-gr__name">{name}</span>
-                      <span class="kex-gr__grade kex-mono" data-kex-test="gr-grade">{r.graded ? r.grade : '–'}</span>
+                      <CourseGrade row={r} />
                       <ArrowRight class="kex-gr__arrow" size={18} strokeWidth={1.75} aria-hidden="true" />
                     </a>
                   </li>

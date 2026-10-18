@@ -85,7 +85,7 @@
   --kex-hero-fallback: url("assets/hero-fallback.webp") right center / cover no-repeat, var(--kex-hero-bg);
 
   /* Geometry */
-  --kex-sb-w-full: clamp(232px, 15.52vw, 300px);
+  --kex-sb-w-full: clamp(204px, 13.2vw, 255px);
   --kex-sb-w: var(--kex-sb-w-full);
   --kex-pad: clamp(24px, 1.77vw, 40px);
   --kex-header-h: 67px;
@@ -121,6 +121,9 @@
   --kex-sb-w: 72px;
 }
 :root[data-kex-sidebar="drawer"] {
+  --kex-sb-w: 0px;
+}
+:root[data-kex-sidebar-auto-hide="true"] {
   --kex-sb-w: 0px;
 }
 

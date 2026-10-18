@@ -24,7 +24,8 @@ export function Popover({ anchor, label, onClose, children, role = 'dialog', cla
     if (!anchor) return;
     const sb = anchor.closest('.kex-sidebar')?.getBoundingClientRect();
     const a = anchor.getBoundingClientRect();
-    setPos({ left: (sb?.right ?? a.right) + 8, bottom: Math.max(8, window.innerHeight - a.bottom) });
+    const width = Math.min(ref.current?.offsetWidth || 300, window.innerWidth - 16);
+    setPos({ left: Math.max(8, Math.min((sb?.right ?? a.right) + 8, window.innerWidth - width - 8)), bottom: Math.max(8, window.innerHeight - a.bottom) });
   }, [anchor]);
 
   useEffect(() => {

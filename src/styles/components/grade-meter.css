@@ -1,0 +1,58 @@
+#kex-root {
+  .kex-grade-meter {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 5px;
+    width: min(180px, 100%);
+    margin-block: 8px 1px;
+    vertical-align: middle;
+  }
+  .kex-grade-meter__values {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--kex-text-2);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+  }
+  .kex-grade-meter__points {
+    color: var(--kex-text);
+    font-weight: 500;
+  }
+  .kex-grade-meter__percent {
+    color: var(--kex-violet);
+  }
+  .kex-grade-meter__track {
+    display: block;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: var(--kex-border);
+  }
+  .kex-grade-meter__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--kex-violet);
+  }
+  .kex-grade-meter--compact {
+    width: min(112px, 100%);
+    margin: 0;
+    gap: 4px;
+    .kex-grade-meter__values {
+      justify-content: flex-end;
+    }
+  }
+}
+@media (forced-colors: active) {
+  #kex-root .kex-grade-meter__track {
+    border: 1px solid CanvasText;
+    height: 5px;
+  }
+  #kex-root .kex-grade-meter__fill {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+}

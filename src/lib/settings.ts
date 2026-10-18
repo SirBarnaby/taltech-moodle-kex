@@ -17,6 +17,8 @@ export interface Settings {
   colourBySchool: boolean;
   sidebarSource: 'moodle' | 'inprogress' | 'starred' | 'all';
   sidebarCollapsed: boolean;
+  /** Reveal the sidebar over the page near the pointer; reserve no content space. */
+  sidebarAutoHide: boolean;
   courseAliases: Record<string, string>;
   courseOrder: number[];
   routeModes: Record<string, RouteMode>;
@@ -37,6 +39,7 @@ export const DEFAULT_SETTINGS: Settings = {
   colourBySchool: true,
   sidebarSource: 'moodle',
   sidebarCollapsed: false,
+  sidebarAutoHide: true,
   courseAliases: {},
   courseOrder: [],
   routeModes: {},
@@ -70,6 +73,7 @@ export function normalizeSettings(raw: unknown): Settings {
     colourBySchool: typeof r.colourBySchool === 'boolean' ? r.colourBySchool : d.colourBySchool,
     sidebarSource: pick(r.sidebarSource, ['moodle', 'inprogress', 'starred', 'all'], d.sidebarSource),
     sidebarCollapsed: typeof r.sidebarCollapsed === 'boolean' ? r.sidebarCollapsed : d.sidebarCollapsed,
+    sidebarAutoHide: typeof r.sidebarAutoHide === 'boolean' ? r.sidebarAutoHide : d.sidebarAutoHide,
     courseAliases: rec(r.courseAliases),
     courseOrder: Array.isArray(r.courseOrder) ? r.courseOrder.filter((n): n is number => Number.isInteger(n)) : [],
     routeModes: modes,
@@ -103,6 +107,7 @@ export interface BootMirror {
   effects: EffectsSetting;
   motion: MotionSetting;
   sidebarCollapsed: boolean;
+  sidebarAutoHide: boolean;
 }
 
 export const DEFAULT_MIRROR: BootMirror = {
@@ -111,10 +116,11 @@ export const DEFAULT_MIRROR: BootMirror = {
   effects: 'animated',
   motion: 'system',
   sidebarCollapsed: false,
+  sidebarAutoHide: true,
 };
 
 export function toBootMirror(s: Settings): BootMirror {
-  return { enabled: s.enabled, theme: s.theme, effects: s.effects, motion: s.motion, sidebarCollapsed: s.sidebarCollapsed };
+  return { enabled: s.enabled, theme: s.theme, effects: s.effects, motion: s.motion, sidebarCollapsed: s.sidebarCollapsed, sidebarAutoHide: s.sidebarAutoHide };
 }
 
 export function readBootMirror(): BootMirror {

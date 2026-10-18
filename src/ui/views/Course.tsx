@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'preact/hooks';
-import { courseCode, closePreview, initCourse, openCm, previewCm, retryCourse, setTopic, togglePin, toggleDone } from '../../actions/course';
+import { courseCode, closePreview, initCourse, openCm, openCmOriginal, previewCm, retryCourse, setTopic, togglePin, toggleDone } from '../../actions/course';
+import { courseGradesStore } from '../../data/repo/grades';
 import { splitTitle } from '../../data/names';
 import { pinsStore, isPinned } from '../../data/repo/pins';
 import { pad2, primaryIndex, resourceCount, type RowModel } from '../../data/topics';
@@ -21,12 +22,15 @@ import { EmptyState, RowSkeleton, TopicSkeleton } from '../components/States';
 import { SubsectionCard } from '../components/SubsectionCard';
 import { TopicList, topicDisplayTitle } from '../components/TopicList';
 
-function useCourseInit(): void {
+function useCourseInit(): ReturnType<typeof courseGradesStore> | undefined {
   const id = activeCourseId.value;
+  const gradeStore = id ? courseGradesStore(id) : undefined;
+  useEffect(() => { if (gradeStore) void gradeStore.refresh(); }, [id]);
   useEffect(() => {
     if (!id) return;
     return initCourse(id);
   }, [id]);
+  return gradeStore;
 }
 
 function useCompactTitle(code: string, courseName: string, topicLabel: { chip: string; text: string } | undefined): void {
@@ -65,7 +69,7 @@ function useCompactTitle(code: string, courseName: string, topicLabel: { chip: s
 }
 
 export function CourseView() {
-  useCourseInit();
+  const gradeStore = useCourseInit();
   useEffectsConfig();
   useQuietFocus();
 
@@ -142,6 +146,7 @@ export function CourseView() {
     <ResourceRow
       key={row.cm.id}
       row={row}
+      grade={gradeStore?.value.value?.activities[String(row.cm.id)]}
       index={position.get(row.cm.id) ?? 0}
       topicNumber={pad2(topic?.section.number ?? 0)}
       pinned={isPinned(row.cm.id, pins)}
@@ -176,7 +181,7 @@ export function CourseView() {
           ) : failed ? null : tps.length ? (
             <TopicList topics={tps} active={topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} />
           ) : null}
-          <section class="kex-detail" id="kex-detail" data-kex-test="detail">
+          <section class="kex-detail" id="kex-detail" data-kex-test="detail" aria-busy={loading}>
             {failed ? (
               <EmptyState tone="error" kicker={t('course.errorKicker')} title={t('course.error')} text={courseError.value}>
                 <Button variant="outlined" arrow={false} onClick={retryCourse}>{t('course.retry')}</Button>
@@ -233,7 +238,7 @@ export function CourseView() {
           row={previewRow}
           pinned={isPinned(previewRow.cm.id, pins)}
           onClose={closePreview}
-          onOpen={(r, newTab) => openCm(r, newTab)}
+          onOpen={(r, newTab) => openCmOriginal(r, newTab)}
           onPin={(r) => void togglePin(r)}
         />
       )}

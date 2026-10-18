@@ -1,4 +1,5 @@
 import { Lock } from 'lucide-preact';
+import { useEffect, useRef } from 'preact/hooks';
 import type { TopicModel } from '../../data/topics';
 import { t } from '../../i18n';
 import { ArrowEast } from './Glyphs';
@@ -16,12 +17,29 @@ export const topicDisplayTitle = (tp: Pick<TopicModel, 'isRange' | 'title' | 'se
 
 /** The TOPICS list (design-spec §4.7): number, optional tile photo, title, arrow on the active row. */
 export function TopicList({ topics, active, onSelect, onKeyDown }: TopicListProps) {
+  const strip = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    const list = strip.current;
+    const selected = list?.querySelector<HTMLElement>(`[data-kex-topic="${active}"]`);
+    if (!list || !selected) return;
+    const box = list.getBoundingClientRect();
+    const item = selected.getBoundingClientRect();
+    const delta = item.left < box.left ? item.left - box.left : item.right > box.right ? item.right - box.right : 0;
+    if (delta) list.scrollLeft += delta;
+  }, [active]);
   const anyTile = topics.some((tp) => tp.tile);
   const tabStop = topics.some((tp) => tp.section.number === active) ? active : topics[0]?.section.number;
   return (
     <nav class="kex-topics" aria-label={t('course.topicsNav')} data-kex-test="topics">
       <p class="kex-topics__label kex-mono" id="kex-topics-label">{t('course.topics')}</p>
-      <ol class="kex-topics__list" aria-labelledby="kex-topics-label" onKeyDown={onKeyDown}>
+      <ol class="kex-topics__list" ref={strip} aria-labelledby="kex-topics-label" onKeyDown={(e) => {
+        onKeyDown?.(e);
+        if (e.defaultPrevented || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+        e.preventDefault();
+        const index = topics.findIndex((tp) => tp.section.number === active);
+        const next = topics[Math.max(0, Math.min(topics.length - 1, index + (e.key === 'ArrowRight' ? 1 : -1)))];
+        if (next) onSelect(next.section.number);
+      }}>
         {topics.map((tp, i) => {
           const isActive = tp.section.number === active;
           const title = topicDisplayTitle(tp);

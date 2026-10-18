@@ -1,4 +1,5 @@
 import { animSettle, animTrack } from './anim';
+import { viewMotionAllowed } from './navigation';
 
 /** Slide Up Text (architecture §15): masked pieces slide up with a stagger. Screen readers get the full text once. */
 
@@ -160,7 +161,8 @@ export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions 
     started = true;
     observer?.disconnect();
     o.onStart?.();
-    if (o.reduced || typeof items[0]?.animate !== 'function' || items.length === 0) {
+    if (o.reduced || !viewMotionAllowed() || typeof items[0]?.animate !== 'function' || items.length === 0) {
+      items.forEach((item) => { item.style.transform = ''; });
       done();
       return;
     }
@@ -196,7 +198,7 @@ export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions 
     resolve();
   };
 
-  if (o.reduced) {
+  if (o.reduced || !viewMotionAllowed()) {
     done();
     started = true;
   } else if (o.inView && typeof IntersectionObserver !== 'undefined') {

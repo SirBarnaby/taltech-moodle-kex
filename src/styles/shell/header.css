@@ -22,8 +22,7 @@
       height 180ms var(--kex-ease),
       background-color 180ms var(--kex-ease),
       box-shadow 180ms var(--kex-ease),
-      border-color 180ms var(--kex-ease),
-      left 200ms var(--kex-ease);
+      border-color 180ms var(--kex-ease);
     gap: 0;
   }
   .kex-header[data-compact="true"] {
@@ -39,7 +38,12 @@
   }
 
   .kex-header__menu {
+    flex: none;
     margin-right: 12px;
+    transition: transform 120ms var(--kex-ease), background 120ms var(--kex-ease);
+    &:active {
+      transform: scale(0.96);
+    }
   }
 
   /* ---- breadcrumb ---- */
@@ -182,6 +186,9 @@
     &:hover {
       background: color-mix(in srgb, var(--kex-search-bg) 80%, var(--kex-kbd-bg));
     }
+    &:active {
+      transform: scale(0.985);
+    }
   }
   .kex-search__icon {
     color: var(--kex-search-icon);
@@ -269,6 +276,18 @@
   }
 }
 
+@media (min-width: 760px) and (max-width: 1099px) {
+  #kex-root .kex-header {
+    padding-inline: 20px;
+  }
+  #kex-root .kex-header .kex-search {
+    width: 180px;
+  }
+  #kex-root .kex-header__theme {
+    margin-left: 16px;
+  }
+}
+
 /* ===== Responsive header (design-spec §11) ===== */
 @media (max-width: 1279px) {
   #kex-root .kex-search {
@@ -326,4 +345,7 @@
 :root[data-kex-motion="reduced"][data-kex-nav="loading"] #kex-root .kex-header::after {
   animation: none;
   transform: scaleX(0.5);
+}
+:root:is([data-kex-motion="reduced"], [data-kex-input="keyboard"]) #kex-root :is(.kex-header__menu, .kex-search):active {
+  transform: none;
 }

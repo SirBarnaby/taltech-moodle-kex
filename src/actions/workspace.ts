@@ -7,6 +7,7 @@ import { typeNameFor } from '../data/repo/modnames';
 import { markAllRead, markRead, notifsStore } from '../data/repo/notifs';
 import { isPinned, readPins } from '../data/repo/pins';
 import { recentStore, type RecentItem } from '../data/repo/recent';
+import { isReadableMaterial } from '../data/repo/preview';
 import type { DueItem, Pin } from '../data/model';
 import type { FeedItem } from '../data/feed';
 import { verbFor } from '../data/classify';
@@ -135,11 +136,25 @@ export function itemUrl(item: FeedItem): string {
 }
 
 export function openFeedItem(item: FeedItem, newTab = false): void {
+  if (item.type === 'continue') {
+    openWorkspaceMaterial(rowFromRecent(item.item), newTab);
+    return;
+  }
   const url = itemUrl(item);
   if (!url) return;
   if (item.type === 'update' && !item.item.read) void markNotifRead(item.item.id);
-  const external = item.type === 'continue' && item.item.modname === 'url';
-  go(url, newTab || (external && settings.value.openInNewTab !== 'never'));
+  go(url, newTab);
+}
+
+/** Shared by Continue rows and saved materials. Explicit new tabs retain normal browser navigation. */
+export function openWorkspaceMaterial(row: RowModel, newTab = false): void {
+  if (row.locked || row.kind === 'note') return;
+  if (!newTab && settings.value.openInNewTab !== 'always' && isReadableMaterial(row)) {
+    wsPreview.value = row;
+    return;
+  }
+  const external = row.cm.modname === 'url';
+  go(row.cm.url, newTab || settings.value.openInNewTab === 'always' || (external && settings.value.openInNewTab !== 'never'));
 }
 
 export function markNotifRead(id: number): Promise<void> {
