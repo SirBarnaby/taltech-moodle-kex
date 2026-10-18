@@ -89,6 +89,7 @@ describe('fullscreen material reader', () => {
     expect(dialog.contains(document.activeElement)).toBe(true);
     expect(document.activeElement).not.toBe(close);
     await act(async () => { dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); });
+    await act(async () => { await new Promise((r) => setTimeout(r, 200)); });
     expect(onClose).toHaveBeenCalledOnce();
     expect(main.hasAttribute('inert')).toBe(false);
     expect(document.body.style.overflow).toBe('clip');
