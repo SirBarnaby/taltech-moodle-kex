@@ -31,6 +31,7 @@ export const MOODLE_KEYS: Partial<Record<MessageKey, Src>> = {
   'nav.files': core('privatefiles'),
   'nav.participants': core('participants'),
   'nav.search': core('search'),
+  'header.search': core('search'),
   'nav.login': core('login'),
   'nav.logout': core('logout'),
   'nav.language': core('language'),

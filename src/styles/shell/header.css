@@ -169,11 +169,12 @@
 
   /* ---- search trigger ---- */
   .kex-search {
+    --kex-search-w: 268px;
     position: relative;
     flex: none;
     display: flex;
     align-items: center;
-    width: 268px;
+    width: var(--kex-search-w);
     height: 44px;
     margin-left: auto;
     padding: 0 16px 0 19px;
@@ -229,7 +230,7 @@
     }
   }
   .kex-header[data-compact="true"] .kex-search {
-    width: 240px;
+    width: min(240px, var(--kex-search-w));
     height: 36px;
     kbd {
       height: 22px;
@@ -280,9 +281,6 @@
   #kex-root .kex-header {
     padding-inline: 20px;
   }
-  #kex-root .kex-header .kex-search {
-    width: 180px;
-  }
   #kex-root .kex-header__theme {
     margin-left: 16px;
   }
@@ -291,7 +289,29 @@
 /* ===== Responsive header (design-spec §11) ===== */
 @media (max-width: 1279px) {
   #kex-root .kex-search {
-    width: 220px;
+    --kex-search-w: 220px;
+  }
+}
+/* Half-width windows: the label is Moodle's short "Search", so it needs room beside Ctrl K. */
+@media (max-width: 1099px) {
+  #kex-root .kex-search {
+    --kex-search-w: 188px;
+    padding: 0 12px 0 14px;
+    .kex-search__text {
+      margin-left: 10px;
+    }
+  }
+}
+/* Icon only. */
+@media (max-width: 899px) {
+  #kex-root .kex-search {
+    --kex-search-w: 44px;
+    padding: 0;
+    justify-content: center;
+    .kex-search__text,
+    .kex-search__kbd {
+      display: none;
+    }
   }
 }
 @media (max-width: 759px) {
@@ -300,7 +320,7 @@
     padding: 0 12px;
   }
   #kex-root .kex-search {
-    width: 36px;
+    --kex-search-w: 36px;
     height: 36px;
     padding: 0;
     justify-content: center;
@@ -308,9 +328,6 @@
     .kex-search__kbd {
       display: none;
     }
-  }
-  #kex-root .kex-header[data-compact="true"] .kex-search {
-    width: 36px;
   }
   #kex-root .kex-header__theme {
     margin-left: 8px;

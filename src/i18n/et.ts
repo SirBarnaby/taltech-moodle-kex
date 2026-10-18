@@ -25,7 +25,7 @@ export const et: Record<MessageKey, string> = {
   'sidebar.close': 'Sulge menüü',
   'sidebar.toggle': 'Lülita külgriba',
   'sidebar.userMenu': 'Kasutajamenüü',
-  'header.search': 'Otsi kõike',
+  'header.search': 'Otsi',
   'header.themeToLight': 'Vaheta heledale teemale',
   'header.themeToDark': 'Vaheta tumedale teemale',
   'crumb.home': 'Avaleht',

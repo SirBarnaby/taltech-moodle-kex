@@ -24,7 +24,7 @@ export const en = {
   'sidebar.close': 'Close menu',
   'sidebar.toggle': 'Toggle sidebar',
   'sidebar.userMenu': 'User menu',
-  'header.search': 'Search anything',
+  'header.search': 'Search',
   'header.themeToLight': 'Switch to light theme',
   'header.themeToDark': 'Switch to dark theme',
   'crumb.home': 'Home',
