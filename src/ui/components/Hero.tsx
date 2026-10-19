@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'preact/hooks';
-import { effects } from '../../fx/effects';
+import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
+import { heroCanvas } from '../../fx/heroCanvas';
 import { MOTION, sinceNavigation } from '../../fx/navigation';
 import { formatDate, t } from '../../i18n';
 import { nextByCourse } from '../../data/feed';
@@ -78,7 +78,6 @@ function CourseMeta({ courseId }: { courseId: number }) {
 }
 
 export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls }: HeroProps) {
-  const canvas = useRef<HTMLCanvasElement>(null);
   const root = useRef<HTMLElement>(null);
   const mode = heroEffectMode.value;
   const r = route.value;
@@ -86,19 +85,18 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
   const courseId = isCourse ? activeCourseId.value : null;
   const school = activeSchool.value;
 
-  useEffect(() => {
-    const c = canvas.current;
-    if (!c) return;
-    const handle = effects.register(c, { seed, intensity, leftFade: 0.46, style: SCHOOLS[school].ribbons }, (m) => (heroEffectMode.value = m));
+  useLayoutEffect(() => {
     const el = root.current;
+    if (!el) return;
+    const detach = heroCanvas.attach(el, { seed, intensity, leftFade: 0.46, style: SCHOOLS[school].ribbons });
     const onMove = (e: PointerEvent): void => {
-      const rect = c.getBoundingClientRect();
-      handle.setPointer(((e.clientX - rect.left) / rect.width) * 2 - 1, -(((e.clientY - rect.top) / rect.height) * 2 - 1));
+      const rect = el.getBoundingClientRect();
+      heroCanvas.setPointer(((e.clientX - rect.left) / rect.width) * 2 - 1, -(((e.clientY - rect.top) / rect.height) * 2 - 1));
     };
-    el?.addEventListener('pointermove', onMove, { passive: true });
+    el.addEventListener('pointermove', onMove, { passive: true });
     return () => {
-      el?.removeEventListener('pointermove', onMove);
-      handle.dispose();
+      el.removeEventListener('pointermove', onMove);
+      detach();
     };
   }, [seed, intensity, school]);
 
@@ -106,7 +104,6 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
   const aria = courseId ? lines.filter(Boolean).join(' ') : (label ?? '');
   return (
     <section class={`kex-hero${courseId ? ' kex-hero--course' : ''}${cls ? ` ${cls}` : ''}`} ref={root} data-kex-test="hero" data-mode={mode} data-school={school === 'default' ? undefined : school}>
-      <canvas class="kex-hero__canvas" ref={canvas} aria-hidden="true" />
       <Crosshair class="kex-cross--a" />
       <Crosshair class="kex-cross--b" />
       <div class="kex-hero__inner">
@@ -120,6 +117,7 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
           stagger={MOTION.titleStagger / 1000}
           duration={MOTION.title / 1000}
           delay={Math.max(0, MOTION.titleDelay - sinceNavigation()) / 1000}
+          lineDelay={lines[1] ? [0, MOTION.accentDelay / 1000] : undefined}
           gradient={lines[1] ? [1] : [0]}
         />
         <nav class="kex-hero__links" aria-label={aria}>

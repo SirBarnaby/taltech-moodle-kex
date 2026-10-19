@@ -1,3 +1,5 @@
+import { playArrival, watchDepartures, markDeparture } from '../fx/arrival';
+import { heroCanvas } from '../fx/heroCanvas';
 import { batch, effect } from '@preact/signals';
 import { seedDetails } from '../data/repo/cmdetails';
 import { parseCmItems } from '../data/scrape/cm';
@@ -135,6 +137,7 @@ class Controller {
 
   private async boot(): Promise<void> {
     if (this.booting || this.mounted) return;
+    watchDepartures();
     this.booting = true;
     try {
       this.applyAttrs(readBootMirror());
@@ -239,11 +242,13 @@ class Controller {
     // The cookie notice lives in #page-wrapper, which app mode hides: it becomes a toast on the body.
     const notice = document.querySelector<HTMLElement>('.eupopup-container');
     if (notice) document.body.appendChild(notice);
+    if (settings.value.effects !== 'off') heroCanvas.warm();
     mountLogin(root, { model, loggedIn: !info.isGuest, continueHref: `${info.wwwroot}/my/` }, (e) => this.failOpen('login', e));
     window.clearTimeout(this.failTimer);
     this.mounted = true;
     this.html.dataset.kexShell = 'ready';
     setMode('app');
+    playArrival(root.querySelector<HTMLElement>('.kex-login'));
     this.stops.push(() => {
       delete this.html.dataset.kexView;
     });
@@ -318,6 +323,7 @@ class Controller {
       watchMoodleStrings(() => langFromTag(document.documentElement.lang)),
     );
 
+    if (settings.value.effects !== 'off') heroCanvas.warm();
     mountShell(root, (e) => this.failOpen('shell', e));
     keyManager.attach();
     this.bindingsOff = keyManager.register(globalBindings());
@@ -326,6 +332,7 @@ class Controller {
     this.mounted = true;
     this.html.dataset.kexShell = 'ready';
     setMode(eff.effective === 'app' ? 'app' : 'boot');
+    if (eff.effective === 'app') playArrival(root.querySelector<HTMLElement>('.kex-main'));
 
     // Everything below runs without blocking the first paint.
     this.stops.push(
@@ -634,6 +641,7 @@ class Controller {
       cancelViewTransitions();
       navigationLoading.value = false;
       this.html.removeAttribute('data-kex-nav');
+      markDeparture();
       if (push) window.location.assign(url.href);
       else window.location.reload();
     };

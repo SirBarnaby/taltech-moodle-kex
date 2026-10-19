@@ -27,8 +27,9 @@
     color: var(--kex-hero-text);
     isolation: isolate;
   }
+  /* The pre-rendered picture is framed for the wide course hero: on this tall panel the live shader would jump against it. */
   .kex-login__art[data-mode="fallback"] {
-    background: var(--kex-hero-fallback);
+    background: var(--kex-hero-bg);
   }
   .kex-login__art[data-mode="fallback"] .kex-hero__canvas {
     display: none;

@@ -18,6 +18,8 @@ export interface SlideUpOptions {
   /** Cap for the whole stagger across all pieces (seconds); default 0.25. */
   maxStagger?: number;
   delay?: number;
+  /** Extra delay (seconds) per line index: the coloured second line can arrive after the first and still slide in. */
+  lineDelay?: number[];
   from?: 'first' | 'last' | 'center';
   duration?: number;
   ease?: string;
@@ -187,10 +189,12 @@ export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions 
     const n = items.length;
     // The whole stagger fits in the cap, however many pieces there are.
     const gap = n > 1 ? Math.min(o.stagger, (o.maxStagger ?? MAX_STAGGER) / (n - 1)) : 0;
+    const lineOf = new Map<HTMLElement, number>();
+    lineItems.forEach((line, li) => line.forEach((item) => lineOf.set(item, li)));
     animations = items.map((item, i) =>
       item.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], {
         duration: o.duration * 1000,
-        delay: (o.delay + staggerDelay(i, n, o.from, gap)) * 1000,
+        delay: (o.delay + staggerDelay(i, n, o.from, gap) + (o.lineDelay?.[lineOf.get(item) ?? 0] ?? 0)) * 1000,
         easing: o.ease,
         fill: 'both',
       }),

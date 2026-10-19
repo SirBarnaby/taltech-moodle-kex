@@ -14,6 +14,8 @@ export const MOTION = {
   titleDelay: 80,
   title: 260,
   titleStagger: 35,
+  /** The coloured second title line starts this much after the first and slides in like it. */
+  accentDelay: 200,
   /** Teachers, progress and next deadline under the title. */
   metaDelay: 140,
   meta: 160,
@@ -154,25 +156,31 @@ export function beginViewTransition(element: HTMLElement | null, scope: 'page' |
   running.set(scope, stop);
   void exit.finished.then(() => ghost.remove(), () => ghost.remove());
   return (selector) => {
-    frame = requestAnimationFrame(() => {
-      if (running.get(scope) !== stop || !viewMotionAllowed()) return stop();
-      const incoming = root.querySelector<HTMLElement>(selector);
-      if (!incoming || incoming === element && !incoming.isConnected) return stop();
-      if (scope === 'page') {
-        const keyframes: Keyframe[] = lift
-          ? [{ opacity: 0, transform: `translateY(${-lift}px)` }, { opacity: 1, transform: 'translateY(0)' }]
-          : [{ opacity: 0 }, { opacity: 1 }];
-        const lag = performance.now() - t0;
-        enter = incoming.animate(keyframes, {
-          duration: lift ? MOTION.enter : MOTION.subtle,
-          delay: Math.max(0, (lift ? MOTION.enterDelay : 0) - lag),
-          easing: MOTION.ease,
-          fill: 'backwards',
-        });
-      } else {
-        enter = incoming.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: MOTION.topicEnter, easing: MOTION.ease });
-      }
-      void enter.finished.then(stop, stop);
-    });
+    let tries = 0;
+    const reveal = (): void => {
+      frame = requestAnimationFrame(() => {
+        if (running.get(scope) !== stop || !viewMotionAllowed()) return stop();
+        const incoming = root.querySelector<HTMLElement>(selector);
+        // The new view can be a frame late (it mounts after the state change): wait a few frames before giving up on the enter.
+        if (!incoming && ++tries < 4) return reveal();
+        if (!incoming || incoming === element && !incoming.isConnected) return stop();
+        if (scope === 'page') {
+          const keyframes: Keyframe[] = lift
+            ? [{ opacity: 0, transform: `translateY(${-lift}px)` }, { opacity: 1, transform: 'translateY(0)' }]
+            : [{ opacity: 0 }, { opacity: 1 }];
+          const lag = performance.now() - t0;
+          enter = incoming.animate(keyframes, {
+            duration: lift ? MOTION.enter : MOTION.subtle,
+            delay: Math.max(0, (lift ? MOTION.enterDelay : 0) - lag),
+            easing: MOTION.ease,
+            fill: 'backwards',
+          });
+        } else {
+          enter = incoming.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: MOTION.topicEnter, easing: MOTION.ease });
+        }
+        void enter.finished.then(stop, stop);
+      });
+    };
+    reveal();
   };
 }

@@ -29,6 +29,8 @@ interface Entry {
 export interface EffectHandle {
   dispose(): void;
   setPointer(x: number, y: number): void;
+  /** New seed, style, intensity or fade for the same canvas. */
+  update(opts: RibbonsOptions): void;
 }
 
 class EffectsController {
@@ -90,6 +92,7 @@ class EffectsController {
         this.entries.delete(entry);
       },
       setPointer: (x, y) => entry.renderer?.setPointer(x, y),
+      update: (o) => entry.renderer?.setOptions(o),
     };
   }
 

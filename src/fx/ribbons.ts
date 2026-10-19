@@ -174,6 +174,12 @@ export class RibbonsRenderer {
     gl.viewport(0, 0, w, h);
   }
 
+  /** Change seed, style, intensity or fade without rebuilding the context: a canvas moved to another hero keeps its compiled shader. */
+  setOptions(o: Pick<RibbonsOptions, 'seed' | 'intensity' | 'leftFade' | 'style' | 'window'>): void {
+    Object.assign(this.opts, o);
+    if (!this.running && !this.pending && this.gl && this.canvas.dataset.drawn) this.draw(this.tFrozen);
+  }
+
   setPointer(x: number, y: number): void {
     this.pointerTarget = [Math.max(-1, Math.min(1, x)), Math.max(-1, Math.min(1, y))];
   }
@@ -214,6 +220,8 @@ export class RibbonsRenderer {
     } else {
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
+    // The first real frame: CSS fades the canvas in from this point instead of showing it half-ready.
+    if (!this.canvas.dataset.drawn && this.canvas.isConnected && this.canvas.clientWidth > 1) this.canvas.dataset.drawn = '1';
   }
 
   /** One frame at a fixed time (reduced motion, effects "static", tests). */
