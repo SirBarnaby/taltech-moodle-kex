@@ -1,0 +1,295 @@
+/* Lab track (topics with four or more subsections), folded lab cards, compact rows, and the centred reading column. */
+#kex-root {
+  /* The course column is centred and capped, so very wide windows (and 50 % zoom) keep a readable measure. */
+  .kex-course {
+    --kex-measure: 1360px;
+    --kex-gutter: max(var(--kex-pad), calc((100% - var(--kex-measure)) / 2));
+  }
+  .kex-course .kex-content {
+    max-width: none;
+    padding-inline: var(--kex-gutter);
+  }
+  .kex-course .kex-hero__inner {
+    padding-inline: var(--kex-gutter);
+  }
+
+  /* ---- chip strip ---- */
+  .kex-track {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 18px 0 6px;
+  }
+  .kex-track__count {
+    flex: none;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--kex-mono-strong);
+  }
+  .kex-track__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 2px;
+    list-style: none;
+  }
+  .kex-chip-lab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px 0 8px;
+    border: 1px solid var(--kex-border-card);
+    border-radius: 999px;
+    background: var(--kex-bg);
+    font-size: 13px;
+    line-height: 16px;
+    font-weight: 500;
+    color: var(--kex-text-2);
+    white-space: nowrap;
+    transition: background 140ms var(--kex-ease), border-color 140ms var(--kex-ease), color 140ms var(--kex-ease), transform 120ms var(--kex-ease);
+    &:hover {
+      border-color: var(--kex-violet-2);
+      color: var(--kex-violet);
+    }
+    &:active {
+      transform: scale(0.96);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kex-focus);
+      outline-offset: 2px;
+    }
+  }
+  .kex-chip-lab__mark {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid var(--kex-text-4);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .kex-chip-lab--done {
+    color: var(--kex-text-3);
+    .kex-chip-lab__mark {
+      border-color: var(--kex-success);
+      background: var(--kex-success);
+      color: #fff;
+    }
+  }
+  .kex-chip-lab--overdue .kex-chip-lab__mark {
+    border-color: var(--kex-magenta);
+    background: var(--kex-magenta);
+    color: #fff;
+  }
+  .kex-chip-lab--next .kex-chip-lab__mark {
+    border-color: var(--kex-violet);
+    background: radial-gradient(circle, var(--kex-violet) 0 3.5px, transparent 4px);
+  }
+  .kex-chip-lab--open {
+    border-color: var(--kex-violet);
+    background: var(--kex-tint);
+    color: var(--kex-violet);
+  }
+
+  /* ---- folded lab cards ---- */
+  .kex-group--lab {
+    margin: 10px 0;
+    .kex-groupcard {
+      padding: 0 20px;
+      transition: border-color 160ms var(--kex-ease), box-shadow 160ms var(--kex-ease);
+    }
+    .kex-groupcard__head {
+      gap: 14px;
+      min-height: 56px;
+      padding: 0;
+    }
+    .kex-groupcard__title {
+      font-size: 19px;
+      line-height: 24px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .kex-groupcard__progress {
+      margin-left: 0;
+    }
+  }
+  .kex-group--open .kex-groupcard {
+    border-color: color-mix(in srgb, var(--kex-violet-2) 45%, var(--kex-border-card));
+  }
+  .kex-group--next.kex-group--open .kex-groupcard {
+    box-shadow: 0 1px 0 var(--kex-border), 0 8px 24px -16px color-mix(in srgb, var(--kex-violet) 55%, transparent);
+  }
+  .kex-groupcard__toggle {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    height: 56px;
+    margin-left: -8px;
+    padding: 0 8px;
+    border-radius: var(--kex-r-s);
+    text-align: left;
+    color: var(--kex-text);
+    &:hover .kex-groupcard__title {
+      color: var(--kex-violet);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--kex-focus);
+      outline-offset: -2px;
+    }
+  }
+  .kex-groupcard__chev {
+    flex: none;
+    color: var(--kex-text-4);
+    transition: transform 200ms var(--kex-ease);
+  }
+  .kex-group--open .kex-groupcard__chev {
+    transform: rotate(90deg);
+    color: var(--kex-violet);
+  }
+  .kex-groupcard__state {
+    flex: none;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--kex-text-4);
+  }
+  .kex-groupcard__state--done { color: var(--kex-success); }
+  .kex-groupcard__state--overdue { color: var(--kex-magenta); }
+  .kex-groupcard__state--next { color: var(--kex-violet); }
+  .kex-groupcard__due {
+    flex: none;
+    font-size: 14px;
+    color: var(--kex-text-3);
+    white-space: nowrap;
+  }
+  .kex-groupcard__due--late {
+    color: var(--kex-magenta);
+  }
+  .kex-groupcard__fold {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 220ms var(--kex-ease);
+  }
+  .kex-group--open .kex-groupcard__fold {
+    grid-template-rows: 1fr;
+  }
+  .kex-groupcard__foldin {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .kex-group--open .kex-groupcard__foldin {
+    padding-bottom: 6px;
+  }
+  .kex-group--lab .kex-groupcard__summary {
+    margin-top: 0;
+  }
+
+  /* ---- compact rows: 52 px, one main action; Preview and Pin appear on hover or focus ---- */
+  .kex-rows--compact {
+    .kex-row {
+      grid-template-columns: 40px minmax(0, 1fr) auto;
+      column-gap: 16px;
+      min-height: 52px;
+      padding: 6px 12px;
+    }
+    .kex-row--sub {
+      min-height: 52px;
+    }
+    .kex-row > .kex-thumb {
+      align-self: center;
+      width: 40px;
+      height: 30px;
+      border-radius: var(--kex-r-xs);
+      > * { transform: scale(0.42); }
+    }
+    /* The text column dissolves into the row grid: label over title, then the hover actions, then the one button. */
+    .kex-row:not(.kex-row--note) {
+      grid-template-columns: 40px minmax(0, 1fr) auto auto;
+      grid-template-areas: "thumb label acts btn" "thumb title acts btn";
+      row-gap: 2px;
+    }
+    .kex-row > .kex-thumb { grid-area: thumb; }
+    .kex-row__text { display: contents; }
+    .kex-row__label {
+      grid-area: label;
+      align-self: end;
+      font-size: 10.5px;
+      line-height: 13px;
+    }
+    .kex-row__title {
+      grid-area: title;
+      align-self: start;
+      margin-top: 0;
+      font-size: 16px;
+      line-height: 21px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .kex-row__sub,
+    .kex-grade {
+      display: none;
+    }
+    .kex-row__actions {
+      grid-area: acts;
+      align-self: center;
+      margin: 0 8px 0 0;
+      min-height: 0;
+      flex-wrap: nowrap;
+      opacity: 0;
+      transition: opacity 120ms var(--kex-ease);
+    }
+    .kex-row:is(:hover, :focus-within) .kex-row__actions {
+      opacity: 1;
+    }
+    .kex-act + .kex-act {
+      margin-left: 14px;
+      padding-left: 14px;
+    }
+    .kex-act {
+      gap: 8px;
+    }
+    .kex-row > .kex-btn {
+      grid-area: btn;
+      width: auto;
+      min-width: 92px;
+      height: 32px;
+      padding: 0 14px;
+      font-size: 14px;
+      border-radius: var(--kex-r-xs);
+    }
+    .kex-row__note {
+      margin-left: 56px;
+      font-size: 15px;
+      line-height: 22px;
+    }
+    .kex-row--note {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+  }
+}
+
+:root:is([data-kex-motion="reduced"]) #kex-root :is(.kex-groupcard__fold, .kex-groupcard__chev, .kex-chip-lab) {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  #kex-root :is(.kex-groupcard__fold, .kex-groupcard__chev, .kex-chip-lab) {
+    transition: none;
+  }
+}
+@media (max-width: 1100px) {
+  #kex-root .kex-group--lab .kex-groupcard { padding-inline: 14px; }
+  #kex-root .kex-group--lab .kex-groupcard__due { display: none; }
+}
+@media (max-width: 700px) {
+  #kex-root .kex-group--lab .kex-groupcard__progress { display: none; }
+  #kex-root .kex-rows--compact .kex-row__actions { display: none; }
+}

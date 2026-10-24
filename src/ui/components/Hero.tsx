@@ -101,9 +101,11 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
   }, [seed, intensity, school]);
 
   const text = lines[1] ? `${lines[0]}\n${lines[1]}` : lines[0];
+  // The title size follows its longest line, so a long course name fits its column instead of running under the ribbons.
+  const fit = { '--kex-chars': String(Math.max(8, ...lines.map((l) => l?.length ?? 0))), '--kex-chars-all': String(Math.max(8, text.length)) };
   const aria = courseId ? lines.filter(Boolean).join(' ') : (label ?? '');
   return (
-    <section class={`kex-hero${courseId ? ' kex-hero--course' : ''}${cls ? ` ${cls}` : ''}`} ref={root} data-kex-test="hero" data-mode={mode} data-school={school === 'default' ? undefined : school}>
+    <section class={`kex-hero${courseId ? ' kex-hero--course' : ''}${cls ? ` ${cls}` : ''}`} ref={root} style={fit} data-kex-test="hero" data-mode={mode} data-school={school === 'default' ? undefined : school}>
       <Crosshair class="kex-cross--a" />
       <Crosshair class="kex-cross--b" />
       <div class="kex-hero__inner">

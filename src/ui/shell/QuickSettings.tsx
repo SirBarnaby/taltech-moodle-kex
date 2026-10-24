@@ -50,6 +50,10 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
         <Switch id="kex-qs-sidebar" label={t('settings.sidebarAutoHide')} checked={s.sidebarAutoHide} onChange={(sidebarAutoHide) => updateSettings({ sidebarAutoHide })} />
       </div>
       <div class="kex-pop__row">
+        <label class="kex-pop__rowlabel" for="kex-qs-compact">{t('settings.compact')}</label>
+        <Switch id="kex-qs-compact" label={t('settings.compact')} checked={s.density === 'compact'} onChange={(on) => updateSettings({ density: on ? 'compact' : 'comfortable' })} />
+      </div>
+      <div class="kex-pop__row">
         <label class="kex-pop__rowlabel" for="kex-qs-on">{t('settings.kexOnPage')}</label>
         <Switch
           id="kex-qs-on"

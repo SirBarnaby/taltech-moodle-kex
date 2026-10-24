@@ -58,3 +58,7 @@
     visibility: hidden;
   }
 }
+/* A site notice shown as a KEX card (src/content/sitenotice.ts): the original stays out of the way. */
+:root[data-kex="app"] .kex-lifted {
+  display: none !important;
+}

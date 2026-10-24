@@ -8,3 +8,6 @@ export const hardNavigating = signal(false);
 
 /** The page changed in place at least once: titles that played on the first load stay still. */
 export const softEntered = signal(false);
+
+/** A course link in the sidebar was pressed: the highlight moves there at once, before the course has loaded. */
+export const pressedCourseId = signal<number | null>(null);

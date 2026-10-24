@@ -3,7 +3,6 @@ import type { EffectiveRoute } from '../content/router';
 import type { PageInfo } from '../content/pageinfo';
 import type { Course, UserInfo } from '../data/model';
 import { applyAliases, orderCourses } from '../data/repo/courses';
-import { lang } from '../i18n';
 import { schoolFor, type SchoolId } from '../lib/school';
 import type { UserMenuItem } from '../data/scrape/usermenu';
 import { DEFAULT_SETTINGS, type Settings } from '../lib/settings';
@@ -41,16 +40,8 @@ export const sidebarMode = computed(() =>
   sidebarModeFor(viewportWidth.value, settings.value.sidebarCollapsed || (route.value?.key === 'quiz-focus' && route.value.effective === 'skin')),
 );
 
-/**
- * Courses as the sidebar shows them. The user's own aliases always apply; the shipped English short names (for the author's six courses)
- * only on an English UI, so Estonian course names stay exactly as Moodle delivers them.
- */
-export const sidebarCourses = computed<Course[]>(() => {
-  const ordered = orderCourses(coursesRaw.value, settings.value.courseOrder);
-  const aliases = settings.value.courseAliases;
-  if (lang.value === 'en') return applyAliases(ordered, aliases);
-  return ordered.map((c) => (aliases[String(c.id)] ? { ...c, alias: aliases[String(c.id)] } : c));
-});
+/** Courses as the sidebar shows them: the user's own renames apply, otherwise Moodle's name (the same rule on every page). */
+export const sidebarCourses = computed<Course[]>(() => applyAliases(orderCourses(coursesRaw.value, settings.value.courseOrder), settings.value.courseAliases));
 
 /** The course whose page we are on (1 is the site front page). */
 export const activeCourseId = computed<number | null>(() => {

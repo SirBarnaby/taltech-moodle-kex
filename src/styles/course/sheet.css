@@ -66,14 +66,19 @@
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--kex-text);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
   }
   .kex-sheet__actions {
     display: flex;
+    flex: none;
     align-items: center;
     gap: 16px;
+    /* An icon never wraps away from its label. */
+    .kex-act { white-space: nowrap; }
     .kex-act + .kex-act,
     .kex-act + .kex-btn {
       margin-left: 0;
@@ -155,20 +160,31 @@
     text-underline-offset: 3px;
   }
   .kex-sheet__article {
-    max-width: 920px;
+    --kex-read-measure: 72ch;
+    --kex-read-leading: 1.65;
+    max-width: calc(var(--kex-read-measure) + 2 * clamp(20px, 4vw, 48px));
     margin: 0 auto;
     padding: clamp(24px, 4vw, 52px) clamp(20px, 4vw, 48px) 64px;
-    font-size: 16px;
-    line-height: 26px;
+    font-size: var(--kex-read-size, 16px);
+    line-height: var(--kex-read-leading);
     color: var(--kex-text-2);
+    overflow-wrap: break-word;
+    transition: font-size 160ms var(--kex-ease), max-width 200ms var(--kex-ease), line-height 160ms var(--kex-ease);
     h1, h2, h3, h4 {
       font-family: var(--kex-font-display);
       color: var(--kex-text);
-      margin: 1.2em 0 0.4em;
+      margin: 1.4em 0 0.45em;
       letter-spacing: -0.02em;
+      line-height: 1.2;
+      font-weight: 600;
     }
+    > :first-child { margin-top: 0; }
+    h1 { font-size: 1.75em; }
+    h2 { font-size: 1.5em; }
+    h3 { font-size: 1.2em; }
+    h4 { font-size: 1.05em; }
     p {
-      margin: 0 0 12px;
+      margin: 0 0 0.8em;
     }
     a {
       color: var(--kex-violet);
@@ -179,17 +195,184 @@
       max-width: 100%;
       height: auto;
     }
-    pre { overflow-x: auto; }
-    table { display: block; max-width: 100%; overflow-x: auto; }
+    pre, code {
+      font-family: var(--kex-font-mono);
+      font-size: 0.88em;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 12px 14px;
+      border-radius: var(--kex-r-s);
+      background: var(--kex-tint);
+      line-height: 1.5;
+    }
+    table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+    td, th { padding: 4px 10px; border: 1px solid var(--kex-border); }
     ul, ol {
-      margin: 0 0 12px 22px;
+      margin: 0 0 0.8em 1.4em;
       list-style: revert;
     }
+    li { margin-bottom: 0.25em; }
+    blockquote {
+      margin: 0 0 0.8em;
+      padding-left: 14px;
+      border-left: 3px solid var(--kex-border-strong);
+      color: var(--kex-text-3);
+    }
   }
+  .kex-reader[data-width="narrow"] .kex-sheet__article { --kex-read-measure: 58ch; }
+  .kex-reader[data-width="wide"] .kex-sheet__article { --kex-read-measure: 96ch; }
+  .kex-reader[data-leading="tight"] .kex-sheet__article { --kex-read-leading: 1.45; }
+  .kex-reader[data-leading="loose"] .kex-sheet__article { --kex-read-leading: 1.9; }
+  .kex-reader[data-font="serif"] .kex-sheet__article {
+    font-family: "Iowan Old Style", "Charter", "Source Serif 4", Georgia, "Times New Roman", serif;
+    h1, h2, h3, h4 { font-family: inherit; letter-spacing: -0.01em; }
+  }
+
+  /* Centre: a modal sheet with the reading width, not the whole window. */
+  .kex-reader--center {
+    place-items: stretch center;
+    .kex-sheet { width: min(1180px, 100%); }
+  }
+
+  /* Side: a panel on the right below the header; the page keeps working beside it. */
+  .kex-reader--side {
+    /* Follows the header as it compresses from 67 to 52 px on scroll. */
+    inset: var(--kex-hdr, var(--kex-header-h)) 0 0 auto;
+    transition: top 200ms var(--kex-ease);
+    width: var(--kex-reader-w);
+    padding: 0;
+    display: block;
+    .kex-sheet {
+      position: relative;
+      border-width: 0 0 0 1px;
+      border-radius: 0;
+      box-shadow: -18px 0 40px -28px rgb(20 10 50 / 45%);
+    }
+  }
+  .kex-reader--side[data-state="closing"] .kex-sheet {
+    transform: translateX(24px);
+  }
+  .kex-reader--dragging {
+    user-select: none;
+    .kex-sheet__frame { pointer-events: none; }
+    .kex-sheet__article { transition: none; }
+  }
+  .kex-reader__resize {
+    position: absolute;
+    left: -5px;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    width: 10px;
+    cursor: col-resize;
+    touch-action: none;
+    &::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: transparent;
+      transition: background 120ms var(--kex-ease);
+    }
+    &:hover::after,
+    &:focus-visible::after,
+    .kex-reader--dragging &::after {
+      background: var(--kex-violet-2);
+    }
+    &:focus-visible {
+      outline: none;
+    }
+  }
+  .kex-sheet__step {
+    display: inline-flex;
+    gap: 2px;
+    .kex-iconbtn { width: 34px; height: 34px; }
+  }
+  .kex-sheet__aa {
+    position: relative;
+  }
+  .kex-aa {
+    font-family: var(--kex-font-display);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    small { font-size: 13px; font-weight: 600; }
+  }
+  .kex-readmenu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: -8px;
+    z-index: 3;
+    display: grid;
+    gap: 12px;
+    width: max-content;
+    min-width: 300px;
+    padding: 14px 16px;
+    border: 1px solid var(--kex-border-strong);
+    border-radius: var(--kex-r-m);
+    background: var(--kex-bg);
+    box-shadow: var(--kex-shadow-sheet);
+    animation: kex-readmenu-in 140ms var(--kex-ease) both;
+  }
+  .kex-readmenu__row {
+    display: grid;
+    grid-template-columns: 96px auto;
+    align-items: center;
+    gap: 12px;
+  }
+  .kex-readmenu__label {
+    font-size: 13px;
+    color: var(--kex-text-3);
+  }
+  .kex-readmenu__size {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    .kex-iconbtn { width: 32px; height: 32px; border: 1px solid var(--kex-border-card); border-radius: var(--kex-r-s); }
+    .kex-iconbtn[disabled] { opacity: 0.4; cursor: default; }
+  }
+  .kex-readmenu__px {
+    min-width: 44px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--kex-text-2);
+  }
+
+  /* The material open in the side reader stays marked in the list. */
+  .kex-row--reading {
+    background: var(--kex-tint);
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      border-radius: 2px;
+      background: var(--kex-violet);
+    }
+  }
+}
+:root[data-kex-reader="side"] #kex-root {
+  --kex-reader-w: clamp(420px, calc(var(--kex-reader-f, 0.6) * 100vw), calc(100vw - var(--kex-sb-w) - 400px));
+  .kex-main {
+    margin-right: var(--kex-reader-w);
+  }
+}
+#kex-root .kex-main {
+  transition: margin-right 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes kex-readmenu-in {
+  from { opacity: 0; transform: translateY(-4px); }
 }
 @starting-style {
   #kex-root .kex-reader__backdrop { opacity: 0; }
   #kex-root .kex-sheet { opacity: 0; transform: translateY(12px) scale(0.99); }
+  #kex-root .kex-reader--side .kex-sheet { opacity: 0; transform: translateX(24px); }
 }
 @keyframes kex-reader-pulse {
   to { opacity: 0.45; }
@@ -216,4 +399,8 @@
     .kex-sheet, .kex-reader__backdrop, .kex-sheet__frame { transition: none; transform: none; }
     .kex-sheet__skeleton i { animation: none; }
   }
+}
+/* The column the main view gives up lies under the translucent header: it shows the app background, not Moodle's body. */
+:root[data-kex-reader="side"] body {
+  background: var(--kex-bg);
 }

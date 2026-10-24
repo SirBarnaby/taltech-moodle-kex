@@ -1,11 +1,12 @@
 import { EyeOff, Eye, Star } from 'lucide-preact';
+import { SiteNotices } from '../components/SiteNotices';
 import { useEffect, useRef } from 'preact/hooks';
 import { initMyCourses, setMcTab, storeOf, toggleHide, toggleStar } from '../../actions/mycourses';
 import { go } from '../../actions/navigate';
 import { seasonLabel } from '../../data/names';
 import type { Course } from '../../data/model';
 import { COURSE_TABS, lastAccess, type CoursesTab } from '../../data/repo/mycourses';
-import { currentSemester, displayName } from '../../data/repo/courses';
+import { applyAliases, currentSemester, displayName } from '../../data/repo/courses';
 import { t, type MessageKey } from '../../i18n';
 import { relTime } from '../../lib/time';
 import { schoolFor } from '../../lib/school';
@@ -123,7 +124,7 @@ export function MyCoursesView() {
   }, [tab]);
 
   const sem = currentSemester(sidebarCourses.value);
-  const list = raw ? sortCourses(raw.filter((c) => matchesFilter(c, filter)), sort, access) : [];
+  const list = raw ? sortCourses(applyAliases(raw, settings.value.courseAliases).filter((c) => matchesFilter(c, filter)), sort, access) : [];
   const current = sel !== undefined && list.some((c) => c.id === sel) ? sel : list[0]?.id;
   const loading = raw === undefined && status !== 'error';
   const failed = raw === undefined && status === 'error';
@@ -139,6 +140,7 @@ export function MyCoursesView() {
     <main class="kex-main kex-mycourses" id="kex-main" data-kex-test="mycourses" data-tab={tab}>
       <Band label={`${t('mc.label')} / ${seasonLabel(sem.season)} ${sem.year}`} title={t('mc.title')} seed={5} />
       <div class="kex-content">
+        <SiteNotices />
         <div class="kex-matheader kex-mcbar">
           <Tabs<CoursesTab> value={tab} onChange={setMcTab} items={tabs} label={t('mc.tabs')} idPrefix="kex-mc-tab" panelId="kex-mc-panel" />
           <div class="kex-mcbar__tools">

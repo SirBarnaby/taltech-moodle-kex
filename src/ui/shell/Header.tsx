@@ -84,7 +84,7 @@ export function Header() {
     ? buildBreadcrumb(
         { courseId: info.courseId, breadcrumb: info.breadcrumb, heading: info.heading, path: stripBase(location.pathname, info.wwwroot), wwwroot: info.wwwroot },
         sidebarCourses.value,
-        { home: t('crumb.home'), workspace: t('crumb.workspace'), mycourses: t('crumb.mycourses') },
+        { home: t('crumb.home'), workspace: t('crumb.workspace'), mycourses: t('crumb.mycourses'), grades: t('nav.grades'), notifications: t('nav.notifications') },
       )
     : [];
   if (hash.value === '#pinned' && crumbs.length === 2 && /\/my\/?$/.test(info?.wwwroot ? stripBase(location.pathname, info.wwwroot) : '')) crumbs[1] = { text: t('pinned.title'), href: null };

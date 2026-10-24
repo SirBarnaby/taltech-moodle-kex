@@ -97,12 +97,6 @@
     max-width: 760px;
     animation: kex-nf-in 220ms var(--kex-ease) both;
   }
-  @keyframes kex-nf-in {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-  }
   .kex-nfdetail__kicker {
     margin: 4px 0 10px;
     font-size: 11px;
@@ -178,5 +172,11 @@
 @media (prefers-reduced-motion: reduce) {
   #kex-root .kex-nfdetail {
     animation: none;
+  }
+}
+@keyframes kex-nf-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
 }

@@ -240,3 +240,63 @@
     }
   }
 }
+
+/* Moodle / TalTech site notices as KEX cards (Workspace and My courses). */
+#kex-root {
+  .kex-notices {
+    display: grid;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .kex-notice {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 16px;
+    max-width: 1100px;
+    padding: 14px 16px 14px 14px;
+    border: 1px solid var(--kex-tint-border);
+    border-radius: var(--kex-r-m);
+    background: var(--kex-tint);
+    animation: kex-fade 200ms var(--kex-ease) both;
+  }
+  .kex-notice__icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--kex-r-s);
+    background: var(--kex-bg);
+    color: var(--kex-violet);
+    overflow: hidden;
+    img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+  }
+  .kex-notice__kicker {
+    font-size: 11px;
+    line-height: 14px;
+    letter-spacing: 0.12em;
+    color: var(--kex-mono-strong);
+  }
+  .kex-notice__text {
+    margin-top: 4px;
+    font-size: 15px;
+    line-height: 22px;
+    color: var(--kex-text-2);
+    overflow-wrap: anywhere;
+    p { margin: 0 0 4px; }
+    a {
+      color: var(--kex-violet);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    img, svg { display: none; }
+  }
+  .kex-notice__hide {
+    gap: 6px;
+    margin-top: 2px;
+  }
+}

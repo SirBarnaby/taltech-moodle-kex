@@ -120,8 +120,12 @@ export class WsClient {
     try {
       await this.ready;
       const results = await this.post(batch);
+      // Moodle stops a batch at the first call that throws: the calls after it get no result and go again in a batch of their own.
+      const failed = results.some((r) => r?.error);
+      const again: Pending[] = [];
       batch.forEach((p, i) => {
         const r = results[i];
+        if (!r && failed) return void again.push(p);
         if (!r) return p.reject(new WsError('missingresult', `No result for ${p.methodname}`));
         if (r.error) {
           const code = r.exception?.errorcode ?? 'unknown';
@@ -130,6 +134,13 @@ export class WsClient {
         }
         p.resolve(r.data);
       });
+      if (again.length) {
+        this.queue.unshift(...again);
+        if (!this.scheduled) {
+          this.scheduled = true;
+          setTimeout(() => void this.flush(), 0);
+        }
+      }
     } catch (e) {
       batch.forEach((p) => p.reject(e));
     }

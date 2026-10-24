@@ -238,17 +238,30 @@
     color: var(--kex-sb-label);
   }
 
-  /* Active course: gradient, hairlines, and the glowing left marker */
-  .kex-sb__course--active {
+  /* Active course: gradient, hairlines, and the glowing left marker. They live on one glide element behind the list, which
+     slides to the active course; the item itself only changes its text colours. */
+  .kex-sb__courses {
+    position: relative;
+  }
+  .kex-sb__courses > li:not(.kex-sb__glide) {
+    position: relative;
+    z-index: 1;
+  }
+  .kex-sb__glide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 0;
+    height: 0;
+    pointer-events: none;
+    opacity: 0;
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(0, 0, 0, 0.16) 100%),
       linear-gradient(90deg, #6d1087 0%, #57156e 13%, #3d1b5f 40%, #482874 60%, #523882 85%, #392772 100%);
     box-shadow: inset 0 1px 0 rgba(150, 100, 205, 0.6), inset 0 -1px 0 rgba(160, 30, 150, 0.55);
-    &:hover {
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(0, 0, 0, 0.16) 100%),
-        linear-gradient(90deg, #6d1087 0%, #57156e 13%, #3d1b5f 40%, #482874 60%, #523882 85%, #392772 100%);
-    }
+    transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1), height 220ms cubic-bezier(0.23, 1, 0.32, 1), opacity 160ms linear;
+    will-change: transform;
     &::before {
       content: "";
       position: absolute;
@@ -266,11 +279,18 @@
       background: #fdf6fe;
       box-shadow: 0 0 10px 1px rgba(232, 120, 240, 0.65);
     }
+  }
+  .kex-sb__course--active {
+    &:hover {
+      background: transparent;
+    }
     .kex-sb__code {
       color: var(--kex-sb-mono-active);
+      transition: color 160ms linear;
     }
     .kex-sb__name {
       color: #f9f5fc;
+      transition: color 160ms linear;
     }
   }
 
@@ -576,5 +596,13 @@
   }
   .kex-sb__row--sub .kex-sb__pill {
     margin-left: auto;
+  }
+}
+:root[data-kex-motion="reduced"] #kex-root .kex-sb__glide {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  #kex-root .kex-sb__glide {
+    transition: none;
   }
 }

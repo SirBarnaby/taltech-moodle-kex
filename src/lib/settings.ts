@@ -5,6 +5,20 @@ export type ThemeSetting = 'system' | 'light' | 'dark';
 export type EffectsSetting = 'animated' | 'static' | 'off';
 export type MotionSetting = 'system' | 'reduced' | 'full';
 export type RouteMode = 'app' | 'skin' | 'off';
+export type Density = 'comfortable' | 'compact';
+
+/** Reader (side panel) preferences: text size step 0-4 (14-22 px), measure, line spacing, family, placement and the side panel width. */
+export interface ReaderPrefs {
+  size: number;
+  width: 'narrow' | 'medium' | 'wide';
+  leading: 'tight' | 'normal' | 'loose';
+  font: 'sans' | 'serif';
+  mode: 'side' | 'center' | 'full';
+  /** Side panel width as a fraction of the window (0.36-0.8). */
+  side: number;
+}
+
+export const DEFAULT_READER: ReaderPrefs = { size: 1, width: 'medium', leading: 'normal', font: 'sans', mode: 'side', side: 0.6 };
 
 export interface Settings {
   enabled: boolean;
@@ -24,6 +38,11 @@ export interface Settings {
   routeModes: Record<string, RouteMode>;
   showOffPill: boolean;
   openInNewTab: 'never' | 'external' | 'always';
+  /** Compact course rows (52 px) everywhere; topics with four or more labs always use them. */
+  density: Density;
+  reader: ReaderPrefs;
+  /** Moodle site notices the user hid, by a hash of their text (a changed notice shows again). */
+  hiddenNotices: string[];
   debug: { freezeTime?: number; selectorReport?: boolean; logLevel?: 'warn' | 'debug' };
 }
 
@@ -45,11 +64,28 @@ export const DEFAULT_SETTINGS: Settings = {
   routeModes: {},
   showOffPill: true,
   openInNewTab: 'external',
+  density: 'comfortable',
+  reader: DEFAULT_READER,
+  hiddenNotices: [],
   debug: {},
 };
 
 const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T =>
   typeof v === 'string' && (allowed as readonly string[]).includes(v) ? (v as T) : fallback;
+
+function normalizeReader(raw: unknown): ReaderPrefs {
+  const d = DEFAULT_READER;
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const num = (v: unknown, lo: number, hi: number, fallback: number): number => (typeof v === 'number' && Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : fallback);
+  return {
+    size: Math.round(num(r.size, 0, 4, d.size)),
+    width: pick(r.width, ['narrow', 'medium', 'wide'], d.width),
+    leading: pick(r.leading, ['tight', 'normal', 'loose'], d.leading),
+    font: pick(r.font, ['sans', 'serif'], d.font),
+    mode: pick(r.mode, ['side', 'center', 'full'], d.mode),
+    side: num(r.side, 0.36, 0.8, d.side),
+  };
+}
 
 /** Merge a stored (possibly old or hand-edited) value over the defaults, dropping invalid fields. */
 export function normalizeSettings(raw: unknown): Settings {
@@ -79,6 +115,9 @@ export function normalizeSettings(raw: unknown): Settings {
     routeModes: modes,
     showOffPill: typeof r.showOffPill === 'boolean' ? r.showOffPill : d.showOffPill,
     openInNewTab: pick(r.openInNewTab, ['never', 'external', 'always'], d.openInNewTab),
+    density: pick(r.density, ['comfortable', 'compact'], d.density),
+    reader: normalizeReader(r.reader),
+    hiddenNotices: Array.isArray(r.hiddenNotices) ? r.hiddenNotices.filter((x): x is string => typeof x === 'string').slice(-50) : [],
     debug: r.debug && typeof r.debug === 'object' ? (r.debug as Settings['debug']) : {},
   };
 }

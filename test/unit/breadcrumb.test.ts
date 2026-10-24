@@ -3,7 +3,7 @@ import { parsePageInfo } from '../../src/content/pageinfo';
 import { buildBreadcrumb, collapseBreadcrumb } from '../../src/ui/shell/breadcrumb';
 import { captureDoc } from '../fixtures/load';
 
-const labels = { home: 'Home', workspace: 'Workspace', mycourses: 'My courses' };
+const labels = { home: 'Home', workspace: 'Workspace', mycourses: 'My courses', grades: 'Grades', notifications: 'Notifications' };
 const root = 'https://moodle.taltech.ee';
 const courses = [{ id: 37829, code: 'ITB8833', url: `${root}/course/view.php?id=37829` }];
 
@@ -12,6 +12,9 @@ describe('buildBreadcrumb', () => {
     const base = { courseId: 1, breadcrumb: [], heading: '', wwwroot: root };
     expect(buildBreadcrumb({ ...base, path: '/my/' }, courses, labels).map((c) => c.text)).toEqual(['Home', 'Workspace']);
     expect(buildBreadcrumb({ ...base, path: '/my/courses.php' }, courses, labels).map((c) => c.text)).toEqual(['Home', 'My courses']);
+    const grades = { ...base, breadcrumb: [{ text: 'Student Two', href: `${root}/user/profile.php` }, { text: 'Grades', href: null }], path: '/grade/report/overview/index.php' };
+    expect(buildBreadcrumb(grades, courses, labels).map((c) => c.text)).toEqual(['Home', 'Grades']);
+    expect(buildBreadcrumb({ ...base, path: '/message/output/popup/notifications.php' }, courses, labels).map((c) => c.text)).toEqual(['Home', 'Notifications']);
     const c = buildBreadcrumb({ courseId: 37829, breadcrumb: [], heading: 'ITB8833 whatever', path: '/course/view.php', wwwroot: root }, courses, labels);
     expect(c.map((x) => x.text)).toEqual(['Home', 'My courses', 'ITB8833']);
     expect(c[2]?.href).toBeNull();

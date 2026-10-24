@@ -12,6 +12,8 @@ export interface BreadcrumbLabels {
   home: string;
   workspace: string;
   mycourses: string;
+  grades?: string;
+  notifications?: string;
 }
 
 const courseIdOf = (href: string | null): number | null => {
@@ -35,6 +37,9 @@ export function buildBreadcrumb(
 
   if (path === '/my/' || path === '/my/index.php') return [home, { text: labels.workspace, href: null }];
   if (path === '/my/courses.php') return [home, { text: labels.mycourses, href: null }];
+  // Moodle titles these pages with the user's name; the shell names the page itself.
+  if (labels.grades && path === '/grade/report/overview/index.php' && info.courseId <= 1) return [home, { text: labels.grades, href: null }];
+  if (labels.notifications && path === '/message/output/popup/notifications.php') return [home, { text: labels.notifications, href: null }];
 
   const out: ShellCrumb[] = [home];
   if (info.courseId > 1) {

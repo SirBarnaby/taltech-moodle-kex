@@ -200,6 +200,9 @@ function Options() {
             options={[{ value: 'system', label: t('settings.motion.system') }, { value: 'reduced', label: t('settings.motion.reduced') }, { value: 'full', label: t('settings.motion.full') }]}
           />
         </Row>
+        <Row label={t('settings.compact')} hint={t('ext.compactHint')} htmlFor="o-compact">
+          <Switch id="o-compact" label={t('settings.compact')} checked={s.density === 'compact'} onChange={(on) => update({ density: on ? 'compact' : 'comfortable' })} />
+        </Row>
       </Section>
 
       <Section id="o-sidebar" title={t('ext.sidebar')}>

@@ -2,7 +2,7 @@ import {
   BookMarked, CalendarDays, ChevronRight, GraduationCap, House, LibraryBig, Mail, MessageSquare, Settings as SettingsIcon, SlidersHorizontal,
   SquareArrowOutUpRight, type LucideIcon,
 } from 'lucide-preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { setCourseAlias } from '../../actions/settings';
 import { go, homeUrl, PAGES } from '../../actions/navigate';
 import { stripBase } from '../../content/router';
@@ -15,6 +15,7 @@ import {
   activeCourseId, coursesLoading, hash, logoSrc, pageInfo, quickSettingsOpen, route, settings, sidebarCourses, sidebarInstant, sidebarMode, sidebarOverlay,
   ttLinks, user, userMenuOpen,
 } from '../../state';
+import { pressedCourseId } from '../../state/navigation';
 import { QuickSettings } from './QuickSettings';
 import { RailTip } from './RailTip';
 import { UserMenu } from './UserMenu';
@@ -54,6 +55,53 @@ interface CourseItemProps {
   onEdit: (id: number | null) => void;
 }
 
+/** Press feedback: the highlight leaves for the pressed course straight away; the route confirms it (or a timeout puts it back). */
+let pressTimer: number | undefined;
+function pressCourse(id: number): void {
+  if (pressedCourseId.peek() === id) return;
+  pressedCourseId.value = id;
+  window.clearTimeout(pressTimer);
+  pressTimer = window.setTimeout(() => (pressedCourseId.value = null), 4000);
+}
+
+/**
+ * The active-course highlight is one element that slides from course to course (transform and height only), so a course
+ * switch reads as one movement instead of one item going dark and another lighting up.
+ */
+function Glide({ list, activeId, deps }: { list: HTMLUListElement | null; activeId: number | null; deps: unknown[] }) {
+  const ref = useRef<HTMLLIElement>(null);
+  const placed = useRef(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || !list) return;
+    const place = (): void => {
+      const target = activeId === null ? null : list.querySelector<HTMLElement>(`.kex-sb__course[data-course-id="${activeId}"]`);
+      if (!target) {
+        el.style.opacity = '0';
+        placed.current = false;
+        return;
+      }
+      const first = !placed.current;
+      if (first) el.style.transition = 'none';
+      el.style.opacity = '1';
+      // Measured against the list (its items are positioned, so offsetTop would be relative to the item).
+      const top = target.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop;
+      el.style.transform = `translateY(${Math.round(top)}px)`;
+      el.style.height = `${target.offsetHeight}px`;
+      if (first) {
+        void el.offsetHeight;
+        el.style.transition = '';
+      }
+      placed.current = true;
+    };
+    place();
+    const ro = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(place);
+    ro?.observe(list);
+    return () => ro?.disconnect();
+  }, [list, activeId, ...deps]);
+  return <li class="kex-sb__glide" ref={ref} aria-hidden="true" role="presentation" />;
+}
+
 function CourseItem({ course, active, index, editing, onEdit }: CourseItemProps) {
   const name = displayName(course);
   const [c1, c2] = splitCode(course.code);
@@ -73,7 +121,7 @@ function CourseItem({ course, active, index, editing, onEdit }: CourseItemProps)
     };
     return (
       <li>
-        <div class={`kex-sb__course kex-sb__course--editing${active ? ' kex-sb__course--active' : ''}`}>
+        <div class={`kex-sb__course kex-sb__course--editing${active ? ' kex-sb__course--active' : ''}`} data-course-id={course.id}>
           <span class="kex-sb__code">{course.code}</span>
           <input
             ref={inputRef}
@@ -109,6 +157,12 @@ function CourseItem({ course, active, index, editing, onEdit }: CourseItemProps)
         data-tip={`${course.code} · ${name}`}
         data-kex-test={active ? 'sb-active-course' : undefined}
         title={t('sidebar.rename')}
+        onPointerDown={(e) => {
+          if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) pressCourse(course.id);
+        }}
+        onClick={(e) => {
+          if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) pressCourse(course.id);
+        }}
         onKeyDown={(e) => {
           if (e.key === 'F2') {
             e.preventDefault();
@@ -173,7 +227,14 @@ export function Sidebar() {
   const quickOpen = quickSettingsOpen.value;
   const userOpen = userMenuOpen.value;
   const courses = sidebarCourses.value;
-  const activeId = activeCourseId.value;
+  const routeActive = activeCourseId.value;
+  const pressed = pressedCourseId.value;
+  const activeId = pressed ?? routeActive;
+  const [list, setList] = useState<HTMLUListElement | null>(null);
+  useEffect(() => {
+    // The route caught up (or went elsewhere): the press has done its job.
+    pressedCourseId.value = null;
+  }, [routeActive]);
   const r = route.value;
   const u = user.value;
   const [editing, setEditing] = useState<number | null>(null);
@@ -324,7 +385,8 @@ export function Sidebar() {
         </ul>
         <div class="kex-sb__divider kex-sb__divider--2" />
         <div class="kex-sb__label" aria-hidden={expanded ? undefined : 'true'}>{label}</div>
-        <ul class="kex-sb__courses" aria-busy={coursesLoading.value}>
+        <ul class="kex-sb__courses" aria-busy={coursesLoading.value} ref={setList}>
+          {courses.length > 0 && <Glide list={list} activeId={activeId} deps={[courses, editing, expanded, mode]} />}
           {courses.map((c, i) => (
             <CourseItem key={c.id} course={c} index={i} active={c.id === activeId} editing={editing === c.id} onEdit={setEditing} />
           ))}

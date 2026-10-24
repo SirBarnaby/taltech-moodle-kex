@@ -1,7 +1,8 @@
 import type { MessageKey } from '../i18n';
 import type { Binding } from '../lib/keys';
-import { closePreview, copyLink, currentRow, enterRows, enterTopics, moveRow, moveTopic, openCm, previewCm, setTopic, stepPreview, togglePin, toggleDone, undoLast, topicHash } from './course';
-import { focusZone, previewCmId, topicNumber, topics } from '../state/course';
+import { closePreview, copyLink, currentRow, enterRows, enterTopics, moveRow, moveTopic, openCm, previewCm, setTopic, stepGroup, stepPreview, togglePin, toggleDone, undoLast, topicHash } from './course';
+import { stepReaderSize } from './reader';
+import { focusZone, labTrack, previewCmId, topicNumber, topics } from '../state/course';
 
 /** Course-page and preview key bindings (happy-path §3 and §7). Registered while the course view is mounted. */
 
@@ -64,19 +65,26 @@ export function courseBindings(): Binding[] {
       if (row) void copyLink(row);
     }, (e) => idle() && !!currentRow() && (inLists(e.target) || bodyLike(e.target))),
     b('z', d('help.course.undo'), undoLast, () => true),
+    b('[', d('help.course.labs'), () => stepGroup(-1), () => idle() && !!labTrack.value),
+    b(']', d('help.course.labs'), () => stepGroup(1), () => idle() && !!labTrack.value),
   ];
 }
+
+/** Keys that belong to a control inside the reader (the Aa menu's radio groups, the resize handle). */
+const inReaderControl = (t: EventTarget | null): boolean => t instanceof Element && !!t.closest('.kex-readmenu, .kex-reader__resize, [role="radiogroup"]');
 
 export function previewBindings(): Binding[] {
   const p = (keys: string, description: MessageKey, run: (e: KeyboardEvent) => void, guard: (e: KeyboardEvent) => boolean = () => true): Binding => ({
     keys, scope: 'preview', group: 'Course', description, run, when: (e) => previewCmId.value !== undefined && guard(e),
   });
   return [
-    p('j', d('help.preview.step'), () => stepPreview(1)),
-    p('k', d('help.preview.step'), () => stepPreview(-1)),
-    p('arrowdown', d('help.preview.step'), () => stepPreview(1)),
-    p('arrowup', d('help.preview.step'), () => stepPreview(-1)),
+    p('j', d('help.preview.step'), () => stepPreview(1), (e) => !inReaderControl(e.target)),
+    p('k', d('help.preview.step'), () => stepPreview(-1), (e) => !inReaderControl(e.target)),
+    p('arrowdown', d('help.preview.step'), () => stepPreview(1), (e) => !inReaderControl(e.target)),
+    p('arrowup', d('help.preview.step'), () => stepPreview(-1), (e) => !inReaderControl(e.target)),
     p('escape', d('help.escape'), closePreview),
+    p('[', d('help.preview.size'), () => stepReaderSize(-1), (e) => !inReaderControl(e.target)),
+    p(']', d('help.preview.size'), () => stepReaderSize(1), (e) => !inReaderControl(e.target)),
     p('enter', d('help.course.open'), () => {
       const row = currentRow();
       if (row) openCm(row);

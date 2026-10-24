@@ -180,6 +180,26 @@ export class RibbonsRenderer {
     if (!this.running && !this.pending && this.gl && this.canvas.dataset.drawn) this.draw(this.tFrozen);
   }
 
+  /**
+   * The frame on screen as a 2D canvas (drawn again first: a WebGL buffer is only readable in the task that drew it), so the
+   * caller can lay it over the next look and fade it out. Null before the first frame or without a context.
+   */
+  snapshot(): HTMLCanvasElement | null {
+    if (!this.gl || this.lost || this.pending || !this.canvas.dataset.drawn || this.canvas.width < 2) return null;
+    this.draw(this.tFrozen);
+    const snap = document.createElement('canvas');
+    snap.width = this.canvas.width;
+    snap.height = this.canvas.height;
+    const ctx = snap.getContext('2d');
+    if (!ctx) return null;
+    try {
+      ctx.drawImage(this.canvas, 0, 0);
+    } catch {
+      return null;
+    }
+    return snap;
+  }
+
   setPointer(x: number, y: number): void {
     this.pointerTarget = [Math.max(-1, Math.min(1, x)), Math.max(-1, Math.min(1, y))];
   }

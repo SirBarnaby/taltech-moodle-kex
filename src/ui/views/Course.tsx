@@ -1,16 +1,17 @@
 import { useEffect, useRef } from 'preact/hooks';
-import { courseCode, closePreview, initCourse, openCm, openCmOriginal, previewCm, retryCourse, setTopic, togglePin, toggleDone } from '../../actions/course';
+import { courseCode, closePreview, initCourse, openCm, openCmOriginal, previewCm, retryCourse, setGroupOpen, setTopic, showGroup, stepPreview, togglePin, toggleDone } from '../../actions/course';
 import { MOTION, sinceNavigation } from '../../fx/navigation';
 import { softEntered } from '../../state/navigation';
 import { courseGradesStore } from '../../data/repo/grades';
 import { splitTitle } from '../../data/names';
+import { displayName } from '../../data/repo/courses';
 import { pinsStore, isPinned } from '../../data/repo/pins';
 import { pad2, primaryIndex, resourceCount, type RowModel } from '../../data/topics';
 import { t } from '../../i18n';
 import { sanitizeHtml } from '../../lib/sanitize';
-import { activeCourseId, headerTitle, pageInfo, sidebarCourses } from '../../state';
+import { activeCourseId, headerTitle, pageInfo, settings, sidebarCourses } from '../../state';
 import {
-  courseError, courseState, courseStatus, focusZone, mergedSummaries, pinnedRow, previewCmId, rows, sectionView, secondaryNav, selectedCmId, topicNumber, topics, currentTopic,
+  courseError, courseState, courseStatus, focusZone, labTrack, mergedSummaries, openGroups, pinnedRow, previewCmId, rows, sectionView, secondaryNav, selectedCmId, topicNumber, topics, currentTopic,
 } from '../../state/course';
 import { Button } from '../components/Button';
 import { CourseNav } from '../components/CourseNav';
@@ -21,6 +22,7 @@ import { PreviewSheet } from '../components/PreviewSheet';
 import { ResourceRow } from '../components/ResourceRow';
 import { SlideUpText } from '../components/SlideUpText';
 import { EmptyState, RowSkeleton, TopicSkeleton } from '../components/States';
+import { LabTrack } from '../components/LabTrack';
 import { SubsectionCard } from '../components/SubsectionCard';
 import { TopicList, topicDisplayTitle } from '../components/TopicList';
 
@@ -91,9 +93,13 @@ export function CourseView() {
   const sel = selectedCmId.value;
   const previewId = previewCmId.value;
   const previewRow = previewId === undefined ? undefined : rowList.find((r) => r.cm.id === previewId);
+  const track = labTrack.value;
+  const open = openGroups.value;
+  const labOf = new Map(track?.map((i) => [i.group.section.id, i]) ?? []);
+  const compact = !!track || settings.value.density === 'compact';
 
   const code = course?.code ?? courseCode();
-  const rawName = course?.name ?? info?.heading ?? '';
+  const rawName = (course ? displayName(course) : '') || info?.heading || '';
   const lines = splitTitle(rawName);
 
   const detailTitle = topic ? topicDisplayTitle(topic) : '';
@@ -161,6 +167,7 @@ export function CourseView() {
       pinned={isPinned(row.cm.id, pins)}
       primary={row === primaryRow}
       selected={row.cm.id === sel}
+      reading={row.cm.id === previewId}
       enter={enter}
       onSelect={(cmid) => (selectedCmId.value = cmid)}
       onOpen={(r, newTab) => openCm(r, newTab)}
@@ -222,13 +229,21 @@ export function CourseView() {
                   </div>
                 </div>
                 {summaryHtml && <div class="kex-detail__summary" data-kex-test="detail-summary" dangerouslySetInnerHTML={{ __html: summaryHtml }} />}
+                {track && <LabTrack items={track} open={open} onShow={(gid) => showGroup(gid)} />}
                 {view.blocks.length ? (
-                  <ul class="kex-rows" key={topicNumber.value} data-kex-test="rows">
+                  <ul class={`kex-rows${compact ? ' kex-rows--compact' : ''}`} key={topicNumber.value} data-kex-test="rows">
                     {view.blocks.map((block, bi) =>
                       block.type === 'row' ? (
                         renderRow(block.row, orderOf.get(block.row.cm.id) ?? bi)
                       ) : (
-                        <SubsectionCard key={`g-${block.group.section.id}`} group={block.group} index={bi + 1}>
+                        <SubsectionCard
+                          key={`g-${block.group.section.id}`}
+                          group={block.group}
+                          index={bi + 1}
+                          lab={labOf.get(block.group.section.id)}
+                          open={!track || open.has(block.group.section.id)}
+                          onToggle={(o) => setGroupOpen(block.group.section.id, o)}
+                        >
                           {block.group.rows.map((r) => renderRow(r, orderOf.get(r.cm.id) ?? bi))}
                         </SubsectionCard>
                       ),
@@ -249,6 +264,7 @@ export function CourseView() {
           onClose={closePreview}
           onOpen={(r, newTab) => openCmOriginal(r, newTab)}
           onPin={(r) => void togglePin(r)}
+          onStep={stepPreview}
         />
       )}
     </main>

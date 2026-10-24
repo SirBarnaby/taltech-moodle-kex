@@ -21,7 +21,7 @@ import {
   hooks, livePageDoc, pageInfo, settings, sidebarCourses,
 } from '../state';
 import {
-  courseError, courseEvents, courseState, courseStatus, fetchedSummaries, focusZone, previewCmId, rows, secondaryNav, selectedCmId, summaries, tileImages, topicNumber, topics,
+  courseError, courseEvents, courseState, courseStatus, fetchedSummaries, focusZone, labTrack, openGroups, openGroupsSet, previewCmId, rows, secondaryNav, selectedCmId, summaries, tileImages, topicNumber, topics, visibleRows,
 } from '../state/course';
 import { go } from './navigate';
 import { pinItem } from './pins';
@@ -338,7 +338,7 @@ export function moveTopic(delta: 1 | -1): void {
 }
 
 export function moveRow(delta: 1 | -1): void {
-  const list = rows.value.filter((r) => r.kind !== 'note');
+  const list = visibleRows.value.filter((r) => r.kind !== 'note');
   if (!list.length) return;
   const i = list.findIndex((r) => r.cm.id === selectedCmId.value);
   const next = i < 0 ? 0 : Math.max(0, Math.min(list.length - 1, i + delta));
@@ -360,7 +360,7 @@ export function focusRow(cmid: number): void {
 }
 
 export function enterRows(): void {
-  const list = rows.value.filter((r) => r.kind !== 'note');
+  const list = visibleRows.value.filter((r) => r.kind !== 'note');
   const target = list.find((r) => r.cm.id === selectedCmId.value) ?? list[0];
   if (target) {
     selectedCmId.value = target.cm.id;
@@ -413,7 +413,45 @@ export function stepPreview(delta: 1 | -1): void {
   if (target) {
     previewCmId.value = target.cm.id;
     selectedCmId.value = target.cm.id;
+    // Stepping into a folded lab opens it, so the highlighted row is on screen beside the reader.
+    const lab = labTrack.value?.find((i) => i.group.rows.some((r) => r.cm.id === target.cm.id));
+    if (lab && !openGroups.value.has(lab.group.section.id)) setGroupOpen(lab.group.section.id, true);
+    requestAnimationFrame(() => document.querySelector(`[data-kex-row="${target.cm.id}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
   }
+}
+
+// -------------------------------------------------------------------- lab track
+
+export function setGroupOpen(id: number, open: boolean): void {
+  const ids = new Set(openGroups.value);
+  if (open) ids.add(id);
+  else ids.delete(id);
+  openGroupsSet.value = { topic: topicNumber.value, ids };
+}
+
+/** Open one lab on its own (chip strip, [ and ]), bring it into view and focus its header. */
+export function showGroup(id: number, opts: { focus?: boolean } = {}): void {
+  openGroupsSet.value = { topic: topicNumber.value, ids: new Set([id]) };
+  requestAnimationFrame(() => {
+    const el = document.querySelector<HTMLElement>(`[data-kex-group="${id}"]`);
+    if (!el) return;
+    const top = el.getBoundingClientRect().top;
+    const head = 64;
+    if (top < head || top > window.innerHeight * 0.6) window.scrollBy({ top: top - head - 72, behavior: document.documentElement.dataset.kexMotion === 'reduced' ? 'instant' as ScrollBehavior : 'smooth' });
+    if (opts.focus) el.querySelector<HTMLElement>('.kex-groupcard__toggle')?.focus({ preventScroll: true });
+  });
+}
+
+/** Previous or next lab from the one in view (or the one open). */
+export function stepGroup(delta: 1 | -1): void {
+  const track = labTrack.value;
+  if (!track?.length) return;
+  const open = openGroups.value;
+  const sel = selectedCmId.value;
+  let i = sel === undefined ? -1 : track.findIndex((x) => x.group.rows.some((r) => r.cm.id === sel) && open.has(x.group.section.id));
+  if (i < 0) i = track.findIndex((x) => open.has(x.group.section.id));
+  const next = track[Math.max(0, Math.min(track.length - 1, i < 0 ? 0 : i + delta))];
+  if (next) showGroup(next.group.section.id, { focus: true });
 }
 
 export function courseCode(): string {

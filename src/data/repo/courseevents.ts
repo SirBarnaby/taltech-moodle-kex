@@ -47,7 +47,8 @@ export function courseEventsStore(courseId: number): Store<CmEvent[]> {
     s = cache.swr<CmEvent[]>(`events:course:${courseId}`, 5 * 60 * 1000, async () => {
       const res = await ws.call<{ events: RawEvent[] }>('core_calendar_get_action_events_by_course', {
         courseid: courseId,
-        timesortfrom: Math.floor(Date.now() / 1000) - 14 * 24 * 3600,
+        // Two months back: the lab track marks every lab whose deadline passed undone, not only last fortnight's.
+        timesortfrom: Math.floor(Date.now() / 1000) - 60 * 24 * 3600,
         limitnum: 50,
       });
       return mapEvents(res.events ?? []);

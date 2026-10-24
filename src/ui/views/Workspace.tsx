@@ -1,4 +1,5 @@
 import { ArrowUpRight, Bell, CircleCheck, Eye, Megaphone, MessagesSquare, Pin as PinIcon, X } from 'lucide-preact';
+import { SiteNotices } from '../components/SiteNotices';
 import { Fragment } from 'preact';
 import { useEffect } from 'preact/hooks';
 import {
@@ -347,6 +348,7 @@ export function WorkspaceView() {
     <main class="kex-main kex-workspace" id="kex-main" data-kex-test="workspace" data-tab={tab}>
       <Hero class="kex-hero--ws" key="ws" label={label} lines={[hello, summary]} links={links} seed={7} />
       <div class="kex-content">
+        <SiteNotices />
         <PinnedRow pins={rowPins(pins, null, 3)} courseId={null} />
         <div class="kex-matheader">
           <SlideUpText as="h2" class="kex-matheader__title" text={t('ws.thisWeek')} split="words" stagger={0.08} duration={0.6} inView />

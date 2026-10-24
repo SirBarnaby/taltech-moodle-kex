@@ -7,7 +7,8 @@ import { cmsOfSection, type CourseState } from '../data/repo/coursestate';
 import { modTypeNames } from '../data/repo/modnames';
 import { pinsStore, rowPins } from '../data/repo/pins';
 import type { NavTab } from '../data/scrape/secondarynav';
-import { buildSectionView, buildTopics, type RowModel, type SectionView, type TopicModel } from '../data/topics';
+import { buildSectionView, buildTopics, type GroupModel, type RowModel, type SectionView, type TopicModel } from '../data/topics';
+import { buildTrack, defaultOpen, isTrack, type LabTrackItem } from '../data/labtrack';
 import { activeCourseId } from './index';
 
 /** State of the course view (page-designs §5). Written by src/actions/course.ts, read by src/ui/views/Course.tsx. */
@@ -63,6 +64,35 @@ export const sectionView = computed<SectionView>(() => {
 
 /** Every row of the detail pane, subsection rows included (notes too). */
 export const rows = computed<RowModel[]>(() => sectionView.value.rows);
+
+/** The lab track of the selected topic (four or more subsections), or undefined for an ordinary topic. */
+export const labTrack = computed<LabTrackItem[] | undefined>(() => {
+  const blocks = sectionView.value.blocks;
+  if (!isTrack(blocks)) return undefined;
+  const groups = blocks.flatMap((b): GroupModel[] => (b.type === 'group' ? [b.group] : []));
+  return buildTrack(groups, Math.floor(Date.now() / 1000));
+});
+
+/** Labs the user opened or folded in this topic; until then the next lab (and anything overdue) is open. */
+export const openGroupsSet = signal<{ topic: number | undefined; ids: ReadonlySet<number> } | undefined>(undefined);
+
+export const openGroups = computed<ReadonlySet<number>>(() => {
+  const track = labTrack.value;
+  if (!track) return new Set();
+  const chosen = openGroupsSet.value;
+  if (chosen && chosen.topic === topicNumber.value) return chosen.ids;
+  return new Set(defaultOpen(track));
+});
+
+/** Rows the keyboard can reach: rows of folded labs are left out. */
+export const visibleRows = computed<RowModel[]>(() => {
+  const track = labTrack.value;
+  if (!track) return rows.value;
+  const open = openGroups.value;
+  const hidden = new Set<number>();
+  for (const item of track) if (!open.has(item.group.section.id)) item.group.rows.forEach((r) => hidden.add(r.cm.id));
+  return rows.value.filter((r) => !hidden.has(r.cm.id));
+});
 
 /** Pins for the PINNED row: this course first. */
 export const pinnedRow = computed<Pin[]>(() => rowPins(pinsStore().value.value ?? [], activeCourseId.value));

@@ -129,9 +129,27 @@ export function beginViewTransition(element: HTMLElement | null, scope: 'page' |
   ghost.setAttribute('aria-hidden', 'true');
   ghost.inert = true;
   const base = { position: 'fixed', left: `${bounds.left}px`, width: `${bounds.width}px`, margin: '0', pointerEvents: 'none', zIndex: '24', overflow: 'hidden', background: 'var(--kex-bg)' };
+  // The page head (hero or band) never fades: the copy of the old one turns see-through, so the old title leaves over the
+  // new head, whose ribbons canvas carries straight on (and cross-fades its own palette).
+  const headOnScreen = scope === 'page' && !!element.querySelector(':scope > :is(.kex-hero, .kex-band)') && element.getBoundingClientRect().top >= 0 && window.scrollY < 4;
   if (scope === 'page') {
     pruneOffscreen(element, copy);
     Object.assign(ghost.style, base, { top: '0px', height: `${Math.min(window.innerHeight, bounds.bottom)}px` });
+    if (headOnScreen) {
+      ghost.style.background = 'transparent';
+      copy.style.background = 'transparent';
+      const head = copy.querySelector<HTMLElement>(':scope > :is(.kex-hero, .kex-band)');
+      if (head) {
+        head.style.background = 'transparent';
+        head.style.boxShadow = 'none';
+        head.querySelectorAll('.kex-cross, .kex-hero__snap').forEach((n) => n.remove());
+      }
+      const content = copy.querySelector<HTMLElement>(':scope > .kex-content');
+      if (content) {
+        content.style.background = 'var(--kex-bg)';
+        content.style.minHeight = `${Math.max(0, window.innerHeight - (head?.offsetHeight ?? 0))}px`;
+      }
+    }
     Object.assign(copy.style, { position: 'absolute', top: `${bounds.top}px`, left: '0px', width: `${bounds.width}px`, height: `${bounds.height}px`, margin: '0', minHeight: '0', transform: 'none', transition: 'none' });
   } else {
     Object.assign(ghost.style, base, { top: `${bounds.top}px`, height: `${bounds.height}px` });
@@ -146,10 +164,12 @@ export function beginViewTransition(element: HTMLElement | null, scope: 'page' |
   );
   let frame = 0;
   let enter: Animation | undefined;
+  const fades: Animation[] = [];
   const stop = (): void => {
     cancelAnimationFrame(frame);
     exit.cancel();
     enter?.cancel();
+    fades.forEach((a) => a.cancel());
     ghost.remove();
     if (running.get(scope) === stop) running.delete(scope);
   };
@@ -165,16 +185,26 @@ export function beginViewTransition(element: HTMLElement | null, scope: 'page' |
         if (!incoming && ++tries < 4) return reveal();
         if (!incoming || incoming === element && !incoming.isConnected) return stop();
         if (scope === 'page') {
-          const keyframes: Keyframe[] = lift
-            ? [{ opacity: 0, transform: `translateY(${-lift}px)` }, { opacity: 1, transform: 'translateY(0)' }]
-            : [{ opacity: 0 }, { opacity: 1 }];
           const lag = performance.now() - t0;
-          enter = incoming.animate(keyframes, {
+          const timing: KeyframeAnimationOptions = {
             duration: lift ? MOTION.enter : MOTION.subtle,
             delay: Math.max(0, (lift ? MOTION.enterDelay : 0) - lag),
             easing: MOTION.ease,
             fill: 'backwards',
-          });
+          };
+          const head = incoming.querySelector<HTMLElement>(':scope > :is(.kex-hero, .kex-band)');
+          const body = incoming.querySelector<HTMLElement>(':scope > .kex-content');
+          if (head && body) {
+            // The head moves with the page but stays opaque (its canvas never blanks); only the content fades in.
+            enter = incoming.animate(lift ? [{ transform: `translateY(${-lift}px)` }, { transform: 'translateY(0)' }] : [{ transform: 'none' }, { transform: 'none' }], timing);
+            const fade = body.animate([{ opacity: 0 }, { opacity: 1 }], timing);
+            fades.push(fade);
+          } else {
+            const keyframes: Keyframe[] = lift
+              ? [{ opacity: 0, transform: `translateY(${-lift}px)` }, { opacity: 1, transform: 'translateY(0)' }]
+              : [{ opacity: 0 }, { opacity: 1 }];
+            enter = incoming.animate(keyframes, timing);
+          }
         } else {
           enter = incoming.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: MOTION.topicEnter, easing: MOTION.ease });
         }

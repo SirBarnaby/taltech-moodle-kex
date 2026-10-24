@@ -32,9 +32,10 @@ describe('courses repo helpers', () => {
     const extra = [...courses, mapCourse(raw(9, 'AAA0001', 'Other (AAA0001)')), mapCourse(raw(10, 'ZZZ9999', 'Last (ZZZ9999)'))];
     expect(orderCourses(extra, []).map((c) => c.code)).toEqual(['ITI8801', 'EMT0140', 'IAS0230', 'AAA0001', 'ZZZ9999']);
   });
-  it('ships default English aliases (a user alias wins, unknown codes have none), picks the most common semester and mirrors the myoverview grouping', () => {
+  it('uses only the user\'s own renames (no shipped short names), decodes escaped names, picks the most common semester and mirrors the myoverview grouping', () => {
     const a = applyAliases(courses, { '3': 'My IoT' });
-    expect(a.map((c) => c.alias)).toEqual(['Cloud & DevOps', 'My IoT', 'Embedded Systems']);
+    expect(a.map((c) => c.alias)).toEqual([undefined, 'My IoT', undefined]);
+    expect(mapCourse(raw(9, 'MMO5770', 'MMO5770 Management &amp; Leadership (2026 sügis)')).name).toBe('Management & Leadership');
     expect(applyAliases([mapCourse(raw(9, 'AAA0001', 'Other (AAA0001)'))], {})[0]?.alias).toBeUndefined();
     expect(currentSemester(courses)).toEqual({ season: 'autumn', year: 2026 });
     expect(groupingFromPrefs([])).toEqual({ grouping: 'all' });

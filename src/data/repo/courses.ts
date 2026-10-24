@@ -4,6 +4,7 @@ import { parseCourseName } from '../names';
 import { scrapeMyoverview, type MyoverviewGrouping } from '../scrape/myoverview';
 import { ws } from '../ws';
 import { log } from '../../lib/log';
+import { decodeEntities } from '../../lib/sanitize';
 import type { Settings } from '../../lib/settings';
 
 const TIMELINE = 'core_course_get_enrolled_courses_by_timeline_classification';
@@ -37,7 +38,9 @@ interface PrefsResponse {
   preferences: { name: string; value: string | null }[];
 }
 
-export function mapCourse(raw: RawCourse, lang: 'en' | 'et' = 'en', wwwroot = ''): Course {
+export function mapCourse(input: RawCourse, lang: 'en' | 'et' = 'en', wwwroot = ''): Course {
+  // Moodle's web services return names HTML-escaped ("Cloud Architectures &amp; DevOps").
+  const raw = { ...input, fullname: decodeEntities(input.fullname ?? ''), shortname: decodeEntities(input.shortname ?? ''), coursecategory: input.coursecategory ? decodeEntities(input.coursecategory) : input.coursecategory };
   const parsed = parseCourseName(raw.shortname ?? '', raw.fullname ?? '', raw.idnumber ?? '', lang);
   const image = raw.courseimage && /^https?:/.test(raw.courseimage) ? raw.courseimage : undefined;
   return {
@@ -58,19 +61,6 @@ export function mapCourse(raw: RawCourse, lang: 'en' | 'et' = 'en', wwwroot = ''
   };
 }
 
-/**
- * Short English names shipped for the author's six TalTech courses (iteration3). They are only a default:
- * a user alias (F2 in the sidebar) always wins.
- */
-export const DEFAULT_ALIASES_BY_CODE: Readonly<Record<string, string>> = {
-  ITI8801: 'Cloud & DevOps',
-  EMT0140: 'IoT for Industry',
-  IAS0230: 'Embedded Systems',
-  MMO5770: 'Management & Leadership',
-  ITB8833: 'Digital State ICT',
-  IEE2630: 'Smart Networks',
-};
-
 /** Default sidebar order for courses that are not in the frozen order yet: the mock's order, then by code. */
 export const DEFAULT_ORDER_BY_CODE: readonly string[] = ['ITI8801', 'EMT0140', 'IAS0230', 'MMO5770', 'ITB8833', 'IEE2630'];
 
@@ -88,10 +78,10 @@ export function orderCourses<T extends { id: number; code: string }>(courses: re
   return [...known, ...fresh];
 }
 
-/** Courses as the sidebar shows them: the user's alias, else the shipped default alias for the code. */
+/** One naming rule for every view: the user's own rename (F2 in the sidebar), else Moodle's name without code and semester. */
 export function applyAliases(courses: readonly Course[], aliases: Record<string, string>): Course[] {
   return courses.map((c) => {
-    const alias = aliases[String(c.id)] || DEFAULT_ALIASES_BY_CODE[c.code];
+    const alias = aliases[String(c.id)];
     return alias ? { ...c, alias } : c;
   });
 }

@@ -31,6 +31,8 @@ export interface EffectHandle {
   setPointer(x: number, y: number): void;
   /** New seed, style, intensity or fade for the same canvas. */
   update(opts: RibbonsOptions): void;
+  /** The current frame as a 2D canvas, for a cross-fade to the next look. */
+  snapshot(): HTMLCanvasElement | null;
 }
 
 class EffectsController {
@@ -93,6 +95,7 @@ class EffectsController {
       },
       setPointer: (x, y) => entry.renderer?.setPointer(x, y),
       update: (o) => entry.renderer?.setOptions(o),
+      snapshot: () => (entry.mode === 'fallback' ? null : entry.renderer?.snapshot() ?? null),
     };
   }
 

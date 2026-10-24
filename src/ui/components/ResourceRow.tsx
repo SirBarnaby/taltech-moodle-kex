@@ -17,6 +17,8 @@ interface ResourceRowProps {
   pinned: boolean;
   primary: boolean;
   selected: boolean;
+  /** Open in the side reader right now. */
+  reading?: boolean;
   /** Stagger index for the entry animation (rows past 8 appear instantly). */
   enter?: number;
   /** Grade from Moodle's user report, keyed by this activity's cmid. */
@@ -31,7 +33,7 @@ interface ResourceRowProps {
 const isModified = (e: MouseEvent): boolean => e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0;
 
 /** One material (design-spec §4.9): thumb, mono label, title, subtitle, actions, primary button. */
-export function ResourceRow({ row, index, topicNumber, pinned, primary, selected, enter, grade, onSelect, onOpen, onPreview, onPin, onDone }: ResourceRowProps) {
+export function ResourceRow({ row, index, topicNumber, pinned, primary, selected, reading, enter, grade, onSelect, onOpen, onPreview, onPin, onDone }: ResourceRowProps) {
   if (row.kind === 'note') {
     return (
       <li class="kex-row kex-row--note" data-kex-note={row.cm.id}>
@@ -45,7 +47,7 @@ export function ResourceRow({ row, index, topicNumber, pinned, primary, selected
   const style = enter !== undefined && enter < 8 ? { '--kex-enter': String(enter) } : undefined;
   return (
     <li
-      class={`kex-row${row.locked ? ' kex-row--locked' : ''}${selected ? ' kex-row--selected' : ''}${enter !== undefined && enter < 8 ? ' kex-row--enter' : ''}${row.provisional ? ' kex-row--provisional' : ''}${subtitle ? ' kex-row--sub' : ''}`}
+      class={`kex-row${row.locked ? ' kex-row--locked' : ''}${selected ? ' kex-row--selected' : ''}${reading ? ' kex-row--reading' : ''}${enter !== undefined && enter < 8 ? ' kex-row--enter' : ''}${row.provisional ? ' kex-row--provisional' : ''}${subtitle ? ' kex-row--sub' : ''}`}
       style={style}
       tabIndex={selected ? 0 : -1}
       data-kex-row={row.cm.id}

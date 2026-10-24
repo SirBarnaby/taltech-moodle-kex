@@ -59,6 +59,7 @@ import { effectiveMode, resolveRoute, stripBase, type EffectiveRoute } from './r
 import { scrapeLanguages } from './langs';
 import { mountGuestSkin, unmountGuestSkin } from './skinguest';
 import { clickedLink, isPlainClick, PageLoader, prefetchSafe, routeOfDoc, softTarget, type SoftTarget } from './softnav';
+import { watchLiveNotices } from './sitenotice';
 import { clearSnapshot, hasSnapshot, paintSnapshot, removeSnapshot, saveSnapshot } from './snapshot';
 
 /** Failsafe from architecture §5.2: if the shell has not mounted after 3 s, show plain Moodle. */
@@ -374,8 +375,16 @@ class Controller {
   }
 
   /** Key bindings, view attributes and per-view keyboard scopes for the route in `eff`. Undone by `unmountRoute`. */
+  private noticeWatch = false;
+
   private mountRoute(eff: EffectiveRoute): void {
     const stops = this.routeStops;
+    if (eff.effective === 'app' && !this.noticeWatch && eff.key !== 'login') {
+      this.noticeWatch = true;
+      // Moodle and TalTech notices (body-level additions, top-of-page alerts) become a KEX card on the home views.
+      const home = eff.key;
+      this.stops.push(watchLiveNotices(() => home === 'workspace' || home === 'mycourses'));
+    }
     if (eff.effective === 'app' && (eff.key === 'course' || eff.key === 'section')) {
       const off = keyManager.register([...courseBindings(), ...previewBindings()]);
       keyManager.setScope('course', true);
@@ -667,6 +676,10 @@ class Controller {
         history.replaceState({ ...(history.state as object | null), kexScroll: window.scrollY }, '');
         history.pushState({ kex: 1 }, '', url.href);
       }
+      // One painted frame first: the press shows (the sidebar highlight starts moving, the old view starts leaving) before
+      // the new view is built, which can hold the main thread for a moment on a large course.
+      await nextPaint();
+      if (seq !== this.navSeq) return;
       this.swapView(target, document.implementation.createHTMLDocument(''), url);
       enter('.kex-main');
       if (restoreY !== undefined) restoreScroll(restoreY, () => !navigationLoading.value && (target.key !== 'course' || courseStatus.value !== 'loading'));
@@ -918,3 +931,15 @@ void new Controller().start().catch((e: unknown) => {
     /* nothing more we can do */
   }
 });
+
+/** Resolves after the next frame has been painted (or 60 ms in a background tab, where frames do not run). */
+function nextPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    const done = (): void => {
+      window.clearTimeout(fallback);
+      resolve();
+    };
+    const fallback = window.setTimeout(done, 60);
+    requestAnimationFrame(() => window.setTimeout(done, 0));
+  });
+}

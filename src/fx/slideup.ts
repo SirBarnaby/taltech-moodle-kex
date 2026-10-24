@@ -187,6 +187,8 @@ export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions 
       return;
     }
     const n = items.length;
+    const inks = Array.from(target.querySelectorAll<HTMLElement>('.kex-su-ink'));
+    inks.forEach((ink) => ink.classList.add('kex-su-ink--plain'));
     // The whole stagger fits in the cap, however many pieces there are.
     const gap = n > 1 ? Math.min(o.stagger, (o.maxStagger ?? MAX_STAGGER) / (n - 1)) : 0;
     const lineOf = new Map<HTMLElement, number>();
@@ -199,7 +201,13 @@ export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions 
         fill: 'both',
       }),
     );
+    // Each coloured piece gets its gradient as soon as it has landed.
+    animations.forEach((a, i) => {
+      const ink = items[i]?.querySelector<HTMLElement>('.kex-su-ink');
+      if (ink) void a.finished.then(() => ink.classList.remove('kex-su-ink--plain'), () => ink.classList.remove('kex-su-ink--plain'));
+    });
     const all = Promise.all(animations.map((a) => a.finished.catch(() => undefined))).then(() => {
+      inks.forEach((ink) => ink.classList.remove('kex-su-ink--plain'));
       // Drop the fill so the text can reflow or be selected without a leftover transform layer.
       animations.forEach((a) => {
         try {
@@ -215,6 +223,7 @@ export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions 
   };
 
   const cancel = (): void => {
+    target.querySelectorAll('.kex-su-ink--plain').forEach((ink) => ink.classList.remove('kex-su-ink--plain'));
     observer?.disconnect();
     animations.forEach((a) => a.cancel());
     animations = [];

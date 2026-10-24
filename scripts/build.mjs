@@ -10,6 +10,7 @@ import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkCss } from './check-css.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = new Set(process.argv.slice(2));
@@ -117,6 +118,12 @@ const cssCfg = {
   // The @font-face urls are relative to kex.css at runtime (fonts/ is copied next to it).
   external: ['*.woff2', '*.webp', '*.png'],
 };
+
+const cssProblems = await checkCss();
+if (cssProblems.length) {
+  console.error(`CSS check failed:\n  ${cssProblems.join('\n  ')}`);
+  process.exit(1);
+}
 
 if (watch) {
   const ctxs = await Promise.all([esbuild.context(jsCfg), esbuild.context(cssCfg)]);
