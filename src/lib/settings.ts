@@ -18,7 +18,7 @@ export interface ReaderPrefs {
   side: number;
 }
 
-export const DEFAULT_READER: ReaderPrefs = { size: 1, width: 'medium', leading: 'normal', font: 'sans', mode: 'side', side: 0.6 };
+export const DEFAULT_READER: ReaderPrefs = { size: 1, width: 'medium', leading: 'normal', font: 'sans', mode: 'side', side: 0.5 };
 
 export interface Settings {
   enabled: boolean;

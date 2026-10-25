@@ -1,19 +1,25 @@
 import { Megaphone, X } from 'lucide-preact';
-import { useMemo } from 'preact/hooks';
+import { useEffect, useMemo } from 'preact/hooks';
 import { updateSettings } from '../../actions/settings';
 import { pushToast } from '../../actions/toasts';
-import { liveNotices, scanNotices, type SiteNotice } from '../../content/sitenotice';
+import { liveNotices, noticeFromHtml, scanNotices, type SiteNotice } from '../../content/sitenotice';
+import { dashboardStore } from '../../data/repo/dashboard';
 import { t } from '../../i18n';
 import { pageDoc, settings } from '../../state';
 
-/** Moodle and TalTech notices as one quiet card each: a small icon, Moodle's own words and links, and Hide (until the text changes). */
+/** Moodle and TalTech notices (page alerts, body-level banners and the dashboard announcement block) as one quiet card each: a small icon, Moodle's own words and links, and Hide (until the text changes). */
 export function SiteNotices() {
   const doc = pageDoc.value;
   // A page opened in place brings its own Moodle document: its top-of-page alerts count too.
   const fromDoc = useMemo<SiteNotice[]>(() => (doc && doc !== document ? scanNotices(doc).map((f) => f.notice) : []), [doc]);
+  // The dashboard's own announcement block (block_advnotifications), read from /my/ when this page does not have it.
+  const dash = dashboardStore();
+  useEffect(() => { void dash.refresh(); }, []);
+  const blocks = dash.value.value?.blocks;
+  const fromDash = useMemo<SiteNotice[]>(() => (blocks ?? []).filter((b) => b.notice).flatMap((b) => noticeFromHtml(b.html) ?? []), [blocks]);
   const hidden = new Set(settings.value.hiddenNotices);
   const seen = new Set<string>();
-  const list = [...liveNotices.value, ...fromDoc].filter((n) => !hidden.has(n.key) && !seen.has(n.key) && seen.add(n.key));
+  const list = [...liveNotices.value, ...fromDoc, ...fromDash].filter((n) => !hidden.has(n.key) && !seen.has(n.key) && seen.add(n.key));
   if (!list.length) return null;
   const hide = (n: SiteNotice): void => {
     updateSettings({ hiddenNotices: [...settings.value.hiddenNotices, n.key] });

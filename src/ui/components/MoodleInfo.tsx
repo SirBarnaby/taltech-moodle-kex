@@ -3,17 +3,16 @@ import { dashboardStore } from '../../data/repo/dashboard';
 import { homeUrl } from '../../actions/navigate';
 import { t } from '../../i18n';
 
-/** University's own announcements remain visible; reference material uses progressive disclosure. */
+/** Reference material from the Moodle dashboard, behind one disclosure. Announcements show as notice cards (SiteNotices). */
 export function MoodleInfo() {
   const store = dashboardStore();
   useEffect(() => { void store.refresh(); }, []);
   const blocks = store.value.value?.blocks ?? [];
   const inventory = store.value.value?.inventory ?? [];
   const references = inventory.filter((item) => item.disposition !== 'shown');
-  if (!blocks.length && !references.length && store.status.value !== 'error') return null;
+  if (!blocks.some((b) => !b.notice) && !references.length && store.status.value !== 'error') return null;
   return (
     <section class="kex-moodle-info" aria-label={t('home.info')} data-kex-test="moodle-info">
-      {blocks.filter((b) => b.notice).map((b, i) => <div key={i} class="kex-moodle-info__notice" role="note" onErrorCapture={(e) => { if (e.target instanceof HTMLImageElement) e.target.replaceWith(document.createTextNode(e.target.alt)); }} dangerouslySetInnerHTML={{ __html: b.html }} />)}
       {(blocks.some((b) => !b.notice) || references.length > 0) && (
         <details class="kex-moodle-info__details">
           <summary>{t('home.info')}</summary>

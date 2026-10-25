@@ -47,6 +47,14 @@ function toNotice(el: Element): SiteNotice | null {
   return { key: hashText(text), text, html: html || text, icon: img?.getAttribute('src') ?? undefined };
 }
 
+/** A notice Moodle renders inside a dashboard block (block_advnotifications), given as that block's sanitized HTML. */
+export function noticeFromHtml(html: string): SiteNotice | null {
+  const doc = document.implementation.createHTMLDocument('');
+  const host = doc.createElement('div');
+  host.innerHTML = html;
+  return toNotice(host);
+}
+
 /** Elements that carry a notice: foreign elements at body level and alerts in Moodle's page slots. */
 export function noticeElements(doc: Document, inPage = true): Element[] {
   const out: Element[] = [];

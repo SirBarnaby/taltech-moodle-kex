@@ -358,7 +358,7 @@
   }
 }
 :root[data-kex-reader="side"] #kex-root {
-  --kex-reader-w: clamp(420px, calc(var(--kex-reader-f, 0.6) * 100vw), calc(100vw - var(--kex-sb-w) - 400px));
+  --kex-reader-w: clamp(420px, calc(var(--kex-reader-f, 0.5) * 100vw), calc(100vw - var(--kex-sb-w) - var(--kex-reader-keep, 640px)));
   .kex-main {
     margin-right: var(--kex-reader-w);
   }

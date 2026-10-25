@@ -285,11 +285,11 @@
     transition: none;
   }
 }
-@media (max-width: 1100px) {
+@container kexcol (max-width: 1040px) {
   #kex-root .kex-group--lab .kex-groupcard { padding-inline: 14px; }
   #kex-root .kex-group--lab .kex-groupcard__due { display: none; }
 }
-@media (max-width: 700px) {
+@container kexcol (max-width: 660px) {
   #kex-root .kex-group--lab .kex-groupcard__progress { display: none; }
   #kex-root .kex-rows--compact .kex-row__actions { display: none; }
 }
