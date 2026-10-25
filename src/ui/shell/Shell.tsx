@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { MOTION } from '../../fx/navigation';
 import { motionTier } from '../../fx/motion';
 import { t } from '../../i18n';
-import { activeCourseId, hash, headerCompact, helpOpen, paletteOpen, route, settings, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
+import { activeCourseId, hash, headerCompact, helpOpen, paletteOpen, route, sidebarMode, sidebarOverlay, viewportWidth } from '../../state';
 import { CourseView } from '../views/Course';
 import { GradesOverviewView } from '../views/GradesOverview';
 import { MyCoursesView } from '../views/MyCourses';
@@ -64,7 +64,6 @@ function useShellEffects(): void {
 function useSidebarSlide(): void {
   const mode = sidebarMode.value;
   const width = viewportWidth.value;
-  const pinned = !settings.value.sidebarAutoHide;
   const prev = useRef<{ width: number; main: number; header: number } | null>(null);
   useLayoutEffect(() => {
     const main = document.getElementById('kex-main');
@@ -77,7 +76,7 @@ function useSidebarSlide(): void {
       if (!el || typeof el.animate !== 'function' || Math.abs(from - to) < 1) continue;
       el.animate([{ transform: `translateX(${from - to}px)` }, { transform: 'translateX(0)' }], { duration: 220, easing: MOTION.ease });
     }
-  }, [mode, width, pinned]);
+  }, [mode, width]);
 }
 
 /** Debug-only hook for the fail-open test: `?kex-test-throw=shell` makes the shell throw while rendering. */

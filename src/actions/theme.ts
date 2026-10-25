@@ -1,4 +1,4 @@
-import { quickSettingsOpen, resolvedTheme, settings, sidebarInstant, sidebarMode, sidebarOverlay, userMenuOpen, viewportWidth } from '../state';
+import { quickSettingsOpen, resolvedTheme, settings, sidebarInstant, sidebarMode, sidebarOverlay, sidebarOverlays, userMenuOpen } from '../state';
 import { updateSettings } from './settings';
 
 /** `t`: flip between light and dark based on what is currently shown. */
@@ -14,10 +14,10 @@ export function toggleMotion(): void {
   updateSettings({ motion: settings.value.motion === 'reduced' ? 'full' : 'reduced' });
 }
 
-/** Keep the existing responsive sidebar when pinned; otherwise open it above the page. */
+/** Full <-> rail where the window is wide enough for the full menu; otherwise open the menu above the page. */
 export function toggleSidebar(keyboard = false): void {
   sidebarInstant.value = keyboard;
-  if (!settings.value.sidebarAutoHide && (sidebarMode.value === 'full' || (sidebarMode.value === 'rail' && !sidebarOverlay.value && viewportWidth.value >= 1100))) {
+  if (!sidebarOverlays.value) {
     updateSettings({ sidebarCollapsed: sidebarMode.value === 'full' });
     return;
   }

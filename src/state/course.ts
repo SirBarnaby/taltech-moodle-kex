@@ -28,6 +28,8 @@ export const selectedCmId = signal<number | undefined>(undefined);
 export const previewCmId = signal<number | undefined>(undefined);
 
 export const courseEvents = signal<ReadonlyMap<number, CmEvent>>(new Map());
+/** The course's deadlines have arrived (or failed): until then a lab track without completion tracking cannot tell its next lab. */
+export const courseEventsReady = signal(false);
 export const tileImages = signal<ReadonlyMap<number, string>>(new Map());
 /** Sanitized section summaries from the page DOM (or section.php), by section id. */
 export const summaries = signal<ReadonlyMap<number, string>>(new Map());
@@ -76,12 +78,19 @@ export const labTrack = computed<LabTrackItem[] | undefined>(() => {
 /** Labs the user opened or folded in this topic; until then the next lab (and anything overdue) is open. */
 export const openGroupsSet = signal<{ topic: number | undefined; ids: ReadonlySet<number> } | undefined>(undefined);
 
+/**
+ * Whether the track knows its next lab: once the deadlines are in (at once when they are cached). Completion alone is not
+ * enough, since a past deadline makes a lab overdue and "next" skips it. Until then no lab is opened by default, so the first
+ * lab does not open and then give way to the real next one a second later.
+ */
+export const labTrackSettled = computed(() => !labTrack.value || courseEventsReady.value);
+
 export const openGroups = computed<ReadonlySet<number>>(() => {
   const track = labTrack.value;
   if (!track) return new Set();
   const chosen = openGroupsSet.value;
   if (chosen && chosen.topic === topicNumber.value) return chosen.ids;
-  return new Set(defaultOpen(track));
+  return labTrackSettled.value ? new Set(defaultOpen(track)) : new Set();
 });
 
 /** Rows the keyboard can reach: rows of folded labs are left out. */

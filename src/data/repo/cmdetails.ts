@@ -10,6 +10,8 @@ export const CMD_TTL_MS = 30 * 60 * 1000;
 
 /** All known details, by cmid. Replaced (not mutated) so signal readers re-render. */
 export const cmDetails = signal<ReadonlyMap<number, CmDetails>>(new Map());
+/** Activities whose details could not be read either way (get_module and section.php): their rows stop waiting for them. */
+export const cmDetailsMissed = signal<ReadonlySet<number>>(new Set());
 
 type Persisted = Record<string, CmDetails>;
 const keyFor = (courseId: number): string => `cmd:${courseId}`;
@@ -83,6 +85,8 @@ export async function loadDetails(courseId: number, ids: readonly number[], sect
           }
         }
       }
+      const missed = failed.filter((id) => !got.has(id));
+      if (missed.length) cmDetailsMissed.value = new Set([...cmDetailsMissed.peek(), ...missed]);
       if (got.size) {
         const next = new Map(cmDetails.value);
         for (const [id, d] of got) next.set(id, d);

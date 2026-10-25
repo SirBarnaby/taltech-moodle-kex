@@ -20,11 +20,20 @@
     gap: 14px;
     margin: 18px 0 6px;
   }
-  .kex-track__count {
+  .kex-track__head {
     flex: none;
+    margin: 0;
     font-size: 12px;
     letter-spacing: 0.1em;
     color: var(--kex-mono-strong);
+  }
+  /* The list form's parts (wide column, below); the strip shows the short label only. */
+  .kex-track__label,
+  .kex-chip-lab__title,
+  .kex-chip-lab__due,
+  .kex-chip-lab__meta,
+  .kex-labs__none {
+    display: none;
   }
   .kex-track__chips {
     display: flex;
@@ -283,6 +292,208 @@
 @media (prefers-reduced-motion: reduce) {
   #kex-root :is(.kex-groupcard__fold, .kex-groupcard__chev, .kex-chip-lab) {
     transition: none;
+  }
+}
+/* ---- lab board: a wide column lists every lab (full title, deadline, progress) beside the open one, so the labs are not
+   thirteen full-width strips with nothing in the middle. Pure CSS on the same buttons and cards, so the switch happens in the
+   same layout as the width change (the side reader's row anchoring sees it). `--kex-board` tells the card toggle. ---- */
+@container kexcol (min-width: 900px) {
+  #kex-root .kex-labs {
+    --kex-board: 1;
+    display: grid;
+    grid-template-columns: clamp(240px, 26%, 320px) minmax(0, 1fr);
+    column-gap: clamp(20px, 2.4%, 32px);
+    align-items: start;
+    margin-top: 18px;
+    > .kex-rows {
+      grid-column: 2;
+      margin-top: 0;
+    }
+    > .kex-labs__none {
+      display: block;
+      grid-column: 2;
+      margin: 0;
+      padding: 22px 24px;
+      border: 1px dashed var(--kex-border-card);
+      border-radius: var(--kex-r-m);
+      font-size: 15px;
+      color: var(--kex-text-3);
+    }
+    /* The next lab is being worked out (deadlines on their way): a card-sized wait instead of a lab that is swapped a second later. */
+    > .kex-labs__none--wait {
+      display: grid;
+      gap: 10px;
+      min-height: 220px;
+      border-style: solid;
+      align-content: start;
+    }
+    .kex-track {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      display: block;
+      margin: 0;
+      padding: 6px;
+      border: 1px solid var(--kex-border-card);
+      border-radius: var(--kex-r-m);
+    }
+    .kex-track__head {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 10px 8px;
+    }
+    .kex-track__label {
+      display: inline;
+      text-transform: uppercase;
+    }
+    .kex-track__chips {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0;
+    }
+    .kex-chip-lab {
+      position: relative;
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr) auto;
+      grid-template-areas: "mark title due" ". meta meta";
+      align-items: center;
+      column-gap: 10px;
+      row-gap: 3px;
+      width: 100%;
+      height: auto;
+      padding: 9px 10px;
+      border: 0;
+      border-radius: var(--kex-r-s);
+      background: transparent;
+      text-align: left;
+      white-space: normal;
+      color: var(--kex-text);
+      &:hover:not(.kex-chip-lab--open) {
+        background: var(--kex-hover);
+        color: var(--kex-text);
+      }
+      &:active {
+        transform: none;
+      }
+      &:focus-visible {
+        outline-offset: -2px;
+      }
+    }
+    .kex-chip-lab__mark {
+      grid-area: mark;
+    }
+    .kex-chip-lab__text {
+      display: none;
+    }
+    .kex-chip-lab__title {
+      display: block;
+      grid-area: title;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 15px;
+      line-height: 20px;
+      font-weight: 500;
+    }
+    .kex-chip-lab__due {
+      display: block;
+      grid-area: due;
+      font-size: 13px;
+      line-height: 20px;
+      font-weight: 400;
+      color: var(--kex-text-3);
+      white-space: nowrap;
+    }
+    .kex-chip-lab__due--late {
+      color: var(--kex-magenta);
+    }
+    .kex-chip-lab__meta {
+      display: flex;
+      grid-area: meta;
+      align-items: center;
+      gap: 8px;
+      font-size: 10.5px;
+      line-height: 13px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      color: var(--kex-text-4);
+    }
+    .kex-chip-lab__state {
+      text-transform: uppercase;
+    }
+    .kex-chip-lab--done .kex-chip-lab__state { color: var(--kex-success); }
+    .kex-chip-lab--overdue .kex-chip-lab__state { color: var(--kex-magenta); }
+    .kex-chip-lab--next .kex-chip-lab__state { color: var(--kex-violet); }
+    .kex-chip-lab__bar {
+      display: block;
+      width: 40px;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--kex-border);
+      overflow: hidden;
+      > span {
+        display: block;
+        height: 100%;
+        background: var(--kex-success);
+      }
+    }
+    .kex-chip-lab--open {
+      background: var(--kex-tint);
+      .kex-chip-lab__title {
+        color: var(--kex-violet);
+        font-weight: 600;
+      }
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 6px;
+        bottom: 6px;
+        width: 3px;
+        border-radius: 0 2px 2px 0;
+        background: var(--kex-accent-bar, var(--kex-violet));
+      }
+    }
+    /* The right column holds only the open lab: the list is where labs are chosen, so its header neither folds nor shows a chevron. */
+    .kex-group--lab:not(.kex-group--open) {
+      display: none;
+    }
+    .kex-group--lab {
+      margin: 0 0 14px;
+      animation: kex-lab-in 180ms var(--kex-ease) both;
+    }
+    .kex-rows > .kex-row + .kex-group--lab {
+      margin-top: 14px;
+    }
+    .kex-groupcard__chev {
+      display: none;
+    }
+    .kex-groupcard__toggle {
+      margin-left: 0;
+      padding-left: 0;
+      cursor: default;
+      &:hover .kex-groupcard__title {
+        color: var(--kex-text);
+      }
+    }
+    .kex-group--lab .kex-groupcard__title {
+      font-size: 22px;
+      line-height: 28px;
+    }
+  }
+}
+@keyframes kex-lab-in {
+  from {
+    opacity: 0;
+  }
+}
+:root[data-kex-motion="reduced"] #kex-root .kex-labs .kex-group--lab {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  #kex-root .kex-labs .kex-group--lab {
+    animation: none;
   }
 }
 @container kexcol (max-width: 1040px) {

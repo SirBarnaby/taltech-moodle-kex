@@ -350,3 +350,50 @@ can sit next to a release build.
   debug-free bundle with the lab origin added; it is never shipped. `smoke.mjs --only prod` checks that `kex.xpi` itself has no localhost and the real add-on id, then mounts the shell
   on four page types with the lab variant and asserts that no debug attributes exist.
 - `npm run pack` -> `dist/packages/kex.xpi` (569 KB).
+
+## Round 7: layout stability
+
+A test pass for "weirdness" (things that move, grow or jump without the user asking). Every finding was reproduced on the lab in Firefox,
+fixed, and is now guarded by `test/bench/stability.mjs` (see below) or a unit test in `test/unit/round7.test.ts` and `sidebar.test.ts`.
+
+### Removed: auto-hide sidebar
+- The edge zone only opened when the pointer reached the exact first pixels of the window, and the overlay it opened covered the page. The
+  setting, its edge element, `data-auto-hide` and the options toggle are gone; an old stored value is dropped by `normalizeSettings`. The menu
+  button folds the full sidebar to the rail; below 1100 px, and on a quiz attempt (rail forced), it opens the menu over the page instead
+  (`sidebarOverlays` in `src/state/index.ts`), so it never rewrites the saved setting where widening is not possible.
+- The course list's scrollbar is always reserved (`scrollbar-width: thin`, transparent until hover). A scrollbar that appears on hover takes
+  width, which rewrapped course titles under the pointer.
+
+### Rules for anything that changes layout
+1. **No slide on a page change.** The incoming view fades in place (`MOTION.enter`, opacity only). A lift of even 8 px reads as the page
+   jumping when it is scrolled, because the hero moves against the fixed header.
+2. **Change a column's width in one step and keep the row being read in place.** The side reader no longer animates `margin-right`; when it
+   opens or closes, `keepRowInPlace` measures the row before and after and scrolls by the difference (rows above it rewrap).
+3. **Reserve space for content that arrives late.** A label's text gets a one-line skeleton (inline, so margins match the real text); the hero
+   meta line has a fixed height; Back keeps `#kex-main` tall enough for the old scroll position until the view says `data-kex-ready`.
+4. **Do not pick a default from data that is still loading.** The open lab waits for the deadlines (`labTrackSettled`): with completion alone,
+   Lab 1 opened and gave way to the real next lab a second later. A wait card holds the space meanwhile. Lab choices reset per course.
+5. **`data-kex-ready` on `#kex-main` means "the content is in"** (course and its lab choice, the Workspace feed, My courses, Notifications).
+   Scroll restore and the bench wait for it. A new view should set it.
+6. **Scroll restoration is manual only on app routes.** Skinned Moodle pages keep the browser's own restore (`attachHistory` is attached
+   only for app routes); app pages save their position on `pagehide` too, so a full load (an activity) finds it on Back.
+
+### Labs: list and detail
+- A topic with four or more subsections is a lab track. In a course column of 900 px or more (container query `kexcol`) it is a board:
+  the list of labs (state, deadline, progress) in a 240-320 px column, one open lab beside it. Narrower (half-width window, side reader
+  open) it stays the chip strip over folded cards. The board's open lab cannot be folded from its own header; the list chooses.
+- The board flag is a CSS custom property (`--kex-board: 1`) read at click time, so the threshold lives in one place (track.css).
+
+### Site notices
+- TalTech's notice comes twice: in Moodle's top-of-body slot (inside `#page-wrapper`, before the navbar) and from a footer script at body
+  level, in two wordings. Both are read; `sameNotice` treats one as the same message when its letters are a prefix of the other's.
+- Body-level editors and dialogs (TinyMCE, jQuery UI, `<dialog>`, popovers), hidden templates (`.d-none`, cookie consent) and Moodle's live
+  maintenance countdown are never notices. Originals are hidden only where a card shows them: app views, and skinned pages with the band.
+
+### Bench
+- `node test/bench/stability.mjs [check,...]` runs ten checks against the lab with the dev add-on (`npm run pack:dev` first): sidebar width
+  under the pointer, page switch, topic switch, side reader, Back from an activity / to the Workspace / to a skinned page, the labs board at
+  1851 px and the chips at 960 px, notices on Participants. It samples positions every frame, so a one-frame jump fails it. Exit code 1 on failure.
+- Selenium standalone runs one session: checks that open their own window run after the shared one is closed.
+- `.scratch/bench/` (gitignored) holds the throwaway probes used to find these; keep new probes there and promote a check into
+  `stability.mjs` once it guards a fixed bug.

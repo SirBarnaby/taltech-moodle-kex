@@ -70,6 +70,11 @@ const FAILSAFE_MS = 3000;
 type OffReason = 'manual' | 'route' | 'setting' | 'disabled';
 
 const offKey = (routeKey: string): string => `kex.off.${routeKey}`;
+/** Each view marks its main `data-kex-ready` once its content is in (the feed, the course and its lab choice). */
+const viewReady = (): boolean => {
+  const main = document.getElementById('kex-main');
+  return !!main && main.dataset.kexReady !== 'false';
+};
 
 class Controller {
   private html!: HTMLElement;
@@ -141,7 +146,7 @@ class Controller {
 
   // ---------------------------------------------------------------- boot
 
-  private applyAttrs(s: Pick<Settings, 'theme' | 'effects' | 'motion' | 'sidebarCollapsed' | 'sidebarAutoHide'>): void {
+  private applyAttrs(s: Pick<Settings, 'theme' | 'effects' | 'motion' | 'sidebarCollapsed'>): void {
     const focus = this.route?.key === 'quiz-focus' && this.route.effective === 'skin';
     applyShellAttrs(this.html, shellAttrs(focus ? { ...s, sidebarCollapsed: true } : s, window.innerWidth));
   }
@@ -351,6 +356,13 @@ class Controller {
     this.html.dataset.kexShell = 'ready';
     setMode(eff.effective === 'app' ? 'app' : 'boot');
     if (eff.effective === 'app') playArrival(root.querySelector<HTMLElement>('.kex-main'));
+    // A full load reached by Back, Forward or Reload (from an activity, Participants, …): the page goes back to where it was.
+    // Scroll restoration is manual for the soft navigations, so the browser no longer does this itself.
+    const entry = performance.getEntriesByType?.('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const backY = (history.state as { kexScroll?: number } | null)?.kexScroll;
+    if (eff.effective === 'app' && (entry?.type === 'back_forward' || entry?.type === 'reload') && typeof backY === 'number') {
+      restoreScroll(backY, viewReady);
+    }
 
     // Everything below runs without blocking the first paint.
     this.stops.push(
@@ -396,11 +408,15 @@ class Controller {
 
   private mountRoute(eff: EffectiveRoute): void {
     const stops = this.routeStops;
-    if (eff.effective === 'app' && !this.noticeWatch && eff.key !== 'login') {
+    if (eff.effective !== 'off' && !this.noticeWatch && eff.key !== 'login') {
       this.noticeWatch = true;
-      // Moodle and TalTech notices (body-level additions, top-of-page alerts) become a KEX card on the home views.
-      const home = eff.key;
-      this.stops.push(watchLiveNotices(() => home === 'workspace' || home === 'mycourses'));
+      // Moodle and TalTech notices (body-level additions; top-of-page alerts on the home views) become a KEX card: on the
+      // Workspace and My courses, and under the band of a skinned page (where the original would show unstyled).
+      this.stops.push(watchLiveNotices(
+        () => this.route?.effective === 'app' && (this.route.key === 'workspace' || this.route.key === 'mycourses'),
+        // A quiz attempt (and any page switched to skin without the band) has no card: its notices stay Moodle's own.
+        () => this.route?.effective === 'app' || (this.route?.effective === 'skin' && chromeKeys.has(this.route.key)),
+      ));
     }
     if (eff.effective === 'app' && (eff.key === 'course' || eff.key === 'section')) {
       const off = keyManager.register([...courseBindings(), ...previewBindings()]);
@@ -557,7 +573,8 @@ class Controller {
 
   /** Link clicks, hover warm-up and history traversal. Registered once the shell is up. */
   private watchNavigation(): void {
-    this.stops.push(navigation.attachHistory());
+    // Scroll positions are kept by hand only where KEX swaps views in place; skinned pages keep the browser's own restore.
+    if (this.route?.effective === 'app') this.stops.push(navigation.attachHistory());
     const onClick = (e: MouseEvent): void => {
       if (!isPlainClick(e) || !this.canSoft()) return;
       const a = clickedLink(e.target);
@@ -699,7 +716,7 @@ class Controller {
       if (seq !== this.navSeq) return;
       this.swapView(target, document.implementation.createHTMLDocument(''), url);
       enter('.kex-main');
-      if (restoreY !== undefined) restoreScroll(restoreY, () => !navigationLoading.value && (target.key !== 'course' || courseStatus.value !== 'loading'));
+      if (restoreY !== undefined) restoreScroll(restoreY, () => !navigationLoading.value && viewReady());
       let timeout: number | undefined;
       try {
         const doc = await Promise.race([

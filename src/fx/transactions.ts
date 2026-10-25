@@ -119,8 +119,16 @@ class NavigationCoordinator {
       clearTimeout(timer);
       timer = window.setTimeout(() => { if (!this.owner) this.remember(); }, 80);
     };
+    // A full load to another page (an activity, Participants) must find this entry's position when Back returns to it.
+    const leave = (): void => { if (!this.owner) this.remember(); };
     window.addEventListener('scroll', record, { passive: true });
-    return () => { clearTimeout(timer); window.removeEventListener('scroll', record); history.scrollRestoration = previous; };
+    window.addEventListener('pagehide', leave);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', record);
+      window.removeEventListener('pagehide', leave);
+      history.scrollRestoration = previous;
+    };
   }
 
   cancel(): void {

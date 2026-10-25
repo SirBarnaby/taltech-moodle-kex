@@ -8,6 +8,9 @@ import { heroCanvas } from '../../src/fx/heroCanvas';
 // Shipped bug: every course switch built a new WebGL context, so the shader compiled again and popped in a second after the text.
 describe('hero canvas', () => {
   it('is one canvas that moves from hero to hero', () => {
+    // The shared canvas schedules its first compile for an idle moment; fake timers drop it with the test instead of letting it
+    // fire after the environment is gone.
+    vi.useFakeTimers();
     const a = document.createElement('section');
     const b = document.createElement('section');
     document.body.append(a, b);
@@ -19,5 +22,6 @@ describe('hero canvas', () => {
     const offB = heroCanvas.attach(b, { seed: 2 });
     expect(b.querySelector('canvas')).toBe(canvas);
     offB();
+    vi.useRealTimers();
   });
 });

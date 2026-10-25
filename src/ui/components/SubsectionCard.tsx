@@ -28,6 +28,12 @@ function Progress({ group, index, titleId }: { group: GroupModel; index: number;
   );
 }
 
+/** In the wide lab board (track.css sets `--kex-board`) a lab is chosen from the list beside it; its own header does not fold it. */
+const inLabBoard = (el: Element): boolean => {
+  const board = el.closest('.kex-labs');
+  return !!board && getComputedStyle(board).getPropertyValue('--kex-board').trim() === '1';
+};
+
 /** A subsection (Moodle 4.5 `mod_subsection`): a titled card inside its parent topic, with its own summary and progress. */
 export function SubsectionCard({ group, index, lab, open = true, onToggle, children }: SubsectionCardProps) {
   const titleId = `kex-group-${group.section.id}`;
@@ -55,7 +61,10 @@ export function SubsectionCard({ group, index, lab, open = true, onToggle, child
     <li class={`kex-group kex-group--lab kex-group--${lab.state}${open ? ' kex-group--open' : ''}`} data-kex-group={group.section.id} data-kex-test={`group-${index}`}>
       <section class="kex-groupcard" aria-labelledby={titleId}>
         <header class="kex-groupcard__head">
-          <button type="button" class="kex-groupcard__toggle" aria-expanded={open} aria-controls={bodyId} onClick={() => onToggle?.(!open)}>
+          <button type="button" class="kex-groupcard__toggle" aria-expanded={open} aria-controls={bodyId} onClick={(e) => {
+            if (open && inLabBoard(e.currentTarget)) return;
+            onToggle?.(!open);
+          }}>
             <ChevronRight class="kex-groupcard__chev" size={18} strokeWidth={1.75} aria-hidden="true" />
             <h4 class="kex-groupcard__title" id={titleId}>{group.title}</h4>
           </button>

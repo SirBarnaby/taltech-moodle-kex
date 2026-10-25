@@ -12,7 +12,7 @@ import { seasonLabel } from '../../data/names';
 import { currentSemester, displayName } from '../../data/repo/courses';
 import { t } from '../../i18n';
 import {
-  activeCourseId, coursesLoading, hash, logoSrc, pageInfo, quickSettingsOpen, route, settings, sidebarCourses, sidebarInstant, sidebarMode, sidebarOverlay,
+  activeCourseId, coursesLoading, hash, logoSrc, pageInfo, quickSettingsOpen, route, sidebarCourses, sidebarInstant, sidebarMode, sidebarOverlay,
   ttLinks, user, userMenuOpen,
 } from '../../state';
 import { pressedCourseId } from '../../state/navigation';
@@ -223,9 +223,6 @@ function NavRow({ href, label, icon: Icon, current, testId, onClick, badge = 0, 
 export function Sidebar() {
   const mode = sidebarMode.value;
   const overlayOpen = sidebarOverlay.value;
-  const autoHide = settings.value.sidebarAutoHide;
-  const quickOpen = quickSettingsOpen.value;
-  const userOpen = userMenuOpen.value;
   const courses = sidebarCourses.value;
   const routeActive = activeCourseId.value;
   const pressed = pressedCourseId.value;
@@ -238,66 +235,9 @@ export function Sidebar() {
   const r = route.value;
   const u = user.value;
   const [editing, setEditing] = useState<number | null>(null);
-  // Opened by the pointer alone (hover-peek): shown over the page without the dim backdrop.
-  const [peek, setPeek] = useState(false);
   const settingsBtn = useRef<HTMLButtonElement>(null);
   const userBtn = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
-  const pointerInside = useRef(false);
-  const closeTimer = useRef<number | undefined>(undefined);
-  const hadPopover = useRef(false);
-  const cancelClose = (): void => {
-    window.clearTimeout(closeTimer.current);
-    closeTimer.current = undefined;
-  };
-  const scheduleClose = (): void => {
-    cancelClose();
-    if (!autoHide || mode === 'drawer') return;
-    // A short bridge lets the pointer cross from the sidebar to its anchored popover.
-    closeTimer.current = window.setTimeout(() => {
-      if (pointerInside.current || quickSettingsOpen.peek() || userMenuOpen.peek() || navRef.current?.contains(document.activeElement)) return;
-      sidebarInstant.value = false;
-      sidebarOverlay.value = false;
-    }, 160);
-  };
-  const reveal = (e: PointerEvent): void => {
-    if (e.pointerType === 'touch') return;
-    cancelClose();
-    sidebarInstant.value = false;
-    if (!sidebarOverlay.peek()) setPeek(true);
-    sidebarOverlay.value = true;
-  };
-  useEffect(() => () => window.clearTimeout(closeTimer.current), [autoHide]);
-  // Turning auto-hide off ends any hover-peek or overlay; while a popover is still open it waits for that to close.
-  const clearPending = useRef(false);
-  const settleOverlay = (): void => {
-    if (!clearPending.current || quickSettingsOpen.peek() || userMenuOpen.peek()) return;
-    clearPending.current = false;
-    cancelClose();
-    setPeek(false);
-    sidebarInstant.value = false;
-    sidebarOverlay.value = false;
-  };
-  useEffect(() => {
-    if (autoHide) {
-      clearPending.current = false;
-      if (quickSettingsOpen.peek() || userMenuOpen.peek()) sidebarOverlay.value = true;
-    } else if (mode !== 'drawer') {
-      clearPending.current = true;
-      settleOverlay();
-    }
-  }, [autoHide]);
-  useEffect(() => {
-    if (quickOpen || userOpen) cancelClose();
-    else if (hadPopover.current) {
-      scheduleClose();
-      settleOverlay();
-    }
-    hadPopover.current = quickOpen || userOpen;
-  }, [quickOpen, userOpen]);
-  useEffect(() => {
-    if (!overlayOpen) setPeek(false);
-  }, [overlayOpen]);
   useEffect(() => {
     if (overlayOpen && sidebarInstant.peek()) navRef.current?.querySelector<HTMLAnchorElement>('a[href]')?.focus({ preventScroll: true });
   }, [overlayOpen]);
@@ -319,13 +259,12 @@ export function Sidebar() {
     e.preventDefault();
     go(homeUrl(path));
   };
-  const inert = (autoHide || mode === 'drawer') && !overlayOpen;
-  const expanded = (mode === 'full' && !autoHide) || overlayOpen;
+  const inert = mode === 'drawer' && !overlayOpen;
+  const expanded = mode === 'full' || overlayOpen;
 
   return (
     <>
-      {autoHide && mode !== 'drawer' && <div class="kex-sb-edge" data-kex-test="sidebar-edge" aria-hidden="true" onPointerEnter={reveal} onPointerLeave={scheduleClose} />}
-      {(autoHide || mode !== 'full') && overlayOpen && (mode === 'drawer' || !peek) && <div class="kex-sb-backdrop" onClick={() => {
+      {mode !== 'full' && overlayOpen && <div class="kex-sb-backdrop" onClick={() => {
         sidebarInstant.value = false;
         quickSettingsOpen.value = false;
         userMenuOpen.value = false;
@@ -338,23 +277,9 @@ export function Sidebar() {
         data-kex-test="sidebar"
         data-mode={mode}
         data-open={overlayOpen ? 'true' : 'false'}
-        data-peek={overlayOpen && peek && mode !== 'drawer' ? 'true' : undefined}
-        data-auto-hide={autoHide ? 'true' : 'false'}
         data-instant={sidebarInstant.value ? 'true' : 'false'}
         inert={inert}
         aria-hidden={inert ? 'true' : undefined}
-        onPointerEnter={(e) => {
-          if (e.pointerType === 'touch') return;
-          pointerInside.current = true;
-          cancelClose();
-        }}
-        onPointerLeave={(e) => {
-          if (e.pointerType === 'touch') return;
-          pointerInside.current = false;
-          scheduleClose();
-        }}
-        onFocusIn={cancelClose}
-        onFocusOut={scheduleClose}
       >
         <Wordmark />
         <div class="kex-sb__divider" />
@@ -456,7 +381,7 @@ export function Sidebar() {
           </button>
         </div>
       </nav>
-      {!autoHide && mode === 'rail' && !overlayOpen && <RailTip container={navRef} />}
+      {mode === 'rail' && !overlayOpen && <RailTip container={navRef} />}
       {quickSettingsOpen.value && <QuickSettings anchor={settingsBtn.current} />}
       {userMenuOpen.value && <UserMenu anchor={userBtn.current} />}
     </>

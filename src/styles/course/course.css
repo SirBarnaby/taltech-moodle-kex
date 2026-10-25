@@ -421,6 +421,10 @@
     p {
       margin: 0 0 6px;
     }
+    /* A one-paragraph label is exactly one line tall, like the line held for it while it loads. */
+    > :last-child {
+      margin-bottom: 0;
+    }
   }
   .kex-rowgroup {
     padding: 18px 0 4px;
@@ -626,6 +630,13 @@
   .kex-skel--btn {
     width: 148px;
     height: 44px;
+  }
+  /* One 24 px line of a label (note row) whose text is still on its way. */
+  .kex-skel--note {
+    display: inline-block;
+    vertical-align: middle;
+    width: min(420px, 70%);
+    height: 12px;
   }
   .kex-skel--num {
     width: 24px;

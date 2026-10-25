@@ -59,6 +59,6 @@
   }
 }
 /* A site notice shown as a KEX card (src/content/sitenotice.ts): the original stays out of the way. */
-:root[data-kex="app"] .kex-lifted {
+:root:is([data-kex="app"], [data-kex="skin"]) .kex-lifted {
   display: none !important;
 }

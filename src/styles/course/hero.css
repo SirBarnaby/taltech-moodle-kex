@@ -177,56 +177,6 @@
   }
 }
 
-/* The side reader leaves the course a narrow column: the hero takes the same compact form. */
-:root[data-kex-reader="side"] #kex-root {
-    .kex-hero--course {
-      height: var(--kex-hero-h-compact);
-    }
-    .kex-hero--course .kex-hero__inner {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 8px;
-      padding-top: 0;
-      padding-bottom: 6px;
-    }
-    .kex-hero--course .kex-hero__title {
-      order: 1;
-      max-width: 100%;
-      margin: 0 0 0 -1px;
-      font-size: clamp(22px, min(2.6vw, 96cqi / (var(--kex-chars-all, 30) * 0.5)), 44px);
-      line-height: 1.08;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding-bottom: 0.08em;
-    }
-    .kex-hero--course .kex-su-line {
-      display: inline;
-    }
-    .kex-hero--course .kex-su-line + .kex-su-line::before {
-      content: " ";
-    }
-    .kex-hero--course .kex-hero__meta {
-      order: 2;
-      margin: 0;
-      font-size: 11px;
-      line-height: 14px;
-      /* One line is always reserved: teachers and the deadline arrive later and must not move the title. */
-      height: 16px;
-      min-height: 16px;
-    }
-    .kex-hero--course .kex-hero__links {
-      display: none;
-    }
-    .kex-hero--course .kex-cross--a {
-      top: 14px;
-    }
-    .kex-hero--course .kex-cross--b {
-      bottom: 10px;
-    }
-  }
-
 /* Slide Up Text (architecture §15). */
 #kex-root {
   .kex-su {

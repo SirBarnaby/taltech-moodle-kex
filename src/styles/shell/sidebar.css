@@ -168,10 +168,12 @@
     margin-bottom: 4px;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-width: none;
+    /* The thin track is always reserved (classic Windows scrollbars take real width); only the thumb shows on hover, so the
+       course titles never rewrap under the pointer. */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
     &:hover,
     &:focus-within {
-      scrollbar-width: thin;
       scrollbar-color: #3a2e62 transparent;
     }
   }
@@ -367,7 +369,7 @@
 }
 
 /* ===== Rail (760-1099, or collapsed with Ctrl+B) ===== */
-#kex-root .kex-sidebar[data-mode="rail"]:not([data-open="true"]):not([data-auto-hide="true"]) {
+#kex-root .kex-sidebar[data-mode="rail"]:not([data-open="true"]) {
   width: 72px;
   .kex-sb__brand {
     height: 107px;
@@ -483,32 +485,6 @@
   transform: translate(0, -50%);
 }
 
-/* Auto-hide always overlays the page. The full menu moves as one layer; content never shifts. */
-#kex-root .kex-sidebar[data-auto-hide="true"] {
-  width: min(var(--kex-sb-w-full), 86vw);
-  transform: translateX(-100%);
-  opacity: 0;
-  pointer-events: none;
-  &[data-open="true"] {
-    transform: none;
-    opacity: 1;
-    pointer-events: auto;
-    box-shadow: var(--kex-shadow-popover);
-    z-index: calc(var(--kex-z-sidebar) + 5);
-  }
-}
-#kex-root .kex-sb-edge {
-  position: fixed;
-  inset: 0 auto 0 0;
-  width: 10px;
-  z-index: calc(var(--kex-z-sidebar) + 1);
-  pointer-events: none;
-}
-@media (hover: hover) and (pointer: fine) {
-  #kex-root .kex-sb-edge {
-    pointer-events: auto;
-  }
-}
 #kex-root .kex-sidebar[data-instant="true"] {
   transition-duration: 0ms;
 }
@@ -574,7 +550,7 @@
     background: #ff3fc4;
     box-shadow: 0 0 0 2px var(--kex-sb-bg, #1b1334);
   }
-  .kex-sidebar[data-mode="rail"]:not([data-open="true"]):not([data-auto-hide="true"]) .kex-sb__pill {
+  .kex-sidebar[data-mode="rail"]:not([data-open="true"]) .kex-sb__pill {
     position: absolute;
     top: 7px;
     right: 9px;

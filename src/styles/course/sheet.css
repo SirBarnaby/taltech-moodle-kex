@@ -363,9 +363,6 @@
     margin-right: var(--kex-reader-w);
   }
 }
-#kex-root .kex-main {
-  transition: margin-right 220ms cubic-bezier(0.23, 1, 0.32, 1);
-}
 @keyframes kex-readmenu-in {
   from { opacity: 0; transform: translateY(-4px); }
 }

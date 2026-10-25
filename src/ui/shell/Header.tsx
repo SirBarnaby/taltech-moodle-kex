@@ -4,7 +4,7 @@ import { stripBase } from '../../content/router';
 import { toggleSidebar, toggleTheme } from '../../actions/theme';
 import { t } from '../../i18n';
 import {
-  hash, headerCompact, headerTitle, pageInfo, paletteOpen, resolvedTheme, settings, sidebarCourses, sidebarMode, sidebarOverlay,
+  hash, headerCompact, headerTitle, pageInfo, paletteOpen, resolvedTheme, sidebarCourses, sidebarMode, sidebarOverlay, sidebarOverlays,
 } from '../../state';
 import { IconButton } from '../components/IconButton';
 import { buildBreadcrumb, collapseBreadcrumb, type ShellCrumb } from './breadcrumb';
@@ -78,6 +78,8 @@ export function Header() {
   const compact = headerCompact.value;
   const info = pageInfo.value;
   const mode = sidebarMode.value;
+  // Below 1100 px (and on a quiz attempt) the rail does not widen in place: the menu button opens the menu over the page.
+  const overlays = sidebarOverlays.value;
   const theme = resolvedTheme.value;
   const title = headerTitle.value;
   const crumbs = info
@@ -93,10 +95,10 @@ export function Header() {
   return (
     <header class="kex-header" role="banner" data-kex-test="header" data-compact={compact ? 'true' : 'false'}>
       <IconButton
-        label={settings.value.sidebarAutoHide || mode === 'drawer' ? (sidebarOverlay.value ? t('sidebar.close') : t('sidebar.open')) : t('sidebar.toggle')}
+        label={overlays ? (sidebarOverlay.value ? t('sidebar.close') : t('sidebar.open')) : t('sidebar.toggle')}
         testId="sidebar-toggle"
         class="kex-header__menu"
-        expanded={settings.value.sidebarAutoHide || mode === 'drawer' ? sidebarOverlay.value : mode === 'full' || sidebarOverlay.value}
+        expanded={overlays ? sidebarOverlay.value : mode === 'full'}
         onClick={(e) => toggleSidebar(e.detail === 0)}
       >
           <Menu size={20} strokeWidth={1.75} aria-hidden="true" />

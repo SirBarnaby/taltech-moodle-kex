@@ -12,6 +12,7 @@ import { t, type MessageKey } from '../../i18n';
 import { pageInfo, route, sidebarCourses, user } from '../../state';
 import { isActivity, neighbours, skinPage } from '../../state/skin';
 import { Band } from '../components/Band';
+import { SiteNotices } from '../components/SiteNotices';
 import { useEffectsConfig } from '../components/hooks';
 import { Tabs, type TabDef } from '../components/Tabs';
 import { pad2 } from '../../data/topics';
@@ -305,6 +306,7 @@ export function SkinChrome() {
           testId="band"
         />
         {!err && !activity && <CalendarTabs />}
+        <div class="kex-chrome__notices"><SiteNotices live /></div>
       </div>
       <ChromeBody />
       {activity && <PrevNextBar />}

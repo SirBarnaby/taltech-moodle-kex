@@ -11,7 +11,7 @@ import { t } from '../../i18n';
 import { sanitizeHtml } from '../../lib/sanitize';
 import { activeCourseId, headerTitle, pageInfo, settings, sidebarCourses } from '../../state';
 import {
-  courseError, courseState, courseStatus, focusZone, labTrack, mergedSummaries, openGroups, pinnedRow, previewCmId, rows, sectionView, secondaryNav, selectedCmId, topicNumber, topics, currentTopic,
+  courseError, courseState, courseStatus, focusZone, labTrack, labTrackSettled, mergedSummaries, openGroups, pinnedRow, previewCmId, rows, sectionView, secondaryNav, selectedCmId, topicNumber, topics, currentTopic,
 } from '../../state/course';
 import { Button } from '../components/Button';
 import { CourseNav } from '../components/CourseNav';
@@ -177,8 +177,31 @@ export function CourseView() {
     />
   );
 
+  const list = view.blocks.length ? (
+    <ul class={`kex-rows${compact ? ' kex-rows--compact' : ''}`} key={topicNumber.value} data-kex-test="rows">
+      {view.blocks.map((block, bi) =>
+        block.type === 'row' ? (
+          renderRow(block.row, orderOf.get(block.row.cm.id) ?? bi)
+        ) : (
+          <SubsectionCard
+            key={`g-${block.group.section.id}`}
+            group={block.group}
+            index={bi + 1}
+            lab={labOf.get(block.group.section.id)}
+            open={!track || open.has(block.group.section.id)}
+            onToggle={(o) => setGroupOpen(block.group.section.id, o)}
+          >
+            {block.group.rows.map((r) => renderRow(r, orderOf.get(r.cm.id) ?? bi))}
+          </SubsectionCard>
+        ),
+      )}
+    </ul>
+  ) : !summaryHtml ? (
+    <EmptyState kicker={t('course.noRows')} title={t('course.noRowsText')} />
+  ) : null;
+
   return (
-    <main class="kex-main kex-course" id="kex-main" data-kex-test="course" data-kex-course={id ?? ''} data-kex-ready={!loading}>
+    <main class="kex-main kex-course" id="kex-main" data-kex-test="course" data-kex-course={id ?? ''} data-kex-ready={!loading && labTrackSettled.value}>
       <Hero
         key={id ?? 0}
         lines={lines.length ? lines : [rawName]}
@@ -228,29 +251,16 @@ export function CourseView() {
                   </div>
                 </div>
                 {summaryHtml && <div class="kex-detail__summary" data-kex-test="detail-summary" dangerouslySetInnerHTML={{ __html: summaryHtml }} />}
-                {track && <LabTrack items={track} open={open} onShow={(gid) => showGroup(gid)} />}
-                {view.blocks.length ? (
-                  <ul class={`kex-rows${compact ? ' kex-rows--compact' : ''}`} key={topicNumber.value} data-kex-test="rows">
-                    {view.blocks.map((block, bi) =>
-                      block.type === 'row' ? (
-                        renderRow(block.row, orderOf.get(block.row.cm.id) ?? bi)
-                      ) : (
-                        <SubsectionCard
-                          key={`g-${block.group.section.id}`}
-                          group={block.group}
-                          index={bi + 1}
-                          lab={labOf.get(block.group.section.id)}
-                          open={!track || open.has(block.group.section.id)}
-                          onToggle={(o) => setGroupOpen(block.group.section.id, o)}
-                        >
-                          {block.group.rows.map((r) => renderRow(r, orderOf.get(r.cm.id) ?? bi))}
-                        </SubsectionCard>
-                      ),
-                    )}
-                  </ul>
-                ) : !summaryHtml ? (
-                  <EmptyState kicker={t('course.noRows')} title={t('course.noRowsText')} />
-                ) : null}
+                {track ? (
+                  // Labs: a list of every lab beside the open one in a wide column, chips over folded cards in a narrow one (track.css).
+                  <div class="kex-labs" data-kex-test="labs">
+                    <LabTrack items={track} open={open} onShow={(gid) => showGroup(gid)} />
+                    {list}
+                    {!track.some((i) => open.has(i.group.section.id)) && (labTrackSettled.value
+                      ? <p class="kex-labs__none">{t('track.pick')}</p>
+                      : <div class="kex-labs__none kex-labs__none--wait" aria-hidden="true"><span class="kex-skel kex-skel--kicker" /><span class="kex-skel kex-skel--line kex-skel--w1" /><span class="kex-skel kex-skel--line kex-skel--w2" /></div>)}
+                  </div>
+                ) : list}
               </>
             )}
           </section>

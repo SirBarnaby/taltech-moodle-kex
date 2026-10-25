@@ -2,27 +2,35 @@ import { Megaphone, X } from 'lucide-preact';
 import { useEffect, useMemo } from 'preact/hooks';
 import { updateSettings } from '../../actions/settings';
 import { pushToast } from '../../actions/toasts';
-import { liveNotices, noticeFromHtml, scanNotices, type SiteNotice } from '../../content/sitenotice';
+import { liveNotices, noticeFromHtml, sameNotice, scanNotices, type SiteNotice } from '../../content/sitenotice';
 import { dashboardStore } from '../../data/repo/dashboard';
 import { t } from '../../i18n';
 import { pageDoc, settings } from '../../state';
 
-/** Moodle and TalTech notices (page alerts, body-level banners and the dashboard announcement block) as one quiet card each: a small icon, Moodle's own words and links, and Hide (until the text changes). */
-export function SiteNotices() {
+/**
+ * Moodle and TalTech notices (page alerts, body-level banners and the dashboard announcement block) as one quiet card each: a
+ * small icon, Moodle's own words and links, and Hide (until the text changes). `live` (skinned Moodle pages): only the banners
+ * found on this page, which would otherwise show unstyled (TalTech's comes with a giant thumbs-up).
+ */
+export function SiteNotices({ live = false }: { live?: boolean } = {}) {
   const doc = pageDoc.value;
   // A page opened in place brings its own Moodle document: its top-of-page alerts count too.
-  const fromDoc = useMemo<SiteNotice[]>(() => (doc && doc !== document ? scanNotices(doc).map((f) => f.notice) : []), [doc]);
+  const fromDoc = useMemo<SiteNotice[]>(() => (!live && doc && doc !== document ? scanNotices(doc).map((f) => f.notice) : []), [doc, live]);
   // The dashboard's own announcement block (block_advnotifications), read from /my/ when this page does not have it.
   const dash = dashboardStore();
-  useEffect(() => { void dash.refresh(); }, []);
-  const blocks = dash.value.value?.blocks;
+  useEffect(() => { if (!live) void dash.refresh(); }, [live]);
+  const blocks = live ? undefined : dash.value.value?.blocks;
   const fromDash = useMemo<SiteNotice[]>(() => (blocks ?? []).filter((b) => b.notice).flatMap((b) => noticeFromHtml(b.html) ?? []), [blocks]);
   const hidden = new Set(settings.value.hiddenNotices);
-  const seen = new Set<string>();
-  const list = [...liveNotices.value, ...fromDoc, ...fromDash].filter((n) => !hidden.has(n.key) && !seen.has(n.key) && seen.add(n.key));
+  // One message placed in two slots (top of body and footer, a longer and a shorter wording) is one notice, hidden together.
+  const all = [...liveNotices.value, ...fromDoc, ...fromDash];
+  const hiddenOnes = all.filter((n) => hidden.has(n.key));
+  const list: SiteNotice[] = [];
+  for (const n of all) if (!hiddenOnes.some((h) => sameNotice(h, n)) && !list.some((x) => sameNotice(x, n))) list.push(n);
   if (!list.length) return null;
   const hide = (n: SiteNotice): void => {
-    updateSettings({ hiddenNotices: [...settings.value.hiddenNotices, n.key] });
+    const keys = all.filter((x) => sameNotice(x, n)).map((x) => x.key);
+    updateSettings({ hiddenNotices: [...new Set([...settings.value.hiddenNotices, ...keys])] });
     pushToast(t('notice.hidden'));
   };
   return (

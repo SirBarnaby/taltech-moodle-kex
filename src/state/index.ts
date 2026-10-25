@@ -36,9 +36,9 @@ export const resolvedMotion = computed(() => {
   void systemReducedMotion.value;
   return resolveMotion(settings.value.motion);
 });
-export const sidebarMode = computed(() =>
-  sidebarModeFor(viewportWidth.value, settings.value.sidebarCollapsed || (route.value?.key === 'quiz-focus' && route.value.effective === 'skin')),
-);
+/** A quiz attempt keeps the menu folded to the rail, whatever the setting says. */
+const sidebarForced = computed(() => route.value?.key === 'quiz-focus' && route.value.effective === 'skin');
+export const sidebarMode = computed(() => sidebarModeFor(viewportWidth.value, settings.value.sidebarCollapsed || sidebarForced.value));
 
 /** Courses as the sidebar shows them: the user's own renames apply, otherwise Moodle's name (the same rule on every page). */
 export const sidebarCourses = computed<Course[]>(() => applyAliases(orderCourses(coursesRaw.value, settings.value.courseOrder), settings.value.courseAliases));
@@ -93,6 +93,14 @@ export const quickSettingsOpen = signal(false);
 export const userMenuOpen = signal(false);
 /** Rail sidebar expanded as an overlay, or the drawer opened (narrow viewports). */
 export const sidebarOverlay = signal(false);
+/**
+ * Whether the menu button opens the menu over the page instead of widening the rail in place: the drawer, a rail below 1100 px
+ * (no room to widen), a forced rail (widening would only rewrite the saved setting), or an overlay still open after a resize.
+ */
+export const sidebarOverlays = computed(() => {
+  const mode = sidebarMode.value;
+  return mode === 'drawer' || (mode === 'rail' && (viewportWidth.value < 1100 || sidebarForced.value)) || sidebarOverlay.value;
+});
 /** Keyboard-triggered sidebar changes are immediate. Pointer changes use the drawer transition. */
 export const sidebarInstant = signal(false);
 

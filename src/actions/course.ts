@@ -21,7 +21,7 @@ import {
   hooks, livePageDoc, pageInfo, settings, sidebarCourses,
 } from '../state';
 import {
-  courseError, courseEvents, courseState, courseStatus, fetchedSummaries, focusZone, labTrack, openGroups, openGroupsSet, previewCmId, rows, secondaryNav, selectedCmId, summaries, tileImages, topicNumber, topics, visibleRows,
+  courseError, courseEvents, courseEventsReady, courseState, courseStatus, fetchedSummaries, focusZone, labTrack, openGroups, openGroupsSet, previewCmId, rows, secondaryNav, selectedCmId, summaries, tileImages, topicNumber, topics, visibleRows,
 } from '../state/course';
 import { go } from './navigate';
 import { pinItem } from './pins';
@@ -90,6 +90,8 @@ export function initCourse(id: number, tiles: readonly Tile[] = []): () => void 
   focusZone.value = 'topics';
   selectedCmId.value = undefined;
   previewCmId.value = undefined;
+  // Lab choices are by section id of this course: another course (even on the same topic number) starts from its own next lab.
+  openGroupsSet.value = undefined;
   hydrateDetails(id);
 
   const cachedTiles = cache.peek<{ id: number; img: string }[]>(`tiles:${id}`)?.data ?? [];
@@ -124,6 +126,7 @@ export function initCourse(id: number, tiles: readonly Tile[] = []): () => void 
     effect(() => {
       const list = events.value.value ?? [];
       courseEvents.value = new Map(list.map((e) => [e.cmid, e]));
+      courseEventsReady.value = events.value.value !== undefined || events.status.value === 'error';
     }),
     effect(() => {
       const st = courseState.value;
@@ -181,16 +184,21 @@ function onPop(): void {
 /**
  * Switching topic while scrolled down: the new topic starts at its top, right under the sticky strip, instead of wherever
  * the old one happened to be. The jump happens under the copy of the old panel, which is fixed in place and fades out.
+ * The panel keeps enough height for that position, so a shorter topic never lets the browser clamp the scroll (which pulled
+ * the strip loose and dropped the page by hundreds of pixels).
  */
 function revealDetailTop(): void {
   const detail = document.querySelector<HTMLElement>('.kex-detail');
   const strip = document.querySelector<HTMLElement>('.kex-topics');
   if (!detail) return;
+  detail.style.minHeight = '';
   const stuck = strip ? (Number.parseFloat(getComputedStyle(strip).top) || 0) + strip.getBoundingClientRect().height : 0;
   const body = detail.parentElement;
   const gap = Number.parseFloat(body ? getComputedStyle(body).rowGap : '') || 24;
-  const want = detail.getBoundingClientRect().top + window.scrollY - stuck - gap;
-  if (window.scrollY > want + 1) scrollInstant(Math.max(0, want));
+  const top = detail.getBoundingClientRect().top + window.scrollY;
+  const y = Math.max(0, Math.min(window.scrollY, top - stuck - gap));
+  detail.style.minHeight = `${Math.max(0, Math.ceil(y + window.innerHeight - top))}px`;
+  if (window.scrollY > y + 1) scrollInstant(y);
 }
 
 function setTiles(entries: [number, string][]): void {

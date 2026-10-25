@@ -12,7 +12,7 @@ const DELAY = 300;
 
 /**
  * The label beside a hovered or focused rail item. One fixed element placed from the item's rectangle, so it
- * never stretches along the rail. Only rendered while the sidebar is the closed 72 px rail with auto-hide off.
+ * never stretches along the rail. Only rendered while the sidebar is the closed 72 px rail.
  */
 export function RailTip({ container }: { container: RefObject<HTMLElement> }) {
   const [tip, setTip] = useState<Tip | null>(null);

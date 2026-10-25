@@ -112,6 +112,16 @@ type Loaded = { id: number; content: PreviewContent } | { id: number; error: tru
  * Material reader. On wide windows it is a resizable side panel: the list stays usable beside it and up/down step through it.
  * Centre and full are modal sheets that keep the originating page painted and its scroll position intact.
  */
+/** Run a change that resizes the course column, then scroll by however far it moved the row `cmId` (no smooth scroll). */
+function keepRowInPlace(cmId: number, change: () => void): void {
+  const row = document.querySelector<HTMLElement>(`[data-kex-row="${cmId}"]`);
+  const before = row?.getBoundingClientRect().top;
+  change();
+  if (!row?.isConnected || before === undefined) return;
+  const moved = row.getBoundingClientRect().top - before;
+  if (Math.abs(moved) >= 1) window.scrollTo({ top: window.scrollY + moved, left: window.scrollX, behavior: 'instant' });
+}
+
 export function PreviewSheet({ row, pinned, onClose, onOpen, onPin, onStep }: PreviewSheetProps) {
   const prefs = settings.value.reader;
   const wide = useWide();
@@ -163,17 +173,18 @@ export function PreviewSheet({ row, pinned, onClose, onOpen, onPin, onStep }: Pr
   }, [id, row.cm.modname, row.cm.url]);
 
   // Side panel: the page makes room for it (a margin on the main column), and the row being read is marked in the list.
+  // The column changes width in one step, and the row being read stays where it was on screen while the rows above rewrap.
   const sideFraction = drag ?? prefs.side;
   useLayoutEffect(() => {
     if (modal) return;
     const html = document.documentElement;
-    html.dataset.kexReader = 'side';
+    keepRowInPlace(idRef.current, () => { html.dataset.kexReader = 'side'; });
     return () => {
-      delete html.dataset.kexReader;
+      keepRowInPlace(idRef.current, () => { delete html.dataset.kexReader; });
     };
   }, [modal]);
   useLayoutEffect(() => {
-    document.documentElement.style.setProperty('--kex-reader-f', String(sideFraction));
+    keepRowInPlace(idRef.current, () => document.documentElement.style.setProperty('--kex-reader-f', String(sideFraction)));
   }, [sideFraction]);
   useEffect(() => () => document.documentElement.style.removeProperty('--kex-reader-f'), []);
   useEffect(() => {

@@ -21,6 +21,10 @@ The fixture adjusts `Date` only. Animation frames, `performance.now()` and timer
 5. Compare the university notices and information disclosure with the original Moodle dashboard. Unknown widgets should have an original-Moodle link. The academic label should use weeks 1–16 or the relevant break/session.
 6. Check your usual SSO and open an assignment/quiz page. These keep Moodle's native activity flow; the smoke test requires no submission.
 
+## Layout stability bench (lab)
+
+With the lab Moodle and Selenium Firefox running, `npm run pack:dev` and then `node test/bench/stability.mjs` checks that nothing jumps: the sidebar under the pointer, page and topic switches, the side reader, Back from an activity, to the Workspace and to a skinned page, the labs board and chips, and site notices. Pass check names to run only some (`node test/bench/stability.mjs labs,back`). The rules these checks guard are in `docs/decisions.md` (Round 7).
+
 ## Optional isolated live Firefox flow
 
 `npm run test:live -- --course 37582` opens a fresh Firefox test profile and installs the verified production extension temporarily. Sign in yourself in that window, then follow the terminal prompts. It checks authenticated home/Dossier/course rendering and asks you to confirm SSO and native activity links. It does not borrow your Firefox profile, store credentials or submit work. Its aggregate result goes to `artifacts/live-smoke/`.

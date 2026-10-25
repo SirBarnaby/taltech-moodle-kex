@@ -1,4 +1,5 @@
 import { CircleCheck, Eye } from 'lucide-preact';
+import { cmDetailsMissed } from '../../data/repo/cmdetails';
 import type { RowModel } from '../../data/topics';
 import type { GradeStat } from '../../data/scrape/grades';
 import { t } from '../../i18n';
@@ -37,7 +38,15 @@ export function ResourceRow({ row, index, topicNumber, pinned, primary, selected
   if (row.kind === 'note') {
     return (
       <li class="kex-row kex-row--note" data-kex-note={row.cm.id}>
-        <div class="kex-row__note" dangerouslySetInnerHTML={{ __html: sanitizeHtml(row.noteHtml ?? '') }} />
+        {/* A label's text comes with the course page, a moment after the row: one line is held for it so the rows below stay put. */}
+        {/* If its text cannot be read at all, the label's name (Moodle's shortened text) stands in. */}
+        {row.noteHtml || !row.provisional ? (
+          <div class="kex-row__note" dangerouslySetInnerHTML={{ __html: sanitizeHtml(row.noteHtml ?? '') }} />
+        ) : cmDetailsMissed.value.has(row.cm.id) ? (
+          <div class="kex-row__note"><p>{row.title}</p></div>
+        ) : (
+          <div class="kex-row__note" aria-hidden="true"><span class="kex-skel kex-skel--note" /></div>
+        )}
       </li>
     );
   }

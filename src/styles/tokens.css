@@ -126,9 +126,6 @@
 :root[data-kex-sidebar="drawer"] {
   --kex-sb-w: 0px;
 }
-:root[data-kex-sidebar-auto-hide="true"] {
-  --kex-sb-w: 0px;
-}
 
 /* Dark theme: content area; sidebar and hero are unchanged */
 :root[data-kex][data-kex-theme="dark"],

@@ -3,8 +3,8 @@ import { motionTier } from './motion';
 
 /**
  * Pages Moodle renders itself (Participants, Grades, activities) are full loads: the next document just starts at the top.
- * The old page leaves a note (scroll position, time) when a click is what unloads it; the new page reads it and plays the
- * same slide-down as a soft navigation, so a switch from such a page looks like the others.
+ * The old page leaves a note (time) when a click is what unloads it; the new page reads it and plays the same fade-in as a soft
+ * navigation, so a switch from such a page looks like the others.
  */
 const KEY = 'kex-nav-from';
 const FRESH_MS = 5000;
@@ -14,9 +14,9 @@ let watching = false;
 
 function write(): void {
   try {
-    sessionStorage.setItem(KEY, JSON.stringify({ y: Math.round(window.scrollY), t: Date.now() }));
+    sessionStorage.setItem(KEY, JSON.stringify({ t: Date.now() }));
   } catch {
-    /* storage blocked: the page simply arrives without the slide */
+    /* storage blocked: the page simply arrives without the fade */
   }
 }
 
@@ -34,21 +34,19 @@ export function watchDepartures(): void {
   });
 }
 
-/** On the new page, once the view is mounted: slide `main` in the way a soft navigation does. */
+/** On the new page, once the view is mounted: fade the content in the way a soft navigation does (the head stays opaque). */
 export function playArrival(main: HTMLElement | null): void {
-  let note: { y?: number; t?: number } | null = null;
+  let note: { t?: number } | null = null;
   try {
     const raw = sessionStorage.getItem(KEY);
     sessionStorage.removeItem(KEY);
-    note = raw ? (JSON.parse(raw) as { y?: number; t?: number }) : null;
+    note = raw ? (JSON.parse(raw) as { t?: number }) : null;
   } catch {
     note = null;
   }
   if (!main || !note || typeof note.t !== 'number' || Date.now() - note.t > FRESH_MS) return;
   if (motionTier() !== 'full' || typeof main.animate !== 'function') return;
-  const lift = note.y && note.y > 0 ? Math.min(note.y, MOTION.liftMax) : MOTION.liftRest;
-  main.animate(
-    [{ opacity: 0, transform: `translateY(${-lift}px)` }, { opacity: 1, transform: 'translateY(0)' }],
-    { duration: MOTION.enter, easing: MOTION.ease, fill: 'backwards' },
-  );
+  const body = main.querySelector<HTMLElement>(':scope > .kex-content');
+  const head = main.querySelector(':scope > :is(.kex-hero, .kex-band)');
+  (head && body ? body : main).animate([{ opacity: 0 }, { opacity: 1 }], { duration: MOTION.enter, easing: MOTION.ease, fill: 'backwards' });
 }

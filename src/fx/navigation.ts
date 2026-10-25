@@ -8,9 +8,9 @@ export const MOTION = {
   ease: 'cubic-bezier(.23, 1, .32, 1)',
   /** The copy of the old page fades out. */
   exit: 120,
-  /** The new page fades in and slides down from `lift` px above. */
+  /** The new page fades in where it lands; nothing on it moves. */
   enterDelay: 40,
-  enter: 240,
+  enter: 200,
   /** Hero title pieces (white and coloured words together). */
   titleDelay: 80,
   title: 260,
@@ -26,9 +26,6 @@ export const MOTION = {
   topicStagger: 120,
   /** Effects off: a plain crossfade. */
   subtle: 120,
-  /** Page lift: min(old scroll, liftMax); liftRest when the old page was at the top. */
-  liftMax: 160,
-  liftRest: 8,
   /** Switching topic inside a course. */
   topicExit: 110,
   topicEnter: 190,
@@ -140,23 +137,32 @@ export function preserveViewport(origin: HTMLElement | undefined): () => void {
 }
 
 /**
- * Back and forward: put the old scroll position back as soon as the view is mounted, and keep the page tall enough to hold it
- * (`ready` says when the real content is in; at most 2 s) so the position is not clamped while the skeleton is short.
+ * Back, forward and reload: put the old scroll position back as soon as the view is mounted, and keep the page tall enough to
+ * hold it (`ready` says when the real content is in; at most 2 s) so the position is not clamped while the skeleton is short.
+ * Content that is already there (a cached course) is scrolled at once.
  */
 export function restoreScroll(y: number, ready: () => boolean): void {
   if (!(y > 0)) return;
   const t0 = performance.now();
+  let held: HTMLElement | null = null;
+  let placed = false;
   const tick = (): void => {
     const main = document.getElementById('kex-main');
-    if (ready() || performance.now() - t0 > 2000) {
-      if (main) main.style.minHeight = '';
-      return;
+    const done = ready() || performance.now() - t0 > 2000;
+    // Whichever view is current holds the height (a skeleton can give way to the view itself) until its content is in.
+    if (held && (done || held !== main)) {
+      held.style.minHeight = '';
+      held = null;
     }
-    if (main && !main.style.minHeight) {
+    if (main && !done && !held) {
       main.style.minHeight = `${y + window.innerHeight}px`;
-      scrollInstant(y);
+      held = main;
     }
-    requestAnimationFrame(tick);
+    if (main && !placed) {
+      scrollInstant(y);
+      placed = true;
+    }
+    if (!done) requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
 }
@@ -195,7 +201,8 @@ function pruneOffscreen(source: HTMLElement, copy: HTMLElement): void {
 /**
  * Capture before changing state; call the returned function immediately after the change to reveal its destination.
  * `page` copies the whole `.kex-main` (hero text and content), clipped to the viewport, and fades it out while the real page
- * (already scrolled to the top underneath) fades in and slides down: it reads as one short scroll up. `topic` copies the detail panel.
+ * (already scrolled to the top underneath) fades in where it stands: a slide would read as the page jumping. `topic` copies the
+ * detail panel.
  */
 export function beginViewTransition(
   element: HTMLElement | null,
@@ -214,7 +221,6 @@ export function beginViewTransition(
   const finished = new Promise<void>((r) => { resolve = r; });
   const t0 = performance.now();
   const bounds = element.getBoundingClientRect();
-  const lift = scope === 'page' && tier === 'full' ? (window.scrollY > 0 ? Math.min(window.scrollY, MOTION.liftMax) : MOTION.liftRest) : 0;
   const copy = element.cloneNode(true) as HTMLElement;
   stripIdentity(copy);
   const ghost = document.createElement('div');
@@ -257,12 +263,10 @@ export function beginViewTransition(
   );
   let frame = 0;
   let enter: Animation | undefined;
-  const fades: Animation[] = [];
   const stop = (): void => {
     cancelAnimationFrame(frame);
     exit.cancel();
     enter?.cancel();
-    fades.forEach((a) => a.cancel());
     ghost.remove();
     if (running.get(scope) === stop) running.delete(scope);
     resolve();
@@ -279,26 +283,18 @@ export function beginViewTransition(
         if (!incoming && ++tries < 4) return reveal();
         if (!incoming || incoming === element && !incoming.isConnected) return stop();
         if (scope === 'page') {
+          const full = tier === 'full';
           const lag = performance.now() - t0;
           const timing: KeyframeAnimationOptions = {
-            duration: lift ? MOTION.enter : MOTION.subtle,
-            delay: Math.max(0, (lift ? MOTION.enterDelay : 0) - lag),
+            duration: full ? MOTION.enter : MOTION.subtle,
+            delay: Math.max(0, (full ? MOTION.enterDelay : 0) - lag),
             easing: MOTION.ease,
             fill: 'backwards',
           };
           const head = incoming.querySelector<HTMLElement>(':scope > :is(.kex-hero, .kex-band)');
           const body = incoming.querySelector<HTMLElement>(':scope > .kex-content');
-          if (head && body) {
-            // The head moves with the page but stays opaque (its canvas never blanks); only the content fades in.
-            enter = incoming.animate(lift ? [{ transform: `translateY(${-lift}px)` }, { transform: 'translateY(0)' }] : [{ transform: 'none' }, { transform: 'none' }], timing);
-            const fade = body.animate([{ opacity: 0 }, { opacity: 1 }], timing);
-            fades.push(fade);
-          } else {
-            const keyframes: Keyframe[] = lift
-              ? [{ opacity: 0, transform: `translateY(${-lift}px)` }, { opacity: 1, transform: 'translateY(0)' }]
-              : [{ opacity: 0 }, { opacity: 1 }];
-            enter = incoming.animate(keyframes, timing);
-          }
+          // The head stays opaque (its canvas never blanks); only the content fades in.
+          enter = (head && body ? body : incoming).animate([{ opacity: 0 }, { opacity: 1 }], timing);
         } else {
           // Filters and lists: when the new content starts above the viewport, go back up to its top.
           if (options.scroll !== 'preserve') {

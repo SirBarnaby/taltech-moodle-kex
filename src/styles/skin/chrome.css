@@ -31,6 +31,15 @@
   .kex-chrome .kex-band__text {
     max-width: 64%;
   }
+  .kex-chrome__notices {
+    padding-inline: var(--kex-pad);
+    &:empty {
+      display: none;
+    }
+    .kex-notices {
+      margin-top: 16px;
+    }
+  }
 }
 
 /* ---- previous / next bar ---- */
