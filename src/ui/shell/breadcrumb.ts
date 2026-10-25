@@ -30,7 +30,7 @@ export function buildBreadcrumb(
   labels: BreadcrumbLabels,
 ): ShellCrumb[] {
   const root = info.wwwroot;
-  const home: ShellCrumb = { text: labels.home, href: `${root}/my/`, home: true };
+  const home: ShellCrumb = { text: labels.home, href: `${root}/my/courses.php`, home: true };
   const { path } = info;
 
   if (path === '/my/' || path === '/my/index.php') return [home, { text: labels.workspace, href: null }];

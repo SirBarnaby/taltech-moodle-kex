@@ -1,5 +1,6 @@
 import { effect } from '@preact/signals';
-import { beginViewTransition } from '../fx/navigation';
+import { focusWithoutJump } from '../fx/navigation';
+import { changeView, navigation } from '../fx/transactions';
 import { cache } from '../data/cache';
 import type { Pin } from '../data/model';
 import type { NavTab } from '../data/scrape/secondarynav';
@@ -10,8 +11,7 @@ import { hydrateModNames, loadModNames } from '../data/repo/modnames';
 import { isReadableMaterial } from '../data/repo/preview';
 import { readCourseUi, writeCourseUi } from '../data/repo/ui';
 import { parseCmItems } from '../data/scrape/cm';
-import { scrapeSecondaryNav } from '../data/scrape/secondarynav';
-import { scrapeSummaries } from '../data/scrape/summaries';
+import { readMoodleContent } from '../data/adapters';
 import { scrapeTiles, type Tile } from '../data/scrape/tiles';
 import { deadlineTopic, incompleteTopic, initialTopic, parseTopicHash, type RowModel } from '../data/topics';
 import { ws } from '../data/ws';
@@ -69,7 +69,7 @@ function pickStart(state: CourseState): void {
   if (topicNumber.value !== undefined) return;
   const tps = topics.value;
   const ui = readCourseUi(courseId);
-  const fromUrl = urlTopicRequest(state);
+  const fromUrl = urlTopicRequest(state) ?? (history.state as { kexTopic?: number } | null)?.kexTopic;
   const n = initialTopic({
     topics: tps,
     fromUrl,
@@ -147,16 +147,14 @@ export function initCourse(id: number, tiles: readonly Tile[] = []): () => void 
   ];
   void store.refresh(true);
   void events.refresh();
-  window.addEventListener('popstate', onPop);
-  window.addEventListener('hashchange', onPop);
+  document.addEventListener('kex:history', onPop);
   return disposeCourse;
 }
 
 export function disposeCourse(): void {
   stops.forEach((s) => s());
   stops = [];
-  window.removeEventListener('popstate', onPop);
-  window.removeEventListener('hashchange', onPop);
+  document.removeEventListener('kex:history', onPop);
   window.clearTimeout(prefetchTimer);
 }
 
@@ -168,11 +166,9 @@ export function retryCourse(): void {
 function onPop(): void {
   const st = courseState.value;
   if (!st) return;
-  const n = parseTopicHash(location.hash);
+  const n = parseTopicHash(location.hash) ?? (history.state as { kexTopic?: number } | null)?.kexTopic;
   if (n !== undefined && topics.value.some((x) => x.section.number === n)) {
-    const enter = beginViewTransition(document.querySelector<HTMLElement>('.kex-detail'), 'topic');
     topicNumber.value = n;
-    enter('.kex-detail');
   }
 }
 
@@ -194,9 +190,10 @@ function scrapePage(id: number): void {
   try {
     const found = scrapeTiles(livePageDoc());
     if (found.length) setTileList(found);
-    const sums = scrapeSummaries(livePageDoc());
+    const content = readMoodleContent(livePageDoc(), new URL(location.href));
+    const sums = content.summaries.data;
     if (sums.size) summaries.value = new Map([...summaries.value, ...sums]);
-    const nav = scrapeSecondaryNav(livePageDoc());
+    const nav = content.navigation.data;
     if (nav.length) {
       secondaryNav.value = nav;
       void cache.write(`snav:${id}`, nav);
@@ -227,7 +224,7 @@ async function loadSummaries(st: CourseState, n: number): Promise<void> {
   attempted.add(sec.id);
   try {
     const html = await ws.fetchText(`/course/section.php?id=${sec.id}`);
-    const got = scrapeSummaries(new DOMParser().parseFromString(html, 'text/html')).get(sec.id);
+    const got = readMoodleContent(new DOMParser().parseFromString(html, 'text/html'), new URL(location.href)).summaries.data.get(sec.id);
     if (!got || courseId !== st.courseId) return;
     fetchedSummaries.value = new Map([...fetchedSummaries.value, [sec.id, got]]);
     void cache.write(`sums:${courseId}`, [...fetchedSummaries.value]);
@@ -296,19 +293,17 @@ export function setTopic(n: number, opts: { push?: boolean; focus?: boolean } = 
     if (opts.focus) focusTopic(n);
     return;
   }
-  const enter = beginViewTransition(document.querySelector<HTMLElement>('.kex-detail'), 'topic');
-  performance.mark('kex:topic-switch');
-  topicNumber.value = n;
-  enter('.kex-detail');
-  selectedCmId.value = undefined;
-  writeCourseUi(courseId, { topic: n });
   const url = new URL(location.href);
   url.hash = topicHash(n);
   const now = Date.now();
-  if (opts.push !== false && now - lastPush > PUSH_COALESCE_MS) history.pushState(null, '', url);
-  else history.replaceState(null, '', url);
+  changeView('topic', '.kex-detail', () => {
+    navigation.write(url, opts.push !== false && now - lastPush > PUSH_COALESCE_MS ? 'push' : 'replace', { kexTopic: n });
+    performance.mark('kex:topic-switch');
+    topicNumber.value = n;
+    selectedCmId.value = undefined;
+    writeCourseUi(courseId, { topic: n });
+  }, { focus: opts.focus ? `[data-kex-topic="${n}"]` : undefined });
   lastPush = now;
-  if (opts.focus) focusTopic(n);
 }
 
 export function moveTopic(delta: 1 | -1): void {
@@ -334,12 +329,12 @@ export function moveRow(delta: 1 | -1): void {
 
 export function focusTopic(n: number): void {
   focusZone.value = 'topics';
-  requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-topic="${n}"]`)?.focus({ preventScroll: false }));
+  requestAnimationFrame(() => focusWithoutJump(document.querySelector<HTMLElement>(`[data-kex-topic="${n}"]`)));
 }
 
 export function focusRow(cmid: number): void {
   focusZone.value = 'rows';
-  requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-row="${cmid}"]`)?.focus());
+  requestAnimationFrame(() => focusWithoutJump(document.querySelector<HTMLElement>(`[data-kex-row="${cmid}"]`), true));
 }
 
 export function enterRows(): void {

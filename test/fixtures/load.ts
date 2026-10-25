@@ -34,7 +34,7 @@ export function captureMeta(name: CaptureName): CaptureMeta {
 export function loadCapture(name: CaptureName): Document {
   const html = captureHtml(name);
   document.open();
-  document.write(html);
+  document.write(html.replace(/<script\b[^>]*\bsrc\s*=[^>]*>[\s\S]*?<\/script>/gi, '').replace(/<link\b[^>]*>/gi, ''));
   document.close();
   return document;
 }

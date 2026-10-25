@@ -2,6 +2,9 @@
    Transform and opacity only, under 300 ms, strong ease-out. Decoration needs the effects setting on "animated"; press feedback needs it
    not "off". Reduced motion (system or KEX's own choice) removes all of it. */
 #kex-root {
+  overflow-anchor: none;
+  .kex-pinned-hint { display: flex; align-items: center; gap: 8px; padding: 14px 0 0; margin: 0; color: var(--kex-text-3); font: 13px/1.5 var(--kex-font-ui); }
+  .kex-pinned-hint svg { width: 14px; height: 14px; flex: none; }
   --kex-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   /* ---- focus ring: the same everywhere, also on cards and rows that take focus themselves ---- */
@@ -41,10 +44,10 @@
 /* ---- press feedback ---- */
 :root:not([data-kex-effects="off"]):not([data-kex-motion="reduced"]) #kex-root {
   :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt) {
-    transition: transform 120ms var(--kex-ease-out), background-color 120ms var(--kex-ease-out), color 120ms var(--kex-ease-out), border-color 120ms var(--kex-ease-out);
+    transition: transform var(--kex-motion-press, 120ms) var(--kex-ease-out), background-color var(--kex-motion-press, 120ms) var(--kex-ease-out), color var(--kex-motion-press, 120ms) var(--kex-ease-out), border-color var(--kex-motion-press, 120ms) var(--kex-ease-out);
   }
   :is(.kex-mc, .kex-wc, .kex-row, .kex-groupcard) {
-    transition: transform 120ms var(--kex-ease-out), box-shadow 160ms var(--kex-ease-out), background-color 120ms var(--kex-ease-out), border-color 120ms var(--kex-ease-out);
+    transition: transform var(--kex-motion-press, 120ms) var(--kex-ease-out), box-shadow var(--kex-motion-focus, 160ms) var(--kex-ease-out), background-color var(--kex-motion-press, 120ms) var(--kex-ease-out), border-color var(--kex-motion-press, 120ms) var(--kex-ease-out);
   }
   :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc):active {
     transform: scale(0.97);

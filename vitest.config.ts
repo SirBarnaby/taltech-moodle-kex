@@ -6,5 +6,5 @@ export default defineConfig({
     environment: 'happy-dom',
     environmentOptions: { happyDOM: { settings: { disableJavaScriptEvaluation: true, disableCSSFileLoading: true, disableJavaScriptFileLoading: true } } },
   },
-  define: { __DEBUG__: 'true', __VERSION__: '"test"' },
+  define: { __DEBUG__: 'true', __VERSION__: '"test"', __BUILD_ID__: '"test-build"' },
 });

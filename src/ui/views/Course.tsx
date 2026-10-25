@@ -162,12 +162,11 @@ export function CourseView() {
   );
 
   return (
-    <main class="kex-main kex-course" id="kex-main" data-kex-test="course" data-kex-course={id ?? ''}>
+    <main class="kex-main kex-course" id="kex-main" data-kex-test="course" data-kex-course={id ?? ''} data-kex-ready={!loading}>
       <Hero
         key={id ?? 0}
         lines={lines.length ? lines : [rawName]}
         links={[]}
-        seed={id ?? 0}
       />
       <div class="kex-content">
         <PinnedRow pins={pinnedRow.value} courseId={id} />

@@ -1,5 +1,5 @@
 import { animSettle, animTrack } from './anim';
-import { viewMotionAllowed } from './navigation';
+import { MOTION, viewMotionAllowed } from './navigation';
 
 /** Slide Up Text (architecture §15): masked pieces slide up with a stagger. Screen readers get the full text once. */
 
@@ -18,6 +18,8 @@ export interface SlideUpOptions {
   lines?: 'explicit' | 'auto';
   /** Paint these lines (0-based; `true` = all) with the hero gradient across the whole line (hero line 2). */
   gradient?: boolean | number[];
+  /** Accent lines fade in after the primary line starts (milliseconds). */
+  accentDelay?: number;
   /** No animation: render the final text immediately. */
   reduced?: boolean;
   onStart?: () => void;
@@ -166,12 +168,13 @@ export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions 
       done();
       return;
     }
-    const n = items.length;
-    animations = items.map((item, i) =>
-      item.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], {
+    const accent = new Set(o.accentDelay !== undefined ? lineItems.filter((_, i) => i > 0 && (o.gradient === true || Array.isArray(o.gradient) && o.gradient.includes(i))).flat() : []);
+    const primary = items.filter((item) => !accent.has(item));
+    animations = items.map((item) =>
+      item.animate(accent.has(item) ? [{ opacity: 0 }, { opacity: 1 }] : [{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], {
         duration: o.duration * 1000,
-        delay: (o.delay + staggerDelay(i, n, o.from, o.stagger)) * 1000,
-        easing: o.ease,
+        delay: o.delay * 1000 + (accent.has(item) ? (o.accentDelay ?? MOTION.accentDelay) : staggerDelay(primary.indexOf(item), primary.length, o.from, o.stagger) * 1000),
+        easing: accent.has(item) ? MOTION.ease : o.ease,
         fill: 'both',
       }),
     );

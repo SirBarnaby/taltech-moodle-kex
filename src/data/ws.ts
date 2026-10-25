@@ -83,9 +83,10 @@ export class WsClient {
   }
 
   /** GET a URL and report where it ended up: PDFs and images answer with their final pluginfile URL and type, pages with their HTML. */
-  async probe(url: string): Promise<{ url: string; type: string; html?: string }> {
+  async probe(url: string, signal?: AbortSignal): Promise<{ url: string; type: string; html?: string }> {
     await this.ready;
-    const res = await this.http(url, { credentials: 'same-origin' });
+    signal?.throwIfAborted();
+    const res = await this.http(url, { credentials: 'same-origin', signal });
     if (!res.ok) throw new NetworkError(`HTTP ${res.status}`);
     const type = (res.headers.get('content-type') ?? '').toLowerCase();
     if (type.includes('html')) return { url: res.url || url, type, html: await res.text() };

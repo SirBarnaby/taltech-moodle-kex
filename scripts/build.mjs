@@ -10,6 +10,7 @@ import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildIdentity, sourceFingerprint, writeProvenance, verifyProvenance } from './provenance.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = new Set(process.argv.slice(2));
@@ -19,6 +20,7 @@ const mv3 = args.has('--mv3-probe');
 const cssOnly = args.has('--css-only');
 // The release bundle (minified, no debug hooks) with the lab's origin added, so the real production code can be tested on http://localhost:8080.
 const lab = args.has('--lab');
+if (watch && !dev) throw new Error('--watch is only available for development builds');
 
 const outName = mv3 ? 'firefox-mv3-probe' : cssOnly ? 'firefox-dev-cssonly' : lab ? 'firefox-prod-lab' : dev ? 'firefox-dev' : 'firefox';
 const out = path.join(root, 'dist', outName);
@@ -35,6 +37,9 @@ const FONT_FILES = [
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 const base = JSON.parse(await readFile(path.join(root, 'manifest', 'base.json'), 'utf8'));
 const devOverlay = JSON.parse(await readFile(path.join(root, 'manifest', 'dev.json'), 'utf8'));
+const fingerprint = await sourceFingerprint();
+const identityOptions = { version: pkg.version, mode: dev ? 'development' : 'production', output: outName, lab, mv3, cssOnly };
+const buildId = watch ? 'watch-unverified' : buildIdentity(fingerprint.sourceHash, identityOptions);
 
 /** Build the manifest from base.json (+ dev overlay, + MV3 probe). */
 function makeManifest() {
@@ -83,6 +88,7 @@ const common = {
   define: {
     __DEBUG__: JSON.stringify(dev),
     __VERSION__: JSON.stringify(pkg.version),
+    __BUILD_ID__: JSON.stringify(buildId),
   },
 };
 
@@ -97,6 +103,7 @@ async function copyStatic() {
   await writeFile(path.join(out, 'manifest.json'), JSON.stringify(makeManifest(), null, 2) + '\n');
 }
 
+if (!out.startsWith(path.join(root, 'dist') + path.sep)) throw new Error('Unsafe build output');
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 
@@ -122,9 +129,15 @@ if (watch) {
   const ctxs = await Promise.all([esbuild.context(jsCfg), esbuild.context(cssCfg)]);
   await Promise.all(ctxs.map((c) => c.watch()));
   await copyStatic();
+  // Watch builds deliberately never claim release provenance: esbuild may rebuild
+  // JS/CSS independently, and static files are copied only at startup.
+  await writeFile(path.join(out, 'build-info.json'), JSON.stringify({ schema: 1, state: 'watch-unverified', buildId, ...identityOptions }, null, 2) + '\n');
   console.log(`watching -> ${path.relative(root, out)}`);
 } else {
   await Promise.all([esbuild.build(jsCfg), esbuild.build(cssCfg)]);
   await copyStatic();
-  console.log(`built ${path.relative(root, out)}`);
+  if ((await sourceFingerprint()).sourceHash !== fingerprint.sourceHash) throw new Error('Source changed during build; rebuild before using this artifact');
+  await writeProvenance(out, { buildId, ...identityOptions }, fingerprint);
+  await verifyProvenance(out);
+  console.log(`built ${path.relative(root, out)} (${buildId})`);
 }

@@ -1,18 +1,19 @@
 import { batch, effect } from '@preact/signals';
 import { seedDetails } from '../data/repo/cmdetails';
 import { parseCmItems } from '../data/scrape/cm';
-import { scrapeSecondaryNav } from '../data/scrape/secondarynav';
-import { beginViewTransition, cancelViewTransitions } from '../fx/navigation';
+import { cancelViewTransitions, focusWithoutJump } from '../fx/navigation';
+import { navigation, type NavigationState, type NavigationTransaction } from '../fx/transactions';
+import { applyMotionTokens } from '../fx/motion';
+import { markBuild } from './build-id';
+import { readMoodleContent } from '../data/adapters';
 import { hardNavigating, navigationLoading } from '../state/navigation';
 import { cache } from '../data/cache';
 import { createCoursesStore, loadCustomField } from '../data/repo/courses';
 import { cachedUser, fetchUser, storeUser } from '../data/repo/user';
-import { scrapeGradeOverview } from '../data/scrape/grades';
 import { scrapeMyoverview } from '../data/scrape/myoverview';
 import { gradeRows } from '../state/grades';
 import { gradesBindings } from '../actions/grades';
 import { notificationsBindings } from '../actions/notifications';
-import { scrapeSummaries } from '../data/scrape/summaries';
 import { scrapeTiles } from '../data/scrape/tiles';
 import { setTileList } from '../actions/course';
 import { courseBindings, previewBindings } from '../actions/coursekeys';
@@ -56,7 +57,7 @@ import { parsePageInfo, type PageInfo } from './pageinfo';
 import { effectiveMode, resolveRoute, stripBase, type EffectiveRoute } from './router';
 import { scrapeLanguages } from './langs';
 import { mountGuestSkin, unmountGuestSkin } from './skinguest';
-import { clickedLink, isPlainClick, PageLoader, prefetchSafe, routeOfDoc, softTarget, type SoftTarget } from './softnav';
+import { clickedLink, homeTarget, isPlainClick, PageLoader, prefetchSafe, routeOfDoc, softTarget, type SoftTarget } from './softnav';
 import { clearSnapshot, hasSnapshot, paintSnapshot, removeSnapshot, saveSnapshot } from './snapshot';
 
 /** Failsafe from architecture §5.2: if the shell has not mounted after 3 s, show plain Moodle. */
@@ -67,6 +68,7 @@ type OffReason = 'manual' | 'route' | 'setting' | 'disabled';
 const offKey = (routeKey: string): string => `kex.off.${routeKey}`;
 
 class Controller {
+  private hardTransaction?: NavigationTransaction;
   private html!: HTMLElement;
   private root: HTMLElement | null = null;
   private route: EffectiveRoute | null = null;
@@ -76,12 +78,11 @@ class Controller {
   /** Per-view subscriptions (key bindings, view attributes): replaced when a soft navigation swaps the view. */
   private routeStops: (() => void)[] = [];
   private bindingsOff: (() => void) | null = null;
-  private loader = new PageLoader((url) => this.fetchText(url));
+  private loader = new PageLoader((url, signal) => this.fetchText(url, signal));
   /** True once a soft navigation replaced the view: Moodle's own DOM (hidden behind the shell) is then the first page's, not the current one's. */
   private softNavigated = false;
   /** path + search of the view that is mounted (a hash change alone is not a navigation). */
   private viewUrl = '';
-  private navSeq = 0;
   private snapshotTimer: number | undefined;
   private booting = false;
   private mounted = false;
@@ -91,6 +92,8 @@ class Controller {
 
   async start(): Promise<void> {
     this.html = await documentElementReady();
+    markBuild();
+    applyMotionTokens(this.html);
     // Alt+Shift+O must work in every state (on, off, error).
     window.addEventListener('keydown', (e) => isOriginalToggle(e) && toggleOriginalFromKey(e), true);
     hooks.toggleOriginal = () => this.toggleOriginal();
@@ -117,6 +120,10 @@ class Controller {
     });
     document.addEventListener('pointerdown', () => { this.html.dataset.kexInput = 'pointer'; }, true);
     window.addEventListener('keydown', () => { this.html.dataset.kexInput = 'keyboard'; }, true);
+    document.addEventListener('focusin', (event) => {
+      const target = event.target;
+      if (this.html.dataset.kexInput === 'keyboard' && target instanceof HTMLElement && target.closest('#kex-root')) focusWithoutJump(target, true);
+    });
 
     if (!readBootMirror().enabled) {
       void this.settingsLoaded.then((s) => this.goDisabled(s));
@@ -199,6 +206,13 @@ class Controller {
       }
       if (safeSessionStorage()?.getItem(offKey(eff.key)) === '1') return this.settleOff(s.showOffPill, 'manual');
 
+      // Moodle's default sign-in destination is /my/. Our home is always My courses;
+      // the explicit dossier URL remains bookmarkable and works with Back/Forward.
+      const landing = homeTarget(new URL(location.href), info.wwwroot);
+      if (landing.href !== location.href) {
+        location.replace(landing.href);
+        return;
+      }
       await this.mount(eff);
     } catch (e) {
       recordError('boot', e);
@@ -239,7 +253,7 @@ class Controller {
     // The cookie notice lives in #page-wrapper, which app mode hides: it becomes a toast on the body.
     const notice = document.querySelector<HTMLElement>('.eupopup-container');
     if (notice) document.body.appendChild(notice);
-    mountLogin(root, { model, loggedIn: !info.isGuest, continueHref: `${info.wwwroot}/my/` }, (e) => this.failOpen('login', e));
+    mountLogin(root, { model, loggedIn: !info.isGuest, continueHref: `${info.wwwroot}/my/courses.php` }, (e) => this.failOpen('login', e));
     window.clearTimeout(this.failTimer);
     this.mounted = true;
     this.html.dataset.kexShell = 'ready';
@@ -464,13 +478,14 @@ class Controller {
 
   /** The view's own data from a page document (the live one, or the one a soft navigation fetched). */
   private refreshViewFromDoc(eff: EffectiveRoute, doc: Document): void {
+    const content = readMoodleContent(doc, new URL(location.href));
     if (eff.key === 'workspace' || eff.key === 'mycourses') void scrapeMyoverview(doc);
-    if (eff.key === 'grades') gradeRows.value = scrapeGradeOverview(doc);
+    if (eff.key === 'grades') gradeRows.value = content.grades.data;
     if (eff.key === 'course' || eff.key === 'section') {
       const tiles = scrapeTiles(doc);
       if (tiles.length) setTileList(tiles);
-      summaries.value = scrapeSummaries(doc);
-      const nav = scrapeSecondaryNav(doc);
+      summaries.value = content.summaries.data;
+      const nav = content.navigation.data;
       secondaryNav.value = nav;
       const id = this.info?.courseId;
       if (id) {
@@ -523,6 +538,7 @@ class Controller {
 
   /** Link clicks, hover warm-up and history traversal. Registered once the shell is up. */
   private watchNavigation(): void {
+    this.stops.push(navigation.attachHistory());
     const onClick = (e: MouseEvent): void => {
       if (!isPlainClick(e) || !this.canSoft()) return;
       const a = clickedLink(e.target);
@@ -534,7 +550,7 @@ class Controller {
         return;
       }
       // Same page: let the browser handle anchors and reloads of the current URL.
-      if (url.pathname + url.search === location.pathname + location.search) return;
+      if (url.pathname + url.search === location.pathname + location.search && url.hash === location.hash) return;
       if (this.trySoft(url)) e.preventDefault();
       else if (a.closest('.kex-coursenav')) this.hardLoadFeedback();
     };
@@ -594,17 +610,20 @@ class Controller {
    */
   private hardLoadFeedback(): void {
     if (hardNavigating.value) return;
-    const enter = beginViewTransition(this.root?.querySelector<HTMLElement>('.kex-main .kex-content') ?? null, 'page');
+    const tx = navigation.begin('page', { selector: '.kex-main .kex-content', scroll: 'preserve' });
+    this.hardTransaction = tx;
     this.html.dataset.kexNav = 'loading';
     hardNavigating.value = true;
-    enter('.kex-main .kex-content');
+    void tx.finish({ ready: () => !hardNavigating.value }).catch(() => undefined);
     // A cancelled load (Escape, a download) leaves the page as it was.
     window.clearTimeout(this.hardTimer);
-    this.hardTimer = window.setTimeout(() => this.endHardLoadFeedback(), 10_000);
+    this.hardTimer = window.setTimeout(() => this.endHardLoadFeedback(), 7500);
   }
 
   private endHardLoadFeedback(): void {
     window.clearTimeout(this.hardTimer);
+    this.hardTransaction?.cancel();
+    this.hardTransaction = undefined;
     if (!hardNavigating.value) return;
     hardNavigating.value = false;
     if (!navigationLoading.value) this.html.removeAttribute('data-kex-nav');
@@ -618,6 +637,7 @@ class Controller {
   /** Open `url` in place when it is an app view. Returns true when the navigation was taken over (the caller must not load the page). */
   private trySoft(url: URL): boolean {
     if (!this.canSoft()) return false;
+    url = homeTarget(url, this.info!.wwwroot);
     const target = softTarget(url, this.softCtx());
     if (!target) return false;
     // A course page with another query on the same course is one the page itself has to resolve (section, edit): a normal load.
@@ -626,61 +646,62 @@ class Controller {
     return true;
   }
 
-  private async softNavigate(url: URL, target: SoftTarget, push: boolean): Promise<void> {
-    const seq = ++this.navSeq;
+  private async softNavigate(url: URL, target: SoftTarget, push: boolean, restoreTop?: number): Promise<void> {
     this.endHardLoadFeedback();
+    const destination = navigation.openDestination();
+    const tx = navigation.begin(push ? 'page' : 'history', { selector: '.kex-main', top: restoreTop });
     const hard = (): void => {
-      if (seq !== this.navSeq) return;
-      cancelViewTransitions();
+      if (!destination.current()) return;
+      navigation.cancel();
       navigationLoading.value = false;
       this.html.removeAttribute('data-kex-nav');
-      if (push) window.location.assign(url.href);
-      else window.location.reload();
+      window.location.reload();
     };
     try {
       // Only the query or hash of the Workspace or My courses changed (the course filter, the list tab): the same view, nothing to load.
       if (!navigationLoading.value && this.route?.key === target.key && (target.key === 'workspace' || target.key === 'mycourses')) {
-        if (push) {
-          history.replaceState({ ...(history.state as object | null), kexScroll: window.scrollY }, '');
-          history.pushState({ kex: 1 }, '', url.href);
-        }
+        if (push) navigation.write(url, 'push');
         this.viewUrl = url.pathname + url.search;
         searchSig.value = location.search;
         hashSig.value = location.hash;
+        await tx.finish({ ready: () => this.destinationReady() });
         return;
       }
       this.html.dataset.kexNav = 'loading';
-      const enter = beginViewTransition(this.root?.querySelector<HTMLElement>('.kex-main .kex-content') ?? null, 'page');
       // Begin the request and mount the destination together. A detached empty document prevents the new course
       // from scraping the previous course's still-hidden Moodle DOM while its own HTML is in flight.
-      const page = this.loader.load(url);
+      const page = this.loader.load(url, destination.signal);
       navigationLoading.value = true;
-      if (push) {
-        history.replaceState({ ...(history.state as object | null), kexScroll: window.scrollY }, '');
-        history.pushState({ kex: 1 }, '', url.href);
-      }
+      if (push) navigation.write(url, 'push');
       this.swapView(target, document.implementation.createHTMLDocument(''), url);
-      enter('.kex-main .kex-content');
       let timeout: number | undefined;
       try {
         const doc = await Promise.race([
           page,
           new Promise<never>((_, rej) => { timeout = window.setTimeout(() => rej(new Error('soft navigation timed out')), 8000); }),
         ]);
-        if (seq !== this.navSeq) return; // a newer click won
+        if (!destination.current()) return;
         // The page says what it really is: editing mode, an embedded layout, or a route the user set to another mode.
         const real = routeOfDoc(doc, target.path, settings.value.routeModes);
         if (real.key !== target.key || real.effective !== 'app') return hard();
         this.applyPageDoc(target.route, doc);
         navigationLoading.value = false;
         this.html.removeAttribute('data-kex-nav');
+        const focus = this.html.dataset.kexInput === 'keyboard' ? (history.state as NavigationState | null)?.kexFocus ?? '.kex-main h1' : undefined;
+        if (tx.current()) await tx.finish({ ready: () => this.destinationReady(), focus });
       } finally {
         window.clearTimeout(timeout);
       }
     } catch (e) {
+      if (destination.signal.aborted) return;
       recordError('softnav', e);
       hard();
     }
+  }
+
+  private destinationReady(): boolean {
+    const main = this.root?.querySelector<HTMLElement>('.kex-main');
+    return !!main && main.dataset.kexReady !== 'false' && !navigationLoading.value;
   }
 
   /** Replace the mounted view with the one `target` names. The shell (sidebar, header, overlays) is not touched. */
@@ -715,7 +736,6 @@ class Controller {
     });
     this.mountRoute(target.route);
     if (doc) this.applyPageDoc(target.route, doc);
-    window.scrollTo(0, 0);
     // Close what belongs to the old view.
     void import('../state').then((m) => {
       m.paletteOpen.value = false;
@@ -745,9 +765,15 @@ class Controller {
   /** Back and forward between the views of this page: swap in place, or reload when the entry is not one we can show. */
   private async onPopState(): Promise<void> {
     if (!this.canSoft()) return;
-    hashSig.value = location.hash;
-    searchSig.value = location.search;
-    if (location.pathname + location.search === this.viewUrl) return;
+    const state = history.state as NavigationState | null;
+    if (location.pathname + location.search === this.viewUrl) {
+      const tx = navigation.begin('history', { selector: '.kex-main', top: state?.kexScroll ?? 0 });
+      hashSig.value = location.hash;
+      searchSig.value = location.search;
+      document.dispatchEvent(new CustomEvent('kex:history'));
+      await tx.finish({ ready: () => this.destinationReady(), focus: this.html.dataset.kexInput === 'keyboard' ? state?.kexFocus : undefined }).catch(() => undefined);
+      return;
+    }
     const url = new URL(location.href);
     const target = softTarget(url, this.softCtx());
     if (!target) {
@@ -755,9 +781,8 @@ class Controller {
       return;
     }
     // Restore the scroll position of the entry we return to once the view is in.
-    const y = (history.state as { kexScroll?: number } | null)?.kexScroll;
-    await this.softNavigate(url, target, false);
-    if (typeof y === 'number') requestAnimationFrame(() => window.scrollTo(0, y));
+    const y = state?.kexScroll;
+    await this.softNavigate(url, target, false, typeof y === 'number' ? y : 0);
   }
 
   private syncAttrs(): void {
@@ -766,9 +791,9 @@ class Controller {
     writeBootMirror(toBootMirror(s));
   }
 
-  private async fetchText(url: string): Promise<string> {
+  private async fetchText(url: string, signal?: AbortSignal): Promise<string> {
     const c = (globalThis as unknown as { content?: { fetch: typeof fetch } }).content;
-    const res = await (c ? c.fetch(url, { credentials: 'same-origin' }) : fetch(url, { credentials: 'same-origin' }));
+    const res = await (c ? c.fetch(url, { credentials: 'same-origin', signal }) : fetch(url, { credentials: 'same-origin', signal }));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.text();
   }
@@ -776,7 +801,8 @@ class Controller {
   // ---------------------------------------------------------------- unmount, off, errors
 
   private unmount(): void {
-    this.navSeq++;
+    navigation.cancel();
+    this.loader.clear();
     navigationLoading.value = false;
     this.endHardLoadFeedback();
     cancelViewTransitions();

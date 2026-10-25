@@ -1,9 +1,8 @@
 import { ArrowRight, ChevronDown, CircleHelp, X } from 'lucide-preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { effects } from '../../fx/effects';
 import { primaryIdp, type LoginModel } from '../../data/scrape/login';
 import { t } from '../../i18n';
-import { heroEffectMode } from '../../state/effects';
+import { useRibbons } from '../components/useRibbons';
 import { Crosshair } from '../components/Hero';
 import { SlideUpText } from '../components/SlideUpText';
 import { useEffectsConfig } from '../components/hooks';
@@ -47,14 +46,7 @@ function Moved({ node, class: cls, testId }: { node: HTMLElement | null; class: 
 }
 
 function Art() {
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const mode = heroEffectMode.value;
-  useEffect(() => {
-    const c = canvas.current;
-    if (!c) return;
-    const h = effects.register(c, { seed: 11, intensity: 1.15, leftFade: 0 }, (m) => (heroEffectMode.value = m));
-    return () => h.dispose();
-  }, []);
+  const { canvas, mode } = useRibbons({ seed: 11, intensity: 0.85, leftFade: 0 });
   return (
     <section class="kex-login__art" data-mode={mode} aria-hidden="true">
       <canvas class="kex-hero__canvas" ref={canvas} />
@@ -62,7 +54,7 @@ function Art() {
       <Crosshair class="kex-cross--b" />
       <div class="kex-login__art-text">
         <p class="kex-mono kex-login__label">{t('login.label')}</p>
-        <SlideUpText as="div" class="kex-login__title" text={`${t('login.title1')}\n${t('login.title2')}`} split="words" stagger={0.08} duration={0.8} delay={0.1} gradient={[1]} />
+        <SlideUpText as="div" class="kex-login__title" text={`${t('login.title1')}\n${t('login.title2')}`} split="words" stagger={0.08} duration={0.8} delay={0.1} gradient={[1]} accentDelay={700} />
       </div>
     </section>
   );

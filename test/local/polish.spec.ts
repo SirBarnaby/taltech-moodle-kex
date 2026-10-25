@@ -1,0 +1,369 @@
+import { test, expect, type Page } from '@playwright/test';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+const { PNG } = createRequire(import.meta.url)('pngjs');
+
+const out = process.env.KEX_ARTIFACT_DIR || 'artifacts/local-review';
+let buildId: string;
+mkdirSync(out, { recursive: true });
+test.beforeAll(async ({ request }) => {
+  const response = await request.get('/__demo/meta');
+  expect(response.ok()).toBe(true);
+  const meta = await response.json();
+  expect(meta.build.state).toBe('verified');
+  expect(meta.variant).toBe('firefox');
+  if (process.env.KEX_EXPECT_BUILD_ID) expect(meta.build.buildId).toBe(process.env.KEX_EXPECT_BUILD_ID);
+  if (process.env.KEX_DEMO_RUN_ID) expect(meta.runId).toBe(process.env.KEX_DEMO_RUN_ID);
+  buildId = meta.build.buildId;
+  writeFileSync(`${out}/replay-build.json`, JSON.stringify(meta, null, 2));
+});
+test.beforeEach(async ({ page, baseURL }) => {
+  // Captured remote images are not authenticated in this isolated profile. Keep the replay offline.
+  await page.route((url) => /^https?:$/.test(url.protocol) && url.origin !== new URL(baseURL!).origin, (r) => r.abort());
+  // Freeze the calendar day without replacing native animation frames or timers.
+  await page.addInitScript((fixtureTime) => {
+    const NativeDate = Date;
+    const offset = fixtureTime - NativeDate.now();
+    const now = () => NativeDate.now() + offset;
+    globalThis.Date = new Proxy(NativeDate, {
+      construct(target, args, newTarget) { return Reflect.construct(target, args.length ? args : [now()], newTarget); },
+      apply() { return new NativeDate(now()).toString(); },
+      get(target, property, receiver) { return property === 'now' ? now : Reflect.get(target, property, receiver); },
+    });
+  }, Date.parse('2026-10-20T09:00:00Z'));
+});
+async function ready(page: Page) {
+  await expect(page.locator('html')).toHaveAttribute('data-kex', 'app');
+  await expect(page.locator('html')).toHaveAttribute('data-kex-build', buildId);
+  await page.evaluate(() => document.fonts.ready);
+}
+
+test('default arrival, home controls, editorial parity and explicit Dossier route', async ({ page }) => {
+  await page.goto('/my/');
+  await expect(page).toHaveURL(/\/my\/courses\.php/);
+  await ready(page);
+  await expect(page.locator('[data-kex-test="mc-row-1"]')).toBeVisible();
+  await expect(page.locator('[data-kex-test="moodle-info"]')).toContainText('Korduma Kippuvad');
+  await page.getByText('Ülikooli teated ja kasulikud lingid', { exact: true }).click();
+  await expect(page.locator('.kex-moodle-info__grid')).toContainText('tehisintellekti');
+  await page.getByText('Ülikooli teated ja kasulikud lingid', { exact: true }).click();
+  await page.screenshot({ path: `${out}/home-desktop.png` });
+  await page.locator('[data-kex-test="sidebar-toggle"]').click();
+  await page.locator('[data-kex-test="sb-workspace"]').click();
+  await expect(page).toHaveURL(/view=dossier/);
+  await expect(page.locator('[data-kex-test="hero-label"]')).toContainText('NÄDAL 8');
+  await expect(page.locator('[data-kex-test="breadcrumb"]')).toContainText('Dossier');
+  await page.locator('[data-kex-test="sidebar-toggle"]').click();
+  await page.locator('[data-kex-test="sb-brand"]').click();
+  await expect(page).toHaveURL(/\/my\/courses\.php/);
+});
+
+for (const [width, height] of [[1440, 900], [960, 800], [390, 844]] as const) {
+  test(`login composition and sharp backing canvas at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto('/login/index.php');
+    await ready(page);
+    await expect(page.locator('[data-kex-test="login-idp"]')).toHaveCount(4);
+    await page.waitForFunction(() => {
+      const c = document.querySelector<HTMLCanvasElement>('canvas');
+      return c && ['running', 'static'].includes(c.dataset.fx ?? '') && c.width >= c.clientWidth;
+    });
+    await page.waitForFunction(() => document.documentElement.dataset.kexAnim === 'done');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const bounds = await page.locator('.kex-login').boundingBox();
+    expect(bounds?.width).toBe(width);
+    await page.screenshot({ path: `${out}/login-${width}.png`, fullPage: true });
+  });
+}
+
+test('delayed shader compilation keeps geometry and fades in a painted canvas', async ({ page }) => {
+  await page.addInitScript(() => {
+    const native = WebGL2RenderingContext.prototype.getProgramParameter;
+    WebGL2RenderingContext.prototype.getProgramParameter = function (program, pname) {
+      if (pname === 0x91B1 && performance.now() < 1800) return false;
+      return native.call(this, program, pname);
+    };
+  });
+  await page.goto('/login/index.php');
+  await ready(page);
+  const initial = await page.locator('.kex-login__art').boundingBox();
+  await page.waitForFunction(() => document.querySelector('canvas')?.dataset.fx === 'running' || document.querySelector('canvas')?.dataset.fx === 'static');
+  const final = await page.locator('.kex-login__art').boundingBox();
+  expect(final).toEqual(initial);
+  const canvas = await page.locator('canvas').evaluate((c: HTMLCanvasElement) => ({ width: c.width, cssWidth: c.clientWidth, display: getComputedStyle(c).display, transition: getComputedStyle(c).transitionProperty }));
+  expect(canvas.display).toBe('block');
+  expect(canvas.width).toBeGreaterThanOrEqual(canvas.cssWidth);
+  expect(canvas.transition).toContain('opacity');
+});
+
+test('Dossier course filter, activity search and responsive density', async ({ page }) => {
+  await page.goto('/my/?view=dossier');
+  await ready(page);
+  await expect(page.locator('[data-kex-test="ws-course"]')).toHaveCount(6);
+  await page.getByRole('searchbox', { name: 'Filtreeri kursusi' }).fill('IAS0230');
+  await expect(page.locator('[data-kex-test="ws-course"]')).toHaveCount(1);
+  await page.getByRole('searchbox', { name: 'Filtreeri kursusi' }).fill('');
+  await page.getByRole('searchbox', { name: 'Otsi tegevusi' }).fill('no-such-activity');
+  await expect(page.locator('[data-kex-test="feed-rows"]')).toHaveCount(0);
+  await page.getByRole('searchbox', { name: 'Otsi tegevusi' }).fill('');
+  const left = await page.locator('.kex-wscourses').boundingBox();
+  const right = await page.locator('.kex-feed').boundingBox();
+  expect(right!.x).toBeGreaterThan(left!.x + left!.width);
+  await page.screenshot({ path: `${out}/dossier-desktop.png`, fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await page.locator('.kex-hero__title').evaluate((e) => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
+  const tile = await page.locator('.kex-thumb--date').first().boundingBox();
+  const number = await page.locator('.kex-thumb__day').first().boundingBox();
+  expect(number!.y).toBeGreaterThanOrEqual(tile!.y);
+  expect(number!.y + number!.height).toBeLessThanOrEqual(tile!.y + tile!.height);
+  await page.screenshot({ path: `${out}/dossier-mobile.png`, fullPage: true });
+});
+
+test('deep-scroll topic change, rapid switching and Back do not snap or leak transition layers', async ({ page }) => {
+  await page.goto('/course/view.php?id=37582#topic-0');
+  await ready(page);
+  await expect(page.locator('[data-kex-topic]')).not.toHaveCount(0);
+  await page.waitForFunction(() => document.querySelectorAll('[data-kex-row]').length > 0);
+  await page.evaluate(() => window.scrollTo({ top: 750, behavior: 'instant' }));
+  await page.evaluate(() => {
+    const values: { y: number; at: number }[] = [];
+    (window as unknown as { scrollSamples: { y: number; at: number }[] }).scrollSamples = values;
+    const start = performance.now();
+    const sample = () => { values.push({ y: scrollY, at: performance.now() - start }); if (performance.now() - start < 1100) requestAnimationFrame(sample); };
+    requestAnimationFrame(sample);
+  });
+  const next = page.locator('[data-kex-topic]:not([aria-current="true"])').first();
+  await next.click();
+  await page.waitForFunction(() => !document.querySelector('.kex-transition-ghost') && !document.getElementById('kex-root')?.style.minHeight);
+  const samples = await page.evaluate(() => (window as unknown as { scrollSamples: { y: number; at: number }[] }).scrollSamples);
+  writeFileSync(`${out}/course-scroll-samples.json`, JSON.stringify(samples));
+  const maxStep = Math.max(0, ...samples.slice(1).map((p, i) => Math.abs(p.y - samples[i]!.y)));
+  expect(maxStep).toBeLessThan(200);
+  await page.screenshot({ path: `${out}/course-topic.png` });
+  await page.locator('[data-kex-topic]').nth(2).click();
+  await page.locator('[data-kex-topic]').nth(3).click();
+  await page.goBack();
+  await expect(page.locator('.kex-transition-ghost')).toHaveCount(0);
+  await expect(page.locator('[data-kex-test="course"]')).toBeVisible();
+});
+
+test('a large Dossier reveals activity batches without dropping items', async ({ page }) => {
+  await page.route('**/lib/ajax/service.php?**', async (route) => {
+    const response = await route.fetch();
+    const rows = await response.json();
+    const requests = route.request().postDataJSON() as { methodname: string }[];
+    requests.forEach((request, i) => {
+      if (request.methodname === 'core_calendar_get_action_events_by_timesort') {
+        const original = rows[i].data.events;
+        rows[i].data.events = Array.from({ length: 60 }, (_, n) => ({ ...original[n % original.length], id: n + 1 }));
+      }
+    });
+    await route.fulfill({ response, json: rows });
+  });
+  await page.goto('/my/?view=dossier#deadlines');
+  await ready(page);
+  await expect(page.locator('[data-kex-item]')).toHaveCount(24);
+  await page.getByRole('button', { name: /Näita rohkem/ }).click();
+  await expect(page.locator('[data-kex-item]')).toHaveCount(48);
+  await page.getByRole('button', { name: /Näita rohkem/ }).click();
+  await expect(page.locator('[data-kex-item]')).toHaveCount(60);
+  await expect(page.getByRole('button', { name: /Näita rohkem/ })).toHaveCount(0);
+});
+
+test('reduced motion, effects off and keyboard paths keep all content usable', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/my/?view=dossier');
+  await ready(page);
+  await expect(page.locator('html')).toHaveAttribute('data-kex-motion', 'reduced');
+  await expect(page.locator('canvas')).toHaveAttribute('data-fx', 'static');
+  await page.getByRole('tab', { name: 'Tähtajad', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.kex-transition-ghost')).toHaveCount(0);
+  await page.evaluate(async () => {
+    await (window as unknown as { browser: { storage: { local: { set: (v: unknown) => Promise<void> } } } }).browser.storage.local.set({ 'kex:settings': { enabled: true, effects: 'off', motion: 'reduced' } });
+  });
+  await expect(page.locator('canvas')).toHaveAttribute('data-fx', 'fallback');
+  await page.screenshot({ path: `${out}/dossier-reduced-off.png` });
+});
+
+test('cold Back waits for delayed course content before restoring the viewport', async ({ page }) => {
+  await page.goto('/course/view.php?id=37582#topic-0');
+  await ready(page);
+  await expect(page.locator('#kex-main')).toHaveAttribute('data-kex-ready', 'true');
+  await page.evaluate(() => window.scrollTo(0, 650));
+  const saved = await page.evaluate(() => scrollY);
+  expect(saved).toBeGreaterThan(300);
+  await page.locator('[data-kex-test="sidebar-toggle"]').click();
+  await page.locator('.kex-sb__course[data-course-id="37829"]').first().click();
+  await expect(page.locator('#kex-main')).toHaveAttribute('data-kex-course', '37829');
+  await page.waitForFunction(() => !document.documentElement.dataset.kexInteraction);
+  await page.route('**/course/view.php?id=37582*', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    await route.continue();
+  });
+  await page.goBack();
+  await page.waitForFunction(() => !document.documentElement.dataset.kexInteraction && document.querySelector('#kex-main')?.getAttribute('data-kex-course') === '37582');
+  expect(await page.evaluate(() => scrollY)).toBeCloseTo(saved, -1);
+  await expect(page.locator('[data-kex-topic="0"]')).toHaveAttribute('aria-current', 'true');
+  await expect(page.locator('.kex-transition-ghost')).toHaveCount(0);
+  await page.goForward();
+  await expect(page.locator('#kex-main')).toHaveAttribute('data-kex-course', '37829');
+  await page.waitForFunction(() => !document.documentElement.dataset.kexInteraction);
+  await page.setViewportSize({ width: 960, height: 800 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: `${out}/course-half-width.png`, fullPage: true });
+});
+
+test('effects pause during interaction and recover a lost context without changing phase or layout', async ({ page }) => {
+  await page.addInitScript(() => {
+    const draw = WebGL2RenderingContext.prototype.drawArrays;
+    const counts = { draws: 0, readbacks: 0 };
+    (window as unknown as { fxCounts: typeof counts }).fxCounts = counts;
+    WebGL2RenderingContext.prototype.drawArrays = function (...args) { counts.draws++; return draw.apply(this, args); };
+    const read = WebGL2RenderingContext.prototype.readPixels;
+    WebGL2RenderingContext.prototype.readPixels = new Proxy(read, { apply(target, receiver, args) { counts.readbacks++; return Reflect.apply(target, receiver, args); } });
+  });
+  await page.goto('/my/?view=dossier');
+  await ready(page);
+  const canvas = page.locator('canvas').first();
+  await expect(canvas).toHaveAttribute('data-fx-state', /live|static/);
+  await page.evaluate(() => document.dispatchEvent(new CustomEvent('kex:interaction', { detail: { busy: true } })));
+  await expect(canvas).toHaveAttribute('data-fx-state', 'paused');
+  const paused = await page.evaluate(() => (window as unknown as { fxCounts: { draws: number } }).fxCounts.draws);
+  await page.waitForTimeout(150);
+  expect(await page.evaluate(() => (window as unknown as { fxCounts: { draws: number } }).fxCounts.draws)).toBe(paused);
+  await page.evaluate(async () => {
+    await (window as unknown as { browser: { storage: { local: { set(v: unknown): Promise<void> } } } }).browser.storage.local.set({ 'kex:settings': { enabled: true, effects: 'static', motion: 'full' } });
+    document.dispatchEvent(new CustomEvent('kex:interaction', { detail: { busy: false } }));
+  });
+  await expect(canvas).toHaveAttribute('data-fx-state', 'static');
+  const phase = () => canvas.evaluate((element: HTMLCanvasElement) => {
+    const gl = element.getContext('webgl2')!;
+    return gl.getUniform(gl.getParameter(gl.CURRENT_PROGRAM), gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM), 'uTime')!) as number;
+  });
+  const before = await phase();
+  const bounds = await canvas.boundingBox();
+  await canvas.evaluate((element: HTMLCanvasElement) => {
+    const extension = element.getContext('webgl2')!.getExtension('WEBGL_lose_context')!;
+    (window as unknown as { restoreFxContext(): void }).restoreFxContext = () => extension.restoreContext();
+    extension.loseContext();
+  });
+  await expect(canvas).toHaveAttribute('data-fx-state', 'fallback');
+  await page.evaluate(() => (window as unknown as { restoreFxContext(): void }).restoreFxContext());
+  await expect(canvas).toHaveAttribute('data-fx-state', 'static');
+  expect(await phase()).toBeCloseTo(before, 4);
+  expect(await canvas.boundingBox()).toEqual(bounds);
+  await page.evaluate(async () => {
+    await (window as unknown as { browser: { storage: { local: { set(v: unknown): Promise<void> } } } }).browser.storage.local.set({ 'kex:settings': { enabled: true, effects: 'off', motion: 'full' } });
+  });
+  await expect(canvas).toHaveAttribute('data-fx-state', 'fallback');
+  await page.evaluate(async () => {
+    await (window as unknown as { browser: { storage: { local: { set(v: unknown): Promise<void> } } } }).browser.storage.local.set({ 'kex:settings': { enabled: true, effects: 'static', motion: 'full' } });
+  });
+  await expect(canvas).toHaveAttribute('data-fx-state', 'static');
+  expect(await phase()).toBeCloseTo(before, 4);
+  await page.setViewportSize({ width: 960, height: 800 });
+  await expect.poll(() => canvas.evaluate((element: HTMLCanvasElement) => element.width > 0 && element.height > 0)).toBe(true);
+  expect(await page.evaluate(() => (window as unknown as { fxCounts: { readbacks: number } }).fxCounts.readbacks)).toBe(0);
+  await page.screenshot({ path: `${out}/effects-context-restored.png` });
+});
+
+test('an early topic change preserves the pending destination document and clears loading', async ({ page }) => {
+  await page.goto('/my/courses.php');
+  await ready(page);
+  await page.route('**/course/view.php?id=37582*', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+    await route.continue();
+  });
+  await page.locator('[data-kex-test="sidebar-toggle"]').click();
+  await page.locator('.kex-sb__course[data-course-id="37582"]').first().click();
+  await expect(page.locator('[data-kex-topic]')).not.toHaveCount(0);
+  await expect(page.locator('html')).toHaveAttribute('data-kex-nav', 'loading');
+  const topic = page.locator('[data-kex-topic]').nth(2);
+  const selected = await topic.getAttribute('data-kex-topic');
+  await topic.click();
+  await expect(page.locator('html')).not.toHaveAttribute('data-kex-nav', 'loading');
+  await expect(page.locator(`[data-kex-topic="${selected}"]`)).toHaveAttribute('aria-current', 'true');
+  await expect(page.locator('.kex-coursenav a')).not.toHaveCount(0);
+  await expect(page.locator('.kex-transition-ghost')).toHaveCount(0);
+});
+
+test('Back restores the first implicitly chosen topic from an entry without a hash', async ({ page }) => {
+  await page.goto('/course/view.php?id=37582');
+  await ready(page);
+  const initial = page.locator('[data-kex-topic][aria-current="true"]');
+  await expect(initial).toHaveCount(1);
+  const number = await initial.getAttribute('data-kex-topic');
+  await page.locator('[data-kex-topic]:not([aria-current="true"])').first().click();
+  await page.waitForFunction(() => !document.documentElement.dataset.kexInteraction);
+  await page.goBack();
+  await expect(page).toHaveURL(/id=37582$/);
+  await expect(page.locator(`[data-kex-topic="${number}"]`)).toHaveAttribute('aria-current', 'true');
+});
+
+test('faculty theme changes repaint a working shader without leaving a lost context', async ({ page }) => {
+  await page.goto('/course/view.php?id=37582');
+  await ready(page);
+  const setColour = async (colourBySchool: boolean) => {
+    await page.evaluate(async (colourBySchool) => {
+      await (window as unknown as { browser: { storage: { local: { set(v: unknown): Promise<void> } } } }).browser.storage.local.set({ 'kex:settings': { enabled: true, effects: 'static', motion: 'full', colourBySchool } });
+    }, colourBySchool);
+  };
+  const canvas = page.locator('#kex-main .kex-hero__canvas');
+  for (const themed of [true, false, true]) {
+    await setColour(themed);
+    if (themed) await expect(page.locator('html')).toHaveAttribute('data-kex-school', 'it');
+    else await expect(page.locator('html')).not.toHaveAttribute('data-kex-school');
+    await expect(canvas).toHaveAttribute('data-fx-state', 'static');
+    const palette = await canvas.evaluate((element: HTMLCanvasElement) => {
+      const gl = element.getContext('webgl2')!;
+      if (gl.isContextLost()) throw new Error('Theme changed into a lost WebGL context');
+      const program = gl.getParameter(gl.CURRENT_PROGRAM);
+      return [...gl.getUniform(program, gl.getUniformLocation(program, 'uBody')!)];
+    });
+    expect(palette[0]).toBeCloseTo(themed ? 0.45 : 0);
+    expect(palette[1]).toBeCloseTo(themed ? 0.06 : 0);
+    expect(palette[2]).toBeCloseTo(themed ? 0.95 : 1);
+  }
+});
+
+for (const [name, path, selector] of [
+  ['dossier', '/my/?view=dossier', '.kex-hero'],
+  ['page-band', '/my/courses.php', '.kex-band'],
+  ['faculty-course', '/course/view.php?id=37582', '.kex-hero'],
+] as const) {
+  test(`static artwork and first shader paint retain the same composition: ${name}`, async ({ page }) => {
+    await page.addInitScript(() => {
+      const native = WebGL2RenderingContext.prototype.getProgramParameter;
+      WebGL2RenderingContext.prototype.getProgramParameter = function (program, parameter) {
+        if (parameter === 0x91B1 && !(window as unknown as { allowShaderPaint?: boolean }).allowShaderPaint) return false;
+        return native.call(this, program, parameter);
+      };
+    });
+    await page.goto(path);
+    await ready(page);
+    const art = page.locator(selector).first();
+    await art.evaluate((element) => {
+      element.querySelectorAll<HTMLElement>(':scope > :not(canvas)').forEach((child) => { child.style.visibility = 'hidden'; });
+    });
+    await page.evaluate(async () => {
+      await (window as unknown as { browser: { storage: { local: { set(v: unknown): Promise<void> } } } }).browser.storage.local.set({ 'kex:settings': { enabled: true, effects: 'static', motion: 'full' } });
+    });
+    await expect(art).toHaveAttribute('data-mode', 'fallback');
+    const before = PNG.sync.read(await art.screenshot({ path: `${out}/${name}-fallback.png` }));
+    await page.evaluate(() => { (window as unknown as { allowShaderPaint?: boolean }).allowShaderPaint = true; });
+    await expect(art).toHaveAttribute('data-mode', 'static');
+    await expect.poll(() => art.locator('canvas').evaluate((element) => getComputedStyle(element).opacity)).toBe('1');
+    const after = PNG.sync.read(await art.screenshot({ path: `${out}/${name}-first-paint.png` }));
+    expect(after.width).toBe(before.width);
+    expect(after.height).toBe(before.height);
+    let difference = 0;
+    for (let i = 0; i < before.data.length; i += 4) for (let channel = 0; channel < 3; channel++) difference += Math.abs(before.data[i + channel] - after.data[i + channel]);
+    // Allow antialiasing/resampling and WebP compression, but reject a different crop or palette.
+    const meanDifference = difference / (before.width * before.height * 3);
+    expect(meanDifference).toBeLessThan(8);
+    writeFileSync(`${out}/${name}-composition.json`, JSON.stringify({ meanDifference, width: before.width, height: before.height }));
+  });
+}

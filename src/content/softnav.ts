@@ -12,6 +12,15 @@ export const SOFT_KEYS: ReadonlySet<RouteKey> = new Set<RouteKey>(['workspace', 
 /** Query parameters that turn a course page into something else (editing, notices): never swapped. */
 const HARD_PARAMS = ['edit', 'sesskey', 'notifyeditingon', 'notifyeditingoff', 'switchrole', 'action', 'kex'];
 
+/** Default Moodle dashboard links and post-login redirects always arrive at My courses. */
+export function homeTarget(url: URL, wwwroot: string): URL {
+  const path = stripBase(url.pathname, wwwroot);
+  if (url.origin !== new URL(wwwroot).origin || !['/my/', '/my/index.php'].includes(path) || url.hash || url.searchParams.has('course') || url.searchParams.has('kex') || url.searchParams.get('view') === 'dossier') return url;
+  const target = new URL(`${wwwroot}/my/courses.php`);
+  target.search = url.search;
+  return target;
+}
+
 export interface SoftTarget {
   key: RouteKey;
   route: EffectiveRoute;
@@ -72,10 +81,10 @@ export function prefetchSafe(url: URL, ctx: { origin: string; wwwroot: string })
  * (20 s), so the swap is usually instant.
  */
 export class PageLoader {
-  private cache = new Map<string, { at: number; p: Promise<Document> }>();
+  private cache = new Map<string, { at: number; p: Promise<Document>; controller: AbortController; readers: number; warm: boolean; ready: boolean }>();
 
   constructor(
-    private readonly fetchText: (url: string) => Promise<string>,
+    private readonly fetchText: (url: string, signal?: AbortSignal) => Promise<string>,
     private readonly ttl = 20_000,
     private readonly now: () => number = Date.now,
   ) {}
@@ -85,22 +94,43 @@ export class PageLoader {
   }
 
   /** The parsed page (never run, never attached). Rejects when the request fails. */
-  load(url: URL): Promise<Document> {
+  load(url: URL, signal?: AbortSignal): Promise<Document> {
+    if (signal?.aborted) return Promise.reject(new DOMException('Aborted', 'AbortError'));
     const k = this.key(url);
-    const hit = this.cache.get(k);
-    if (hit && this.now() - hit.at < this.ttl) return hit.p;
-    const p = this.fetchText(url.href).then((html) => new DOMParser().parseFromString(html, 'text/html'));
-    this.cache.set(k, { at: this.now(), p });
-    p.catch(() => this.cache.delete(k));
+    let entry = this.cache.get(k);
+    if (!entry || this.now() - entry.at >= this.ttl || entry.controller.signal.aborted) {
+      const controller = new AbortController();
+      const p = this.fetchText(url.href, controller.signal).then((html) => new DOMParser().parseFromString(html, 'text/html'));
+      entry = { at: this.now(), p, controller, readers: 0, warm: !signal, ready: false };
+      this.cache.set(k, entry);
+      const created = entry;
+      void p.then(() => { created.ready = true; }, () => { if (this.cache.get(k) === created) this.cache.delete(k); });
+    }
     if (this.cache.size > 12) {
       const oldest = [...this.cache.entries()].sort((a, b) => a[1].at - b[1].at)[0];
       if (oldest) this.cache.delete(oldest[0]);
     }
-    return p;
+    const hit = entry;
+    if (!signal) { hit.warm = true; return hit.p; }
+    hit.readers++;
+    return new Promise<Document>((resolve, reject) => {
+      const release = (): void => { signal.removeEventListener('abort', abort); hit.readers--; };
+      const abort = (): void => {
+        release();
+        if (!hit.ready && !hit.readers && !hit.warm) {
+          hit.controller.abort();
+          if (this.cache.get(k) === hit) this.cache.delete(k);
+        }
+        reject(new DOMException('Aborted', 'AbortError'));
+      };
+      signal.addEventListener('abort', abort, { once: true });
+      void hit.p.then((doc) => { if (!signal.aborted) { release(); resolve(doc); } }, (error: unknown) => { if (!signal.aborted) { release(); reject(error); } });
+    });
   }
 
   /** Drop what is cached (a page that changes server-side after an action must be read fresh). */
   clear(): void {
+    this.cache.forEach((entry) => entry.controller.abort());
     this.cache.clear();
   }
 }

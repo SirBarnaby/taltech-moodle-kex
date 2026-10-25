@@ -3,8 +3,19 @@ import { scrapeMyoverview } from '../../src/data/scrape/myoverview';
 import { scrapeTtLinks, scrapeUser } from '../../src/data/scrape/user';
 import { findLogoutHref, scrapeUserMenu } from '../../src/data/scrape/usermenu';
 import { loadCapture } from '../fixtures/load';
+import { scrapeDashboard } from '../../src/data/scrape/dashboard';
 
 describe('scrapers on TalTech captures', () => {
+  it('preserves the stock homepage access notice, citation and AI guidance, useful links and news', () => {
+    const blocks = scrapeDashboard(loadCapture('my_'), 'https://moodle.taltech.ee');
+    expect(blocks.filter((b) => b.notice)).toHaveLength(1);
+    const html = blocks.map((b) => b.html).join(' ');
+    expect(html).toContain('Korduma Kippuvad');
+    expect(html).toContain('tehisintellekti');
+    expect(html).toContain('kirjandust');
+    expect(blocks.map((b) => b.title)).toContain('Viimased uudised');
+    expect(html).not.toMatch(/<script|onerror=/i);
+  });
   it('user menu: items in order with the logout link flagged', () => {
     const doc = loadCapture('my_');
     const items = scrapeUserMenu(doc);

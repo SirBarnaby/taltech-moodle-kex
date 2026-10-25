@@ -1,6 +1,7 @@
 import { signal, type Signal } from '@preact/signals';
 import { log } from '../lib/log';
 import { onStorageChanged, storageGetAll, storageSet } from '../lib/storage';
+import { sourceFor, sourceMetadata, type SourceDescriptor, type SourceMetadata } from './sources';
 
 /**
  * Stale-while-revalidate cache over browser.storage.local (architecture §8.5).
@@ -56,6 +57,8 @@ export interface Store<T> {
   at: Signal<number | undefined>;
   /** Revalidate now (or only when older than the TTL unless `force`). */
   refresh(force?: boolean): Promise<void>;
+  source: SourceDescriptor;
+  metadata(now?: number): SourceMetadata;
 }
 
 class Cache {
@@ -163,7 +166,8 @@ class Cache {
         });
       return inflight;
     };
-    return { value, status, error, at, refresh };
+    const source = sourceFor(name, ttlMs);
+    return { value, status, error, at, refresh, source, metadata: (now) => sourceMetadata(source, at.value, status.value === 'loading', status.value === 'error', now) };
   }
 
   /** Test helper. */

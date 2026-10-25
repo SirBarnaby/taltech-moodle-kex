@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { buildRows, buildTopics, deadlineTopic, dueTextFromDates, incompleteTopic, initialTopic, isDateRange, pad2, parseTopicHash, primaryIndex, resourceCount, subtitleForRows } from '../../src/data/topics';
 import { cmsOfSection, normalizeState, topicSections } from '../../src/data/repo/coursestate';
 import { previewFromHtml, downloadUrl, domainOf } from '../../src/data/repo/preview';
-import { buildSlideUp, splitGraphemes, splitWords, staggerDelay } from '../../src/fx/slideup';
+import { buildSlideUp, slideUp, splitGraphemes, splitWords, staggerDelay } from '../../src/fx/slideup';
 import type { CmEvent } from '../../src/data/repo/courseevents';
 
 const raw = {
@@ -160,6 +160,17 @@ describe('preview content', () => {
 });
 
 describe('Slide Up Text splitting', () => {
+  it('fades the accent line 700ms after the primary begins, independently of word count', () => {
+    const animate = vi.spyOn(Element.prototype, 'animate').mockReturnValue({ finished: new Promise(() => undefined), cancel: vi.fn() } as unknown as Animation);
+    const host = document.createElement('h1');
+    const handle = slideUp(host, 'A longer first line\nAccent text', { delay: 0.05, gradient: [1], accentDelay: 700 });
+    const calls = animate.mock.calls;
+    expect((calls[0]?.[1] as KeyframeAnimationOptions).delay).toBe(50);
+    expect((calls[4]?.[1] as KeyframeAnimationOptions).delay).toBe(750);
+    expect(calls[4]?.[0]).toEqual([{ opacity: 0 }, { opacity: 1 }]);
+    handle.cancel();
+    animate.mockRestore();
+  });
   it('words, graphemes (õ, combining marks, emoji) and stagger orders', () => {
     expect(splitWords('  Cloud   Architectures \n & DevOps ')).toEqual(['Cloud', 'Architectures', '&', 'DevOps']);
     expect(splitGraphemes('Õpe👩‍💻é')).toEqual(['Õ', 'p', 'e', '👩‍💻', 'é']);

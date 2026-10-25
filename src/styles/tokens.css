@@ -82,7 +82,8 @@
   --kex-hero-gradient-text: linear-gradient(90deg, #b9a4ff 0%, #cea3f9 12%, #eba4f8 30%, #f8aaf3 50%, #f8a8ef 100%);
   --kex-hero-cross: rgba(150, 100, 210, 0.55);
   --kex-hero-cross-bright: rgba(200, 165, 235, 0.75);
-  --kex-hero-fallback: url("assets/hero-fallback.webp") right center / cover no-repeat, var(--kex-hero-bg);
+  --kex-hero-fallback: url("assets/hero-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
+  --kex-band-fallback: url("assets/band-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
 
   /* Geometry */
   --kex-sb-w-full: clamp(204px, 13.2vw, 255px);

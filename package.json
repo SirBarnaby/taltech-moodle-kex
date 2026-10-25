@@ -10,6 +10,12 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:dev": "node scripts/build.mjs --dev",
+    "build:local": "node scripts/sync-local.mjs",
+    "demo": "node scripts/local-demo.mjs",
+    "test:local": "playwright test -c playwright.local.config.ts",
+    "verify:release": "node scripts/release-gate.mjs",
+    "verify:build": "node scripts/provenance.mjs",
+    "test:live": "node scripts/live-smoke.mjs",
     "build:probe": "node scripts/build.mjs --dev --mv3-probe",
     "watch": "node scripts/build.mjs --dev --watch",
     "typecheck": "tsc --noEmit",

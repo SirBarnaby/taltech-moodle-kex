@@ -67,7 +67,7 @@ export function GradesOverviewView() {
 
   return (
     <main class="kex-main kex-grades" id="kex-main" data-kex-test="grades" data-tab={tab}>
-      <Band label={`${t('gr.label')} / ${seasonLabel(sem.season)} ${sem.year}`} title={t('gr.title')} seed={3} />
+      <Band label={`${t('gr.label')} / ${seasonLabel(sem.season)} ${sem.year}`} title={t('gr.title')} />
       <div class="kex-content">
         <div class="kex-matheader kex-grbar">
           <Tabs<GradesTab> value={tab} onChange={setGradesTab} items={TAB_DEFS} label={t('gr.tabs')} idPrefix="kex-gr-tab" panelId="kex-gr-panel" />

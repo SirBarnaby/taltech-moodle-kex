@@ -23,15 +23,15 @@
   .kex-login__art {
     position: relative;
     overflow: hidden;
-    background: var(--kex-hero-bg);
+    background: url("assets/login-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
     color: var(--kex-hero-text);
     isolation: isolate;
   }
   .kex-login__art[data-mode="fallback"] {
-    background: var(--kex-hero-fallback);
+    background: url("assets/login-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
   }
   .kex-login__art[data-mode="fallback"] .kex-hero__canvas {
-    display: none;
+    opacity: 0;
   }
   .kex-login__art .kex-cross--a {
     left: calc(46.75% - 12.5px);
@@ -47,6 +47,14 @@
     left: 56px;
     right: 56px;
     bottom: 56px;
+  }
+  .kex-login__art::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(0deg, rgb(16 9 36 / 72%), transparent 65%);
   }
   .kex-login__label {
     margin: 0 0 14px;
@@ -503,7 +511,7 @@
   @media (max-width: 900px) {
     .kex-login {
       grid-template-columns: 1fr;
-      grid-template-rows: 200px 1fr;
+      grid-template-rows: clamp(200px, 30vh, 280px) 1fr;
     }
     .kex-login__art-text {
       left: 28px;

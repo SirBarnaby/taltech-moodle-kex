@@ -106,7 +106,7 @@ export function PinnedView() {
 
   return (
     <main class="kex-main kex-pinpage" id="kex-main" data-kex-test="pinned-page" data-edit={edit ? 'true' : 'false'}>
-      <Band label={label} title={t('pinned.title')} actions={actions} seed={11} testId="band" />
+      <Band label={label} title={t('pinned.title')} actions={actions} testId="band" />
       <div class="kex-content">
         {!n ? (
           <EmptyState kicker={t('pinned.emptyKicker')} title={t('pinned.emptyTitle')} text={t('pinned.emptyText')}>
@@ -167,7 +167,7 @@ export function PinnedView() {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
                                   void reorderPin(p.cmid, e.key === 'ArrowDown' ? 1 : -1, g.pins).then(() =>
-                                    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-pin="${p.cmid}"] .kex-prow__grip`)?.focus()),
+                                    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-pin="${p.cmid}"] .kex-prow__grip`)?.focus({ preventScroll: true })),
                                   );
                                 }
                               }}

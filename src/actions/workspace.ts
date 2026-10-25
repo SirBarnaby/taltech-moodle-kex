@@ -15,12 +15,13 @@ import { eyebrow, type RowModel } from '../data/topics';
 import { ws } from '../data/ws';
 import { t } from '../i18n';
 import { hash, search, settings } from '../state';
-import { feed, feedSel, feedTab, nowSec, wsPreview } from '../state/workspace';
+import { feed, feedFilter, feedLimit, feedSel, feedTab, nowSec, wsPreview } from '../state/workspace';
 import { go } from './navigate';
 import { pinItem } from './pins';
 import { pushToast } from './toasts';
 import { setUndo } from './undo';
 import { log } from '../lib/log';
+import { changeView, navigation } from '../fx/transactions';
 
 /** Workspace actions (page-designs §2, happy-path §2). Plain functions over src/state/workspace.ts. */
 
@@ -34,6 +35,8 @@ export function selectFeed(key: string): void {
 export function initWorkspace(): () => void {
   touched = false;
   feedSel.value = undefined;
+  feedFilter.value = '';
+  feedLimit.value = 24;
   wsPreview.value = undefined;
   nowSec.value = Math.floor(Date.now() / 1000);
   const timer = window.setInterval(() => (nowSec.value = Math.floor(Date.now() / 1000)), 60_000);
@@ -58,12 +61,16 @@ export function initWorkspace(): () => void {
 }
 
 export function setFeedTab(tab: 'all' | 'deadlines' | 'updates'): void {
+  if (tab === feedTab.value) return;
   const url = new URL(location.href);
   url.hash = tab === 'all' ? '' : `#${tab}`;
-  history.replaceState(null, '', url);
-  hash.value = location.hash;
-  touched = false;
-  feedSel.value = undefined;
+  changeView('filter', '.kex-feed', () => {
+    navigation.write(url, 'replace');
+    hash.value = location.hash;
+    touched = false;
+    feedSel.value = undefined;
+    feedLimit.value = 24;
+  });
 }
 
 /** Filter the Workspace to one course (or all of them) in place: the URL carries `?course=ID`, nothing is loaded. */
@@ -72,10 +79,13 @@ export function setWsCourse(id: number | undefined): void {
   if (id === undefined) url.searchParams.delete('course');
   else url.searchParams.set('course', String(id));
   if (url.href === location.href) return;
-  history.pushState({ kex: 1 }, '', url);
-  search.value = location.search;
-  touched = false;
-  feedSel.value = undefined;
+  changeView('filter', '.kex-feed', () => {
+    navigation.write(url, 'push');
+    search.value = location.search;
+    touched = false;
+    feedSel.value = undefined;
+    feedLimit.value = 24;
+  });
 }
 
 // ------------------------------------------------------------------ deriving rows and pins

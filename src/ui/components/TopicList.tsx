@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import type { TopicModel } from '../../data/topics';
 import { t } from '../../i18n';
 import { ArrowEast } from './Glyphs';
+import { revealInScroller } from '../../fx/navigation';
 
 interface TopicListProps {
   topics: TopicModel[];
@@ -22,10 +23,7 @@ export function TopicList({ topics, active, onSelect, onKeyDown }: TopicListProp
     const list = strip.current;
     const selected = list?.querySelector<HTMLElement>(`[data-kex-topic="${active}"]`);
     if (!list || !selected) return;
-    const box = list.getBoundingClientRect();
-    const item = selected.getBoundingClientRect();
-    const delta = item.left < box.left ? item.left - box.left : item.right > box.right ? item.right - box.right : 0;
-    if (delta) list.scrollLeft += delta;
+    revealInScroller(selected, list);
   }, [active]);
   const anyTile = topics.some((tp) => tp.tile);
   const tabStop = topics.some((tp) => tp.section.number === active) ? active : topics[0]?.section.number;

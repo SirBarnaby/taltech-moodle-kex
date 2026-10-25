@@ -23,6 +23,7 @@
 @import "./views/grades.css";
 @import "./views/notifications.css";
 @import "./components/micro.css";
+@import "./components/moodle-info.css";
 @import "./offpill.css";
 @import "./skin/base.css";
 @import "./skin/chrome.css";

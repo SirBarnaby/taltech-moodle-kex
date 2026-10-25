@@ -70,7 +70,8 @@ export function previewFromHtml(modname: string, html: string, base: string): Pr
   return { kind: 'none' };
 }
 
-export async function loadPreview(cmid: number, modname: string, url: string): Promise<PreviewContent> {
+export async function loadPreview(cmid: number, modname: string, url: string, signal?: AbortSignal): Promise<PreviewContent> {
+  signal?.throwIfAborted();
   const hit = cache.get(cmid);
   if (hit) return hit;
   const original = linkContent(url, location.href);
@@ -78,15 +79,16 @@ export async function loadPreview(cmid: number, modname: string, url: string): P
   if (new URL(original.href).origin !== location.origin) return original;
   let out: PreviewContent = { kind: 'none' };
   if (modname === 'resource') {
-    const r = await ws.probe(withParam(original.href, 'redirect', '1'));
+    const r = await ws.probe(withParam(original.href, 'redirect', '1'), signal);
     if (new URL(r.url).origin !== location.origin) out = linkContent(r.url, url);
     else if (r.html) out = previewFromHtml(modname, r.html, r.url);
     else if (FRAMEABLE.test(r.type)) out = frameContent(r.url, original.href, r.type);
   } else if (modname === 'page' || modname === 'url') {
-    const r = await ws.probe(original.href);
+    const r = await ws.probe(original.href, signal);
     if (new URL(r.url).origin !== location.origin) out = linkContent(r.url, url);
     else if (r.html) out = previewFromHtml(modname, r.html, r.url);
   }
+  signal?.throwIfAborted();
   cache.set(cmid, out);
   return out;
 }

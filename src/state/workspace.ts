@@ -17,6 +17,8 @@ export const nowSec = signal(Math.floor(Date.now() / 1000));
 
 /** Selected feed row key. */
 export const feedSel = signal<string | undefined>(undefined);
+export const feedFilter = signal('');
+export const feedLimit = signal(24);
 /** Material shown in the preview sheet (Continue rows and pins). */
 export const wsPreview = signal<RowModel | undefined>(undefined);
 
@@ -31,12 +33,18 @@ export const wsCourse = computed<number | undefined>(() => {
   return v && /^\d+$/.test(v) ? Number(v) : undefined;
 });
 
-export const feed = computed<FeedItem[]>(() => {
+export const filteredFeed = computed<FeedItem[]>(() => {
   const all = buildFeed(feedTab.value, { due: dueList.value, recent: recentList.value, notifs: notifList.value, now: nowSec.value });
   const id = wsCourse.value;
   const code = id === undefined ? undefined : sidebarCourses.value.find((c) => c.id === id)?.code;
-  return groupDeadlines(filterFeedByCourse(all, id, code));
+  const query = feedFilter.value.toLocaleLowerCase().trim();
+  return groupDeadlines(filterFeedByCourse(all, id, code)).filter((entry) => {
+    const item = entry.item;
+    const title = entry.type === 'update' ? entry.item.subject : entry.item.title;
+    return !query || `${title} ${item.courseCode ?? ''}`.toLocaleLowerCase().includes(query);
+  });
 });
+export const feed = computed(() => filteredFeed.value.slice(0, feedLimit.value));
 
 export const feedLoading = computed(() => {
   const nothing = eventsStore().value.value === undefined && notifsStore().value.value === undefined;

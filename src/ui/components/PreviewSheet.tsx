@@ -6,6 +6,9 @@ import type { RowModel } from '../../data/topics';
 import { t } from '../../i18n';
 import { Button } from './Button';
 import { domainOf } from '../../data/repo/preview';
+import { focusWithoutJump, preserveViewport } from '../../fx/navigation';
+import { MOTION, motionAllowed } from '../../fx/motion';
+import { navigation } from '../../fx/transactions';
 
 interface PreviewSheetProps {
   row: RowModel;
@@ -36,21 +39,23 @@ export function PreviewSheet({ row, pinned, onClose, onOpen, onPin }: PreviewShe
     }
     if (closing) return;
     setClosing(true);
-    closeTimer.current = window.setTimeout(() => close.current(), 140);
+    closeTimer.current = window.setTimeout(() => close.current(), MOTION.overlayExit);
   };
 
   useEffect(() => {
     let live = true;
+    const request = new AbortController();
     setLoaded(undefined);
     setReadyFrame(undefined);
     setFailedFrame(undefined);
     setClosing(false);
     window.clearTimeout(closeTimer.current);
-    loadPreview(id, row.cm.modname, row.cm.url)
+    loadPreview(id, row.cm.modname, row.cm.url, request.signal)
       .then((content) => live && setLoaded({ id, content }))
       .catch(() => live && setLoaded({ id, error: true }));
     return () => {
       live = false;
+      request.abort();
     };
   }, [id, row.cm.modname, row.cm.url]);
 
@@ -60,12 +65,13 @@ export function PreviewSheet({ row, pinned, onClose, onOpen, onPin }: PreviewShe
     const dialog = root.current;
     if (!dialog) return;
     const origin = document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
-    const originRow = origin?.closest<HTMLElement>('[data-kex-row], [data-kex-pin], [data-kex-item]');
-    const scroll = { x: window.scrollX, y: window.scrollY };
-    const scrollParents: { el: HTMLElement; top: number; left: number }[] = [];
-    for (let el = origin?.parentElement; el; el = el.parentElement) {
-      if (el.scrollTop || el.scrollLeft) scrollParents.push({ el, top: el.scrollTop, left: el.scrollLeft });
-    }
+    const restoreViewport = preserveViewport(origin);
+    const tx = navigation.begin('reader', { selector: '.kex-sheet', scroll: 'preserve' });
+    const superseded = (): void => close.current();
+    tx.signal.addEventListener('abort', superseded, { once: true });
+    const enterTimer = window.setTimeout(() => {
+      void tx.finish().catch(() => undefined);
+    }, motionAllowed() ? MOTION.overlayEnter : 0);
     const inert: HTMLElement[] = [];
     let branch: HTMLElement | null = dialog.parentElement;
     while (branch && branch !== document.body) {
@@ -81,7 +87,7 @@ export function PreviewSheet({ row, pinned, onClose, onOpen, onPin }: PreviewShe
     const htmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
-    dialog.focus({ preventScroll: true });
+    focusWithoutJump(dialog);
 
     const focusables = (): HTMLElement[] => Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])')).filter((el) => el.tabIndex >= 0 && !el.hidden && !el.closest('[hidden], [inert], [aria-hidden="true"]'));
     const onKey = (e: KeyboardEvent): void => {
@@ -95,29 +101,29 @@ export function PreviewSheet({ row, pinned, onClose, onOpen, onPin }: PreviewShe
         const last = list[list.length - 1] ?? dialog;
         if (e.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
           e.preventDefault();
-          last.focus({ preventScroll: true });
+          focusWithoutJump(last);
         } else if (!e.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
           e.preventDefault();
-          first.focus({ preventScroll: true });
+          focusWithoutJump(first);
         }
       }
     };
     const onFocus = (e: FocusEvent): void => {
-      if (e.target instanceof Node && !dialog.contains(e.target)) dialog.focus({ preventScroll: true });
+      if (e.target instanceof Node && !dialog.contains(e.target)) focusWithoutJump(dialog);
     };
     document.addEventListener('keydown', onKey, true);
     document.addEventListener('focusin', onFocus);
     return () => {
       window.clearTimeout(closeTimer.current);
+      window.clearTimeout(enterTimer);
+      tx.signal.removeEventListener('abort', superseded);
       document.removeEventListener('keydown', onKey, true);
       document.removeEventListener('focusin', onFocus);
       inert.forEach((el) => el.removeAttribute('inert'));
       document.body.style.overflow = bodyOverflow;
       document.documentElement.style.overflow = htmlOverflow;
-      const target = origin?.isConnected ? origin : originRow?.isConnected ? originRow : undefined;
-      target?.focus({ preventScroll: true });
-      scrollParents.forEach(({ el, top, left }) => { el.scrollTop = top; el.scrollLeft = left; });
-      if (window.scrollX !== scroll.x || window.scrollY !== scroll.y) window.scrollTo(scroll.x, scroll.y);
+      if (tx.current()) restoreViewport();
+      tx.cancel();
     };
   }, []);
 

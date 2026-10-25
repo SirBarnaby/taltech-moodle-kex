@@ -1,5 +1,12 @@
 /* Workspace (page-designs §2): hero variant, COURSES column, feed header. */
 #kex-root {
+  .kex-workspace .kex-body { grid-template-columns: minmax(230px, 290px) minmax(0, 1fr); column-gap: clamp(24px, 3vw, 56px); }
+  .kex-wscourses { position: sticky; top: calc(var(--kex-header-h) + 20px); align-self: start; }
+  .kex-wscourses__list { max-height: min(600px, calc(100dvh - var(--kex-header-h) - 140px)); overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+  .kex-wssearch { display: block; margin: 10px 0 14px; }
+  .kex-wssearch input { width: 100%; min-width: 0; min-height: 40px; padding: 9px 12px; border: 1px solid var(--kex-border); border-radius: var(--kex-r-s); background: var(--kex-bg); color: var(--kex-text); font: 14px/20px var(--kex-font-ui); }
+  .kex-wssearch--feed { margin: 0 0 20px; }
+  .kex-feed__more { margin-top: 24px; }
   .kex-hero--ws .kex-hero__title {
     max-width: 100%;
     font-size: clamp(40px, 3.3vw, 72px);
@@ -157,6 +164,29 @@
   .kex-row--item .kex-row__title {
     margin-top: 6px;
   }
+}
+
+@media (max-width: 760px) {
+  #kex-root .kex-hero--ws { height: auto; min-height: 232px; }
+  #kex-root .kex-hero--ws .kex-hero__inner { height: auto; padding: 24px 20px; }
+  #kex-root .kex-hero--ws .kex-hero__title { font-size: clamp(28px, 7.6vw, 40px); line-height: 1.12; }
+  #kex-root .kex-hero--ws .kex-su-line { white-space: normal; text-wrap: balance; }
+  #kex-root .kex-hero--ws .kex-hero__label { font-size: 10px; letter-spacing: 0.08em; }
+  #kex-root .kex-hero--ws::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, rgb(28 18 57 / 85%), rgb(28 18 57 / 25%)); }
+  #kex-root .kex-workspace .kex-matheader { flex-wrap: wrap; height: auto; gap: 12px; padding-top: 24px; }
+  #kex-root .kex-workspace .kex-matheader__title { flex-basis: 100%; font-size: 32px; line-height: 1.2; white-space: nowrap; }
+  #kex-root .kex-workspace .kex-tabs { width: 100%; }
+  #kex-root .kex-workspace .kex-body { display: flex; flex-direction: column; gap: 24px; }
+  #kex-root .kex-wscourses { position: static; width: 100%; }
+  #kex-root .kex-wscourses__list { display: flex; gap: 8px; overflow-x: auto; max-height: none; border: 0; padding-bottom: 8px; }
+  #kex-root .kex-wscourses__list > li { flex: 0 0 210px; }
+  #kex-root .kex-wscourses__list > li:first-child { flex-basis: 76px; }
+  #kex-root .kex-wc { height: 76px; border: 1px solid var(--kex-border); border-radius: var(--kex-r-s); padding: 10px 12px; }
+  #kex-root .kex-wc--reset { display: flex; align-items: center; }
+  #kex-root .kex-feed { width: 100%; min-width: 0; }
+  #kex-root .kex-workspace .kex-thumb--date { height: 80px; min-height: 80px; gap: 2px; align-self: start; }
+  #kex-root .kex-workspace .kex-thumb__day { font-size: 28px; line-height: 32px; }
+  #kex-root .kex-workspace :is(.kex-thumb__mon, .kex-thumb__sub) { max-width: 100%; overflow: hidden; font-size: 9px; line-height: 12px; letter-spacing: 0.03em; }
 }
 
 /* Course filter and grouping (round 2). */

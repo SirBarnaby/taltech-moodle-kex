@@ -24,7 +24,7 @@ function mk(group: Binding['group']) {
 }
 
 function focusRow(attr: 'data-kex-item' | 'data-kex-mc', key: string | number): void {
-  requestAnimationFrame(() => document.querySelector<HTMLElement>(`[${attr}="${key}"]`)?.focus({ preventScroll: false }));
+  requestAnimationFrame(() => document.querySelector<HTMLElement>(`[${attr}="${key}"]`)?.focus({ preventScroll: true }));
 }
 
 // ---------------------------------------------------------------- Workspace feed
@@ -114,7 +114,7 @@ function moveRowIn(selector: string, delta: 1 | -1): void {
   const cur = rows.findIndex((r) => r === document.activeElement || r.contains(document.activeElement));
   const sel = rows.findIndex((r) => r.tabIndex === 0);
   const i = cur >= 0 ? cur : Math.max(0, sel);
-  rows[Math.max(0, Math.min(rows.length - 1, cur < 0 ? i : i + delta))]?.focus();
+  rows[Math.max(0, Math.min(rows.length - 1, cur < 0 ? i : i + delta))]?.focus({ preventScroll: true });
 }
 
 export function pinnedBindings(): Binding[] {
@@ -200,7 +200,7 @@ export function mycoursesBindings(): Binding[] {
     }, () => !!cur()),
     b('f', d('help.mc.filter'), (e) => {
       e.preventDefault();
-      document.querySelector<HTMLElement>('[data-kex-test="mc-filter"]')?.focus();
+      document.querySelector<HTMLElement>('[data-kex-test="mc-filter"]')?.focus({ preventScroll: true });
     }),
     b('s', d('help.mc.star'), () => {
       const c = cur();

@@ -13,7 +13,7 @@
     height: var(--kex-hero-h);
     overflow: hidden;
     color: var(--kex-hero-text);
-    background: var(--kex-hero-bg);
+    background: var(--kex-hero-fallback);
     box-shadow: inset 0 -1px 0 rgba(12, 6, 44, 0.9);
     isolation: isolate;
   }
@@ -27,9 +27,11 @@
     height: 100%;
     display: block;
     z-index: 0;
+    opacity: 1;
+    transition: opacity 360ms var(--kex-ease-out, ease-out);
   }
   .kex-hero[data-mode="fallback"] .kex-hero__canvas {
-    display: none;
+    opacity: 0;
   }
 
   .kex-cross {

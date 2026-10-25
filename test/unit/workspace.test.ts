@@ -8,6 +8,7 @@ import { groupPins, movedTo, parsePinsJson, pinsToJson, rowPins } from '../../sr
 
 import { matchesFilter, sortCourses } from '../../src/state/mycourses';
 import { greeting, relTime, studyWeek } from '../../src/lib/time';
+import { academicPeriod } from '../../src/lib/academic-calendar';
 
 const NOW = 1_792_000_000;
 const DAY = 86400;
@@ -119,8 +120,38 @@ describe('time', () => {
   it('greets by hour, counts study weeks, and speaks in relative phrases', () => {
     expect([greeting(7), greeting(12), greeting(21)]).toEqual(['morning', 'afternoon', 'evening']);
     expect(studyWeek([NOW - 6 * 7 * DAY - 10, NOW + DAY, undefined], NOW)).toBe(7);
-    expect(studyWeek([NOW + DAY], NOW)).toBeUndefined();
+    expect(studyWeek([NOW + DAY], NOW)).toBe(7);
     expect(relTime(2 * DAY)).toBe('in 2 days');
     expect(relTime(-3 * 3600)).toBe('3 h ago');
+  });
+});
+
+describe('TalTech academic calendar', () => {
+  const sec = (date: string) => Date.parse(date.includes('T') ? date : `${date}T12:00:00+03:00`) / 1000;
+  it('reports week 8 on 20 October regardless of an old or missing course start date', () => {
+    expect(studyWeek([1_600_000_000], sec('2026-10-20'))).toBe(8);
+    expect(studyWeek([], sec('2026-10-20'))).toBe(8);
+  });
+  it.each([
+    ['2026-08-31', { kind: 'teaching', week: 1 }],
+    ['2026-12-19', { kind: 'teaching', week: 16 }],
+    ['2026-12-20', { kind: 'exams' }],
+    ['2026-12-25', { kind: 'winter' }],
+    ['2027-01-10', { kind: 'exams' }],
+    ['2027-01-26', { kind: 'winter' }],
+    ['2027-02-01', { kind: 'teaching', week: 1 }],
+    ['2027-05-23', { kind: 'teaching', week: 16 }],
+    ['2027-05-24', { kind: 'exams' }],
+    ['2026-07-01', { kind: 'summer' }],
+    ['2027-07-01', { kind: 'summer' }],
+    ['2026-08-25', { kind: 'preweek' }],
+    ['2029-10-01', { kind: 'unknown' }],
+  ])('classifies %s without an unbounded teaching week', (date, expected) => {
+    expect(academicPeriod(sec(date as string))).toEqual(expected);
+  });
+  it('changes weeks at Monday midnight in Tallinn, including DST', () => {
+    expect(academicPeriod(sec('2026-10-18T20:59:00Z'))).toEqual({ kind: 'teaching', week: 7 });
+    expect(academicPeriod(sec('2026-10-18T21:00:00Z'))).toEqual({ kind: 'teaching', week: 8 });
+    expect(academicPeriod(sec('2026-10-25T22:00:00Z'))).toEqual({ kind: 'teaching', week: 9 });
   });
 });

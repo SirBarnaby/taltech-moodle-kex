@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'preact/hooks';
-import { effects } from '../../fx/effects';
 import { formatDate, t } from '../../i18n';
 import { nextByCourse } from '../../data/feed';
 import { eventsStore } from '../../data/repo/events';
 import { contactsStore, teacherLine } from '../../lib/contacts';
 import { SCHOOLS } from '../../lib/school';
 import { activeCourseId, activeSchool, route, sidebarCourses } from '../../state';
-import { heroEffectMode } from '../../state/effects';
+import { useRibbons } from './useRibbons';
 import { nowSec } from '../../state/workspace';
 import { ArrowNE } from './Glyphs';
 import { SlideUpText } from './SlideUpText';
@@ -24,8 +23,6 @@ interface HeroProps {
   /** Title lines (the second one is painted with the gradient). */
   lines: [string, string?];
   links: HeroLink[];
-  /** Seed for the shader (course id), so each course has its own phase. */
-  seed?: number;
   intensity?: number;
   /** Extra class on the section (page variants). */
   class?: string;
@@ -76,36 +73,19 @@ function CourseMeta({ courseId }: { courseId: number }) {
   );
 }
 
-export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls }: HeroProps) {
-  const canvas = useRef<HTMLCanvasElement>(null);
+export function Hero({ label, lines, links, intensity = 1, class: cls }: HeroProps) {
   const root = useRef<HTMLElement>(null);
-  const mode = heroEffectMode.value;
   const r = route.value;
   const isCourse = r?.effective === 'app' && (r.key === 'course' || r.key === 'section');
   const courseId = isCourse ? activeCourseId.value : null;
   const school = activeSchool.value;
-
-  useEffect(() => {
-    const c = canvas.current;
-    if (!c) return;
-    const handle = effects.register(c, { seed, intensity, leftFade: 0.46, style: SCHOOLS[school].ribbons }, (m) => (heroEffectMode.value = m));
-    const el = root.current;
-    const onMove = (e: PointerEvent): void => {
-      const rect = c.getBoundingClientRect();
-      handle.setPointer(((e.clientX - rect.left) / rect.width) * 2 - 1, -(((e.clientY - rect.top) / rect.height) * 2 - 1));
-    };
-    el?.addEventListener('pointermove', onMove, { passive: true });
-    return () => {
-      el?.removeEventListener('pointermove', onMove);
-      handle.dispose();
-    };
-  }, [seed, intensity, school]);
+  const { canvas, mode } = useRibbons({ seed: 0, intensity, leftFade: 0.46, style: SCHOOLS[school].ribbons }, root);
 
   const text = lines[1] ? `${lines[0]}\n${lines[1]}` : lines[0];
   const aria = courseId ? lines.filter(Boolean).join(' ') : (label ?? '');
   return (
     <section class={`kex-hero${courseId ? ' kex-hero--course' : ''}${cls ? ` ${cls}` : ''}`} ref={root} data-kex-test="hero" data-mode={mode} data-school={school === 'default' ? undefined : school}>
-      <canvas class="kex-hero__canvas" ref={canvas} aria-hidden="true" />
+      <canvas key={`${school}:${intensity}`} class="kex-hero__canvas" ref={canvas} aria-hidden="true" />
       <Crosshair class="kex-cross--a" />
       <Crosshair class="kex-cross--b" />
       <div class="kex-hero__inner">
@@ -120,6 +100,7 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
           duration={0.7}
           delay={0.05}
           gradient={lines[1] ? [1] : [0]}
+          accentDelay={700}
         />
         <nav class="kex-hero__links" aria-label={aria}>
           {links.map((l) => (

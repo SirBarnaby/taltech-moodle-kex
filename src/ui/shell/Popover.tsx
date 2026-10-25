@@ -30,7 +30,7 @@ export function Popover({ anchor, label, onClose, children, role = 'dialog', cla
 
   useEffect(() => {
     const first = ref.current?.querySelector<HTMLElement>(FOCUSABLE);
-    first?.focus();
+    first?.focus({ preventScroll: true });
     const onDown = (e: PointerEvent): void => {
       const t = e.target as Node;
       if (ref.current?.contains(t) || anchor?.contains(t)) return;
@@ -41,7 +41,7 @@ export function Popover({ anchor, label, onClose, children, role = 'dialog', cla
         e.preventDefault();
         e.stopPropagation();
         onClose();
-        anchor?.focus();
+        anchor?.focus({ preventScroll: true });
       }
     };
     document.addEventListener('pointerdown', onDown, true);
@@ -59,7 +59,7 @@ export function Popover({ anchor, label, onClose, children, role = 'dialog', cla
     e.preventDefault();
     const i = items.indexOf(document.activeElement as HTMLElement);
     const next = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1 : (i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
-    items[next]?.focus();
+    items[next]?.focus({ preventScroll: true });
   };
 
   return (

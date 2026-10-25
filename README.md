@@ -1,7 +1,7 @@
 # TalTech Moodle KEX
 
 A fast, keyboard-first redesign of [moodle.taltech.ee](https://moodle.taltech.ee) for Firefox. It restyles Moodle in your browser:
-a sidebar of your courses, a Workspace with your deadlines, course pages as topic lists with a preview sheet, focused quiz
+a sidebar of your courses, a Dossier with your deadlines, course pages as topic lists with a preview sheet, focused quiz
 pages, and a command palette (`Ctrl+K`). Moodle itself is not changed: every action still goes to Moodle's own pages and
 web services with your own session.
 
@@ -11,7 +11,7 @@ Firefox 140 or newer (desktop). It was developed against Moodle 4.5 (TalTech) an
 
 ### Try it (temporary, until Firefox restarts)
 
-1. Build it once: `npm ci && npm run build` (Node 22 or newer). The extension is in `dist/firefox/`.
+1. Build it once: `npm ci && npm run build:local` (Node 22 or newer). The root and `dist/firefox/` extension files are synchronized.
    (Or use a ready `dist/packages/kex.xpi`, made by `npm run pack`.)
 2. In Firefox open `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on...** and choose `dist/firefox/manifest.json` (or the `.xpi`).
@@ -97,6 +97,8 @@ Press `?` anywhere for the live list. Single keys work when you are not typing i
 ```sh
 npm ci
 npm run build:dev        # dist/firefox-dev with debug hooks
+npm run verify:release   # local release gate, synchronized production files + headless TalTech replay
+npm run test:live -- --course 37582  # optional separate Firefox profile; sign in and test yourself
 npm run watch            # rebuild on change
 npm test                 # unit tests (vitest + happy-dom)
 npm run test:e2e         # Playwright (Chromium) against the lab Moodle on http://localhost:8080
@@ -108,5 +110,7 @@ npm run pack             # dist/packages/kex.xpi
 
 The design is documented in `docs/` (`design-spec.md`, `page-designs.md`, `architecture.md`, `implementation-plan.md`,
 `decisions.md`). The lab Moodle (Docker, Moodle 5.3) and its seed scripts are in `tools/lab/`.
+
+See [local testing](docs/local-testing.md) for reload steps, the release evidence and the manual SSO/activity checklist.
 
 KEX is an unofficial student project and is not affiliated with TalTech or Moodle.

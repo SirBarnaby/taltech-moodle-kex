@@ -8,6 +8,7 @@ import { mcFilter, mcHasArchived, mcSel } from '../state/mycourses';
 import { nowSec } from '../state/workspace';
 import { pushToast } from './toasts';
 import { setUndo } from './undo';
+import { changeView, navigation } from '../fx/transactions';
 
 /** My courses actions (page-designs §4, happy-path §1). */
 
@@ -35,9 +36,11 @@ export function storeOf(tab: CoursesTab) {
 export function setMcTab(tab: CoursesTab): void {
   const url = new URL(location.href);
   url.hash = tab === 'current' ? '' : `#${tab}`;
-  history.replaceState(null, '', url);
-  hash.value = location.hash;
-  mcSel.value = undefined;
+  changeView('filter', '.kex-mclist', () => {
+    navigation.write(url, 'replace');
+    hash.value = location.hash;
+    mcSel.value = undefined;
+  }, { ready: () => storeOf(tab).value.value !== undefined || storeOf(tab).status.value === 'error' });
 }
 
 export function stepMcTab(digit: number): void {

@@ -3,6 +3,8 @@ import type { Binding } from '../lib/keys';
 import { hash } from '../state';
 import { grSel, grTab, visibleGrades, type GradesTab } from '../state/grades';
 import { go } from './navigate';
+import { changeView, navigation } from '../fx/transactions';
+import { focusWithoutJump } from '../fx/navigation';
 
 /** Grade overview actions and keys (page-designs §8). */
 
@@ -12,9 +14,11 @@ const interactive = (t: EventTarget | null): boolean => t instanceof Element && 
 export function setGradesTab(tab: GradesTab): void {
   const url = new URL(location.href);
   url.hash = tab === 'current' ? '' : `#${tab}`;
-  history.replaceState(null, '', url);
-  hash.value = location.hash;
-  grSel.value = undefined;
+  changeView('filter', '.kex-grrows', () => {
+    navigation.write(url, 'replace');
+    hash.value = location.hash;
+    grSel.value = undefined;
+  });
 }
 
 function move(delta: 1 | -1): void {
@@ -24,7 +28,7 @@ function move(delta: 1 | -1): void {
   const next = list[Math.max(0, Math.min(list.length - 1, (i < 0 ? 0 : i) + delta))];
   if (!next) return;
   grSel.value = next.courseId;
-  requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-gr="${next.courseId}"]`)?.focus());
+  requestAnimationFrame(() => focusWithoutJump(document.querySelector<HTMLElement>(`[data-kex-gr="${next.courseId}"]`), true));
 }
 
 const current = () => visibleGrades.value.find((r) => r.courseId === grSel.value) ?? visibleGrades.value[0];

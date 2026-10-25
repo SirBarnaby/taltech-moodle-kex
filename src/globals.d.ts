@@ -1,6 +1,7 @@
 /** Injected by esbuild `define` (scripts/build.mjs). */
 declare const __DEBUG__: boolean;
 declare const __VERSION__: string;
+declare const __BUILD_ID__: string;
 
 declare module '*.glsl' {
   const source: string;
