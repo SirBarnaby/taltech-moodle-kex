@@ -98,8 +98,8 @@ export function NotificationsView() {
   );
 
   return (
-    <main class="kex-main kex-notifs" id="kex-main" data-kex-test="notifications" data-unread={unread}>
-      <Band label={label} title={t('nf.title')} actions={actions} seed={9} testId="band" />
+    <main class="kex-main kex-notifs" id="kex-main" data-kex-test="notifications" data-unread={unread} data-kex-ready={!loading}>
+      <Band label={label} title={t('nf.title')} actions={actions} testId="band" />
       <div class="kex-content">
         {failed ? (
           <EmptyState tone="error" kicker={t('course.errorKicker')} title={t('nf.error')}>

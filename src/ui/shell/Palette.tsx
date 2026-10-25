@@ -1,3 +1,4 @@
+import { revealInScroller } from '../../fx/navigation';
 import { BookOpen, FileText, GraduationCap, Hash, PanelsTopLeft, Pin, Search, Zap, type LucideIcon } from 'lucide-preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { go } from '../../actions/navigate';
@@ -93,15 +94,15 @@ export function Palette() {
   // Focus the input on open and give focus back to what had it on close.
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
-    input.current?.focus();
+    input.current?.focus({ preventScroll: true });
     return () => {
-      if (prev && document.contains(prev)) prev.focus();
+      if (prev && document.contains(prev)) prev.focus({ preventScroll: true });
     };
   }, []);
 
   useEffect(() => setSel(0), [query]);
   useEffect(() => {
-    list.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
+    revealInScroller(list.current?.querySelector<HTMLElement>('[aria-selected="true"]') ?? null, list.current);
   }, [sel, rows]);
 
   const close = (): void => {

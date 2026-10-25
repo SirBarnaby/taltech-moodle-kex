@@ -38,7 +38,7 @@ function move(delta: 1 | -1): void {
   const next = list[Math.max(0, Math.min(list.length - 1, i < 0 ? 0 : i + delta))];
   if (!next) return;
   nfSel.value = next.id;
-  requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-nf="${next.id}"]`)?.focus());
+  requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-nf="${next.id}"]`)?.focus({ preventScroll: true }));
   // Reaching the end of the loaded page pulls the next one.
   if (next === list[list.length - 1] && !moreDone.value) void loadMore();
 }

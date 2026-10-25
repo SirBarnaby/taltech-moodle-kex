@@ -1,8 +1,5 @@
 import { CircleHelp, Folder, Link as LinkIcon, MessagesSquare, Upload } from 'lucide-preact';
-import { useEffect, useState } from 'preact/hooks';
 import type { Format, Kind } from '../../data/model';
-import { videoThumb } from '../../fx/thumbs';
-import { heroEffectMode } from '../../state/effects';
 
 export type ThumbVariant = 'doc' | 'code' | 'video' | 'quiz' | 'link' | 'forum' | 'folder' | 'assignment';
 
@@ -76,18 +73,11 @@ function Code() {
 }
 
 function Video({ seed }: { seed?: number }) {
-  const [src, setSrc] = useState<string | undefined>();
-  const mode = heroEffectMode.value;
-  useEffect(() => {
-    let live = true;
-    if (seed !== undefined && mode !== 'fallback') void videoThumb(seed).then((u) => live && setSrc(u));
-    return () => {
-      live = false;
-    };
-  }, [seed, mode]);
+  // List rows use the pre-rendered ribbon asset. Compiling and reading back WebGL here stalls topic scrolling.
+  const src = browser.runtime.getURL('assets/hero-fallback.webp');
   return (
     <>
-      {src && <img class="kex-thumb__img" src={src} alt="" width="134" height="92" />}
+      <img class="kex-thumb__img" src={src} alt="" width="134" height="92" loading="lazy" style={{ objectPosition: `${65 + (seed ?? 0) % 25}% center` }} />
       <svg class="kex-thumb__svg" viewBox="0 0 134 92" aria-hidden="true" focusable="false">
         <circle cx="67" cy="46" r="25" fill="rgba(20,10,52,.38)" stroke="rgba(255,255,255,.62)" stroke-width="1.6" />
         <path d="M63 38.5v15l12.5-7.5z" fill="#fff" />

@@ -10,6 +10,7 @@ import { previewCmId } from '../../src/state/course';
 import { wsPreview } from '../../src/state/workspace';
 import { settings } from '../../src/state';
 import { PreviewSheet } from '../../src/ui/components/PreviewSheet';
+import { navigation } from '../../src/fx/transactions';
 
 vi.mock('../../src/actions/navigate', () => ({ go: vi.fn() }));
 
@@ -27,6 +28,7 @@ beforeEach(() => {
 afterEach(() => {
   const mount = document.getElementById('reader-mount');
   if (mount) act(() => render(null, mount));
+  navigation.cancel();
   document.body.replaceChildren();
   document.body.style.overflow = '';
   document.documentElement.style.overflow = '';
@@ -65,6 +67,18 @@ describe('fullscreen material reader', () => {
     const props = { row: row(), pinned: false, onClose, onOpen: vi.fn(), onPin: vi.fn() };
     return { origin, mount, onClose, props };
   }
+
+  it('cancels a reader read and skips its old viewport restore when navigation supersedes it', async () => {
+    const read = vi.spyOn(previews, 'loadPreview').mockImplementation(() => new Promise(() => undefined));
+    const { mount, onClose, props, origin } = fixture();
+    await act(async () => render(createElement(PreviewSheet, props), mount));
+    const signal = read.mock.calls[0]?.[3];
+    await act(async () => { navigation.begin('page', { selector: '.kex-main' }); });
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(signal?.aborted).toBe(true);
+    expect(document.activeElement).not.toBe(origin);
+    expect(document.body.style.overflow).toBe('');
+  });
 
   it('isolates sibling content, traps focus, closes with Escape, and restores focus and scroll', async () => {
     vi.spyOn(previews, 'loadPreview').mockResolvedValue({ kind: 'article', html: '<h2>Notes</h2><p>Lab instructions</p>' });

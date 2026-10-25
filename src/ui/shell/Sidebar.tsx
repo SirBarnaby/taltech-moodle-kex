@@ -32,7 +32,7 @@ export function splitCode(code: string): [string, string] {
 function Wordmark() {
   const src = logoSrc.value;
   return (
-    <a class="kex-sb__brand" href={homeUrl('/my/')} data-kex-test="sb-brand">
+    <a class="kex-sb__brand" href={homeUrl(PAGES.mycourses)} data-kex-test="sb-brand">
       {src ? (
         <img class="kex-sb__logo" src={src} alt="" />
       ) : (
@@ -108,7 +108,7 @@ function CourseItem({ course, active, index, editing, onEdit }: CourseItemProps)
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (editing) {
-      inputRef.current?.focus();
+      inputRef.current?.focus({ preventScroll: true });
       inputRef.current?.select();
     }
   }, [editing]);
@@ -299,7 +299,7 @@ export function Sidebar() {
     if (!overlayOpen) setPeek(false);
   }, [overlayOpen]);
   useEffect(() => {
-    if (overlayOpen && sidebarInstant.peek()) navRef.current?.querySelector<HTMLAnchorElement>('a[href]')?.focus();
+    if (overlayOpen && sidebarInstant.peek()) navRef.current?.querySelector<HTMLAnchorElement>('a[href]')?.focus({ preventScroll: true });
   }, [overlayOpen]);
 
   const sem = currentSemester(courses);
@@ -359,9 +359,10 @@ export function Sidebar() {
         <Wordmark />
         <div class="kex-sb__divider" />
         <ul class="kex-sb__nav">
+          <NavRow href={homeUrl(PAGES.mycourses)} label={t('nav.mycourses')} icon={House} current={nav === 'mycourses'} testId="sb-mycourses" />
           <li>
             <a class="kex-sb__row kex-sb__row--sub" href={homeUrl(PAGES.workspace)} aria-current={isHome ? 'page' : undefined} data-tip={t('nav.workspace')} data-kex-test="sb-workspace" onClick={(e) => here(e, PAGES.workspace)}>
-              <House size={22} strokeWidth={1.5} aria-hidden="true" />
+              <LibraryBig size={22} strokeWidth={1.5} aria-hidden="true" />
               <span class="kex-sb__rowlabel">{t('nav.workspace')}</span>
               {unread > 0 && (
                 <span class="kex-sb__pill kex-mono" data-kex-test="sb-unread" aria-label={t('sidebar.unread', { n: unread })}>{unread > 99 ? '99+' : unread}</span>
@@ -374,7 +375,6 @@ export function Sidebar() {
               <span class="kex-sb__rowlabel">{t('nav.pinned')}</span>
             </a>
           </li>
-          <NavRow href={homeUrl(PAGES.mycourses)} label={t('nav.mycourses')} icon={LibraryBig} current={nav === 'mycourses'} testId="sb-mycourses" />
           <NavRow href={homeUrl(PAGES.calendar)} label={t('nav.calendar')} icon={CalendarDays} current={nav === 'calendar'} testId="sb-calendar" />
           <NavRow
             href={homeUrl(PAGES.messages)} label={t('nav.messages')} icon={MessageSquare} current={nav === 'messages'} testId="sb-messages"

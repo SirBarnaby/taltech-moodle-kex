@@ -80,7 +80,8 @@ void main(){
   vec2 uv=gl_FragCoord.xy/uRes;
   float X=mix(uWin.x,uWin.z,uv.x);
   float Y=mix(uWin.y,uWin.w,1.-uv.y);
-  float px=max((uWin.w-uWin.y)/uRes.y,(uWin.z-uWin.x)/uRes.x);
+  // Stroke and glow widths belong to the artwork's reference space, not backing-store resolution.
+  float px=max((uWin.w-uWin.y)/253.,(uWin.z-uWin.x)/1339.);
   float t=uTime*.07*uShape.w+uSeed;
 
   // gentle drift of the curves

@@ -1,6 +1,7 @@
 import { motionTier } from './motion';
 /** Short, interruptible view changes. Visual copies never delay the real route or receive input. */
 const running = new Map<string, () => void>();
+let activeScroll: (() => void) | undefined;
 
 /** The one choreography of a page change (milliseconds, measured from the click). Every duration stays under 300. */
 export const MOTION = {
@@ -53,6 +54,91 @@ export function scrollInstant(top: number): void {
   window.scrollTo({ top, left: 0, behavior: 'instant' as ScrollBehavior });
 }
 
+/** Bound progress per painted frame: delayed hydration must not consume an entire scroll animation offscreen. */
+export function scrollViewport(top: number): { finished: Promise<void>; cancel: () => void } {
+  activeScroll?.();
+  let resolve!: () => void;
+  const finished = new Promise<void>((r) => { resolve = r; });
+  let frame = 0;
+  let stopped = false;
+  const cancel = (): void => {
+    if (stopped) return;
+    stopped = true;
+    if (activeScroll === cancel) activeScroll = undefined;
+    cancelAnimationFrame(frame);
+    for (const event of ['wheel', 'touchstart', 'pointerdown', 'keydown']) window.removeEventListener(event, cancel, true);
+    resolve();
+  };
+  const from = window.scrollY;
+  let position = from;
+  activeScroll = cancel;
+  if (!viewMotionAllowed() || Math.abs(top - from) < 1) {
+    scrollInstant(top);
+    cancel();
+    return { finished, cancel };
+  }
+  const duration = Math.min(420, Math.max(240, Math.abs(top - from) * 0.35));
+  let elapsed = 0;
+  let last = performance.now();
+  const tick = (now: number): void => {
+    if (stopped) return;
+    elapsed += Math.min(34, Math.max(0, now - last));
+    last = now;
+    const p = Math.min(1, elapsed / duration);
+    const proposed = from + (top - from) * (1 - (1 - p) ** 3);
+    const delta = proposed - position;
+    position += Math.sign(delta) * Math.min(Math.abs(delta), Math.max(80, window.innerHeight * 0.18));
+    scrollInstant(position);
+    if (p >= 1 && Math.abs(position - top) < 1) cancel();
+    else frame = requestAnimationFrame(tick);
+  };
+  for (const event of ['wheel', 'touchstart', 'pointerdown', 'keydown']) window.addEventListener(event, cancel, { capture: true, passive: true });
+  frame = requestAnimationFrame(tick);
+  return { finished, cancel };
+}
+
+/** Focus never owns scrolling. Callers explicitly request a reveal for keyboard list navigation. */
+export function focusWithoutJump(element: HTMLElement | null, reveal = false): void {
+  if (!element) return;
+  element.focus({ preventScroll: true });
+  if (!reveal) return;
+  for (let parent = element.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
+    if (/(auto|scroll)/.test(getComputedStyle(parent).overflowY) && parent.scrollHeight > parent.clientHeight) {
+      revealInScroller(element, parent);
+      return;
+    }
+  }
+  const rect = element.getBoundingClientRect();
+  const header = document.querySelector('.kex-header')?.getBoundingClientRect().bottom ?? 64;
+  if (rect.top < header || rect.bottom > window.innerHeight) {
+    scrollViewport(Math.max(0, window.scrollY + rect.top - header - 16));
+  }
+}
+
+/** Reveal an item inside its own list without scrolling any ancestor or the page. */
+export function revealInScroller(element: HTMLElement | null, container: HTMLElement | null): void {
+  if (!element || !container) return;
+  const item = element.getBoundingClientRect();
+  const box = container.getBoundingClientRect();
+  const y = item.top < box.top ? item.top - box.top : item.bottom > box.bottom ? item.bottom - box.bottom : 0;
+  const x = item.left < box.left ? item.left - box.left : item.right > box.right ? item.right - box.right : 0;
+  if (x || y) container.scrollTo({ top: container.scrollTop + y, left: container.scrollLeft + x, behavior: viewMotionAllowed() ? 'smooth' : 'instant' });
+}
+
+/** Reader focus and nested scroll positions are restored together under the viewport policy. */
+export function preserveViewport(origin: HTMLElement | undefined): () => void {
+  const point = { x: window.scrollX, y: window.scrollY };
+  const parents: { el: HTMLElement; top: number; left: number }[] = [];
+  for (let el = origin?.parentElement; el; el = el.parentElement) {
+    if (el.scrollTop || el.scrollLeft) parents.push({ el, top: el.scrollTop, left: el.scrollLeft });
+  }
+  return () => {
+    if (origin?.isConnected) focusWithoutJump(origin);
+    parents.forEach(({ el, top, left }) => { el.scrollTop = top; el.scrollLeft = left; });
+    if (window.scrollY !== point.y || window.scrollX !== point.x) window.scrollTo({ top: point.y, left: point.x, behavior: 'instant' });
+  };
+}
+
 /**
  * Back and forward: put the old scroll position back as soon as the view is mounted, and keep the page tall enough to hold it
  * (`ready` says when the real content is in; at most 2 s) so the position is not clamped while the skeleton is short.
@@ -76,6 +162,7 @@ export function restoreScroll(y: number, ready: () => boolean): void {
 }
 
 export function cancelViewTransitions(): void {
+  activeScroll?.();
   for (const stop of [...running.values()]) stop();
   running.clear();
 }
@@ -110,15 +197,21 @@ function pruneOffscreen(source: HTMLElement, copy: HTMLElement): void {
  * `page` copies the whole `.kex-main` (hero text and content), clipped to the viewport, and fades it out while the real page
  * (already scrolled to the top underneath) fades in and slides down: it reads as one short scroll up. `topic` copies the detail panel.
  */
-export function beginViewTransition(element: HTMLElement | null, scope: 'page' | 'topic'): (selector: string) => void {
+export function beginViewTransition(
+  element: HTMLElement | null,
+  scope: 'page' | 'topic',
+  options: { top?: number; scroll?: 'top' | 'anchor' | 'preserve' } = {},
+): (selector: string) => Promise<void> {
   if (scope === 'page') {
     cancelViewTransitions();
     lastPageBegin = performance.now();
   } else running.get(scope)?.();
   const tier = motionTier();
-  if (!element || tier === 'none' || typeof element.animate !== 'function') return () => undefined;
+  if (!element || tier === 'none' || typeof element.animate !== 'function') return () => Promise.resolve();
   const root = document.getElementById('kex-root');
-  if (!root) return () => undefined;
+  if (!root) return () => Promise.resolve();
+  let resolve!: () => void;
+  const finished = new Promise<void>((r) => { resolve = r; });
   const t0 = performance.now();
   const bounds = element.getBoundingClientRect();
   const lift = scope === 'page' && tier === 'full' ? (window.scrollY > 0 ? Math.min(window.scrollY, MOTION.liftMax) : MOTION.liftRest) : 0;
@@ -172,6 +265,7 @@ export function beginViewTransition(element: HTMLElement | null, scope: 'page' |
     fades.forEach((a) => a.cancel());
     ghost.remove();
     if (running.get(scope) === stop) running.delete(scope);
+    resolve();
   };
   running.set(scope, stop);
   void exit.finished.then(() => ghost.remove(), () => ghost.remove());
@@ -206,11 +300,19 @@ export function beginViewTransition(element: HTMLElement | null, scope: 'page' |
             enter = incoming.animate(keyframes, timing);
           }
         } else {
+          // Filters and lists: when the new content starts above the viewport, go back up to its top.
+          if (options.scroll !== 'preserve') {
+            const header = root.querySelector('.kex-header')?.getBoundingClientRect().bottom ?? 64;
+            const anchor = Math.max(0, window.scrollY + incoming.getBoundingClientRect().top - header - 20);
+            const top = options.top ?? Math.min(window.scrollY, anchor);
+            if (Math.abs(top - window.scrollY) > 1) scrollViewport(top);
+          }
           enter = incoming.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: MOTION.topicEnter, easing: MOTION.ease });
         }
         void enter.finished.then(stop, stop);
       });
     };
     reveal();
+    return finished;
   };
 }

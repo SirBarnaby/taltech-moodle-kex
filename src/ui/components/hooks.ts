@@ -17,7 +17,7 @@ export function focusSibling(current: Element | null, delta: 1 | -1, selector: s
   const list = Array.from(document.querySelectorAll<HTMLElement>(selector));
   const i = list.findIndex((el) => el === current || el.contains(current));
   const next = list[Math.max(0, Math.min(list.length - 1, (i < 0 ? (delta === 1 ? -1 : list.length) : i) + delta))];
-  next?.focus();
+  next?.focus({ preventScroll: true });
 }
 
 /** No focus ring until the first key press: programmatic focus on arrival stays quiet. */

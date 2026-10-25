@@ -60,7 +60,7 @@ function Crumbs({ crumbs }: { crumbs: ShellCrumb[] }) {
     items.push(
       <li key={c.text + i} class={`kex-crumbs__item${last ? ' kex-crumbs__item--current' : ''}${c.home ? ' kex-crumbs__item--home' : ''}`}>
         {c.href && !last ? (
-          <a href={c.href} aria-label={c.home ? t('crumb.home') : undefined}>{c.home ? <HomeGlyph /> : c.text}</a>
+          <a href={c.href} aria-label={c.home ? t('nav.mycourses') : undefined}>{c.home ? <HomeGlyph /> : c.text}</a>
         ) : (
           <span aria-current={last ? 'page' : undefined}>{c.home ? <HomeGlyph /> : c.text}</span>
         )}

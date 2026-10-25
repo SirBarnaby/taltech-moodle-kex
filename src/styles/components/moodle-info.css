@@ -1,0 +1,16 @@
+#kex-root {
+  .kex-moodle-info { margin: 20px 0 4px; font-size: 14px; line-height: 1.6; }
+  .kex-moodle-info__notice { padding: 14px 18px; border-left: 3px solid var(--kex-violet); background: var(--kex-tint); color: var(--kex-text); }
+  .kex-moodle-info__notice + .kex-moodle-info__notice { margin-top: 8px; }
+  .kex-moodle-info__notice p { margin: 0; }
+  .kex-moodle-info a { color: var(--kex-violet); text-decoration: underline; text-underline-offset: 3px; }
+  .kex-moodle-info__details { border-bottom: 1px solid var(--kex-border); }
+  .kex-moodle-info summary { padding: 12px 0; cursor: pointer; color: var(--kex-text-2); }
+  .kex-moodle-info__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 24px; padding: 8px 0 24px; }
+  .kex-moodle-info h2 { font: 600 16px/1.4 var(--kex-font-ui); margin: 0 0 12px; }
+  .kex-moodle-info article { min-width: 0; }
+  .kex-moodle-info article :is(p, ul) { margin-bottom: 10px; }
+  .kex-moodle-info article ul { padding-left: 18px; }
+  .kex-moodle-info__sources { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 0 0 18px; font-size: 13px; }
+  .kex-calendar-notice { padding: 12px 24px; background: var(--kex-tint); color: var(--kex-text-2); font-size: 14px; }
+}

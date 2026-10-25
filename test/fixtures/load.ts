@@ -45,3 +45,11 @@ export function captureDoc(name: CaptureName): Document {
   }
   return doc;
 }
+
+export function loadCapture(name: CaptureName): Document {
+  const html = captureHtml(name);
+  document.open();
+  document.write(html.replace(/<script\b[^>]*\bsrc\s*=[^>]*>[\s\S]*?<\/script>/gi, '').replace(/<link\b[^>]*>/gi, ''));
+  document.close();
+  return document;
+}

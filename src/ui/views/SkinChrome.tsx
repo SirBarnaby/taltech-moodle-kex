@@ -302,7 +302,6 @@ export function SkinChrome() {
           size={activity ? 'activity' : 'page'}
           actions={err ? <ErrorActions /> : activity ? <ChromeActions /> : undefined}
           meta={activity ? <ChromeMeta /> : undefined}
-          seed={pageInfo.value?.cmId ?? pageInfo.value?.courseId ?? 3}
           testId="band"
         />
         {!err && !activity && <CalendarTabs />}

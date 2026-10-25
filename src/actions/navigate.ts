@@ -1,4 +1,4 @@
-import { hash, hooks, pageInfo } from '../state';
+import { hooks, pageInfo } from '../state';
 
 /** Same-tab navigation, or a new tab with noopener. Relative URLs resolve against the Moodle root. */
 export function go(url: string, newTab = false): void {
@@ -7,14 +7,7 @@ export function go(url: string, newTab = false): void {
     window.open(abs, '_blank', 'noopener');
     return;
   }
-  // Same page, hash dropped (`/my/#pinned` -> `/my/`): switch in place, a plain assign would reload.
   const target = new URL(abs);
-  if (target.origin === location.origin && target.pathname === location.pathname && target.search === location.search && target.hash === '' && location.hash !== '') {
-    history.pushState(null, '', target.href);
-    hash.value = '';
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
-    return;
-  }
   // App views open in place (no reload, the shell stays painted); everything else is a normal page load.
   if (hooks.navigate(target)) return;
   window.location.assign(abs);
@@ -26,10 +19,10 @@ export function homeUrl(path: string): string {
 }
 
 export const PAGES = {
-  workspace: '/my/',
-  pinned: '/my/#pinned',
-  deadlines: '/my/#deadlines',
-  updates: '/my/#updates',
+  workspace: '/my/?view=dossier',
+  pinned: '/my/?view=dossier#pinned',
+  deadlines: '/my/?view=dossier#deadlines',
+  updates: '/my/?view=dossier#updates',
   mycourses: '/my/courses.php',
   calendar: '/calendar/view.php?view=month',
   grades: '/grade/report/overview/index.php',

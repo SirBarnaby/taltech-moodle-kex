@@ -33,7 +33,7 @@ export function Segmented<T extends string>({ value, options, onChange, label, s
     if (!next) return;
     onChange(next.value);
     const group = (e.currentTarget as HTMLElement).parentElement;
-    queueMicrotask(() => group?.querySelectorAll<HTMLElement>('[role="radio"]')[(i + d + options.length) % options.length]?.focus());
+    queueMicrotask(() => group?.querySelectorAll<HTMLElement>('[role="radio"]')[(i + d + options.length) % options.length]?.focus({ preventScroll: true }));
   };
   return (
     <div class={`kex-segmented${slide ? ' kex-segmented--slide' : ''}`} role="radiogroup" aria-label={label} ref={group}>

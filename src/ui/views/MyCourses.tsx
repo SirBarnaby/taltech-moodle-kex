@@ -19,6 +19,7 @@ import { useEffectsConfig, useQuietFocus } from '../components/hooks';
 import { Segmented } from '../components/Segmented';
 import { EmptyState } from '../components/States';
 import { Tabs, type TabDef } from '../components/Tabs';
+import { MoodleInfo } from '../components/MoodleInfo';
 
 const TAB_DEFS: TabDef<CoursesTab>[] = COURSE_TABS.map((k, i) => ({ key: k, label: `mc.tab.${k}` as MessageKey, digit: String(i + 1) }));
 
@@ -137,9 +138,10 @@ export function MyCoursesView() {
   ];
 
   return (
-    <main class="kex-main kex-mycourses" id="kex-main" data-kex-test="mycourses" data-tab={tab}>
-      <Band label={`${t('mc.label')} / ${seasonLabel(sem.season)} ${sem.year}`} title={t('mc.title')} seed={5} />
+    <main class="kex-main kex-mycourses" id="kex-main" data-kex-test="mycourses" data-tab={tab} data-kex-ready={!loading}>
+      <Band label={`${t('mc.label')} / ${seasonLabel(sem.season)} ${sem.year}`} title={t('mc.title')} />
       <div class="kex-content">
+        <MoodleInfo />
         <SiteNotices />
         <div class="kex-matheader kex-mcbar">
           <Tabs<CoursesTab> value={tab} onChange={setMcTab} items={tabs} label={t('mc.tabs')} idPrefix="kex-mc-tab" panelId="kex-mc-panel" />
@@ -162,7 +164,7 @@ export function MyCoursesView() {
                     mcFilter.value = '';
                   } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
                     e.preventDefault();
-                    document.querySelector<HTMLElement>('[data-kex-mc][tabindex="0"]')?.focus();
+                    document.querySelector<HTMLElement>('[data-kex-mc][tabindex="0"]')?.focus({ preventScroll: true });
                   }
                 }}
               />

@@ -1,6 +1,7 @@
 import FRAG from './ribbons.glsl';
 import { DEBUG } from '../lib/log';
 import { DEFAULT_RIBBONS, type RibbonStyle } from '../lib/school';
+import { MOTION } from './motion';
 
 /** WebGL2 ribbons renderer (architecture §14, design-spec §9). One full-screen triangle, all work in the fragment shader. */
 
@@ -22,6 +23,8 @@ export interface RibbonsOptions {
   onFallback?: (reason: 'unsupported' | 'lost') => void;
   /** Called once the shader program is compiled and linked (asynchronously after construction). */
   onReady?: () => void;
+  /** The shared runtime defers driver work while navigation or scrolling owns the frame. */
+  canWork?: () => boolean;
 }
 
 export function webgl2Supported(): boolean {
@@ -39,17 +42,20 @@ export class RibbonsRenderer {
   private loc: Record<string, WebGLUniformLocation | null> = {};
   private raf = 0;
   private running = false;
-  private t0 = 0;
-  private tFrozen = 0;
-  private skip = false;
+  private tFrozen = 7.3;
   private pointer: [number, number] = [0, 0];
   private pointerTarget: [number, number] = [0, 0];
   private scale = 1;
   private frameTimes: number[] = [];
+  private drawTimes: number[] = [];
+  private lastDrawMs = 0;
   private drawn = 0;
   private last = 0;
   private lost = false;
   private disposed = false;
+  private pendingTimer = 0;
+  private idleCallback = 0;
+  private generation = 0;
   private waiters: Array<(ok: boolean) => void> = [];
   /** True from linkProgram until the driver has finished: nothing can be drawn yet. */
   private pending = false;
@@ -61,11 +67,12 @@ export class RibbonsRenderer {
     private readonly opts: RibbonsOptions = {},
   ) {
     canvas.addEventListener('webglcontextlost', this.onLost);
+    canvas.addEventListener('webglcontextrestored', this.onRestored);
     this.init();
   }
 
   get ok(): boolean {
-    return !!this.gl && !this.lost;
+    return !!this.gl && !this.lost && !this.disposed;
   }
 
   /** Resolves true once the program is linked (false when it could not be, or the context was lost). */
@@ -87,14 +94,47 @@ export class RibbonsRenderer {
   private onLost = (e: Event): void => {
     e.preventDefault();
     this.lost = true;
+    this.pending = false;
+    this.cancelPending();
     this.settle(false);
     this.stop();
     this.opts.onFallback?.('lost');
   };
 
+  private onRestored = (): void => {
+    if (this.disposed) return;
+    this.lost = false;
+    this.gl = null;
+    this.prog = null;
+    this.loc = {};
+    this.pending = true;
+    const restore = (): void => {
+      this.pendingTimer = 0;
+      if (this.disposed || this.lost) return;
+      if (this.opts.canWork && !this.opts.canWork()) {
+        this.pendingTimer = window.setTimeout(restore, MOTION.effectsIdleDelay);
+        return;
+      }
+      this.init();
+    };
+    this.pendingTimer = window.setTimeout(restore, MOTION.effectsIdleDelay);
+  };
+
+  private cancelPending(): void {
+    this.generation++;
+    clearTimeout(this.pendingTimer);
+    this.pendingTimer = 0;
+    if (this.idleCallback && typeof cancelIdleCallback === 'function') cancelIdleCallback(this.idleCallback);
+    this.idleCallback = 0;
+  }
+
   private init(): void {
+    if (this.disposed || this.lost) return;
+    const generation = ++this.generation;
     const gl = this.canvas.getContext('webgl2', { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: 'low-power' });
     if (!gl) {
+      this.pending = false;
+      this.settle(false);
       this.opts.onFallback?.('unsupported');
       return;
     }
@@ -111,6 +151,11 @@ export class RibbonsRenderer {
     const fs = compile(gl.FRAGMENT_SHADER, FRAG);
     const prog = gl.createProgram();
     if (!vs || !fs || !prog) {
+      if (vs) gl.deleteShader(vs);
+      if (fs) gl.deleteShader(fs);
+      if (prog) gl.deleteProgram(prog);
+      this.pending = false;
+      this.settle(false);
       this.opts.onFallback?.('unsupported');
       return;
     }
@@ -122,9 +167,15 @@ export class RibbonsRenderer {
     this.pending = true;
     const ext = gl.getExtension('KHR_parallel_shader_compile');
     const finish = (): void => {
-      if (this.disposed || this.lost) return;
+      this.pendingTimer = 0;
+      this.idleCallback = 0;
+      if (this.disposed || this.lost || generation !== this.generation) return;
+      if (this.opts.canWork && !this.opts.canWork()) {
+        this.pendingTimer = window.setTimeout(finish, MOTION.effectsIdleDelay);
+        return;
+      }
       if (ext && !gl.getProgramParameter(prog, ext.COMPLETION_STATUS_KHR)) {
-        setTimeout(finish, 16);
+        this.pendingTimer = window.setTimeout(finish, 16);
         return;
       }
       const tLink = DEBUG ? performance.now() : 0;
@@ -137,6 +188,9 @@ export class RibbonsRenderer {
       if (!linked) {
         console.warn('[KEX] shader link failed', gl.getShaderInfoLog(fs), gl.getProgramInfoLog(prog));
         this.pending = false;
+        gl.deleteShader(vs);
+        gl.deleteShader(fs);
+        gl.deleteProgram(prog);
         this.gl = null;
         this.prog = null;
         this.settle(false);
@@ -153,18 +207,18 @@ export class RibbonsRenderer {
       this.opts.onReady?.();
     };
     // Without the extension the blocking read happens after the first paint instead of inside the caller's task.
-    if (ext) setTimeout(finish, 0);
-    else if (typeof requestIdleCallback === 'function') requestIdleCallback(finish, { timeout: 1500 });
-    else setTimeout(finish, 50);
+    if (ext) this.pendingTimer = window.setTimeout(finish, 0);
+    else if (typeof requestIdleCallback === 'function') this.idleCallback = requestIdleCallback(finish, { timeout: 1500 });
+    else this.pendingTimer = window.setTimeout(finish, MOTION.effectsIdleDelay);
   }
 
-  /** Match the canvas backing store to its CSS size (DPR capped at 1.5, times the adaptive scale). */
+  /** Match the canvas backing store to its CSS size (DPR capped at 2, times the adaptive scale). */
   resize(): void {
     const gl = this.gl;
-    if (!gl) return;
+    if (!gl || this.lost || this.disposed) return;
     // An offscreen canvas (video thumbnails) keeps the size it was given.
     const attached = this.canvas.isConnected;
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5) * this.scale;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2) * this.scale;
     const w = attached ? Math.max(1, Math.round(this.canvas.clientWidth * dpr)) : this.canvas.width;
     const h = attached ? Math.max(1, Math.round(this.canvas.clientHeight * dpr)) : this.canvas.height;
     if (this.canvas.width !== w || this.canvas.height !== h) {
@@ -204,9 +258,11 @@ export class RibbonsRenderer {
     this.pointerTarget = [Math.max(-1, Math.min(1, x)), Math.max(-1, Math.min(1, y))];
   }
 
-  private draw(time: number): void {
+  private draw(time: number): boolean {
     const gl = this.gl;
-    if (!gl || this.lost || this.pending) return;
+    if (!gl || this.lost || this.pending || this.disposed) return false;
+    if (this.canvas.isConnected && (!this.canvas.clientWidth || !this.canvas.clientHeight)) return false;
+    const started = performance.now();
     this.resize();
     gl.uniform2f(this.loc.uRes ?? null, this.canvas.width, this.canvas.height);
     gl.uniform1f(this.loc.uTime ?? null, time);
@@ -222,63 +278,70 @@ export class RibbonsRenderer {
     gl.uniform1f(this.loc.uSharp ?? null, st.sharp);
     const w = this.opts.window ?? [0, 0, 1339, 253];
     gl.uniform4f(this.loc.uWin ?? null, w[0], w[1], w[2], w[3]);
-    if (DEBUG && this.drawn === 0) {
-      // Software GL compiles the shader to native code on the first draw: counted with the link time (see finish()).
-      const t = performance.now();
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-      gl.finish();
-      this.drawn++;
-      const w = window as unknown as { __kexShaderCompileMs?: number[] };
-      (w.__kexShaderCompileMs ??= []).push(performance.now() - t);
-    } else if (DEBUG && ++this.drawn % 5 === 0) {
-      // Debug builds time a draw including gl.finish(): the frame cost in the architecture §22 budget (software GL in CI is far slower than a real GPU).
-      const t = performance.now();
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-      gl.finish();
-      const w = window as unknown as { __kexShaderMs?: number[] };
-      (w.__kexShaderMs ??= []).push(performance.now() - t);
-    } else {
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    this.lastDrawMs = performance.now() - started;
+    if (DEBUG) {
+      // CPU submission time only: gl.finish() would stall interaction frames while measuring them.
+      const w = window as unknown as { __kexShaderCompileMs?: number[]; __kexShaderMs?: number[] };
+      if (this.drawn === 0) (w.__kexShaderCompileMs ??= []).push(this.lastDrawMs);
+      else if (this.drawn % 5 === 0) (w.__kexShaderMs ??= []).push(this.lastDrawMs);
     }
     // The first real frame: CSS fades the canvas in from this point instead of showing it half-ready.
     if (!this.canvas.dataset.drawn && this.canvas.isConnected && this.canvas.clientWidth > 1) this.canvas.dataset.drawn = '1';
+    this.drawn++;
+    return true;
   }
 
   /** One frame at a fixed time (reduced motion, effects "static", tests). */
-  renderStatic(t: number): void {
+  renderStatic(t: number): boolean {
+    if (!this.draw(t)) return false;
     this.tFrozen = t;
-    this.draw(t);
+    return true;
   }
 
-  start(): void {
+  /** Managed renderers use the controller's single frame pump; standalone callers keep the same API. */
+  start(managed = false): void {
     if (this.running || !this.gl || this.lost || this.pending) return;
     this.running = true;
-    this.t0 = performance.now() - this.tFrozen * 1000;
     this.last = 0;
     this.frameTimes = [];
+    this.drawTimes = [];
+    if (managed) return;
     const tick = (now: number): void => {
       if (!this.running) return;
       this.raf = requestAnimationFrame(tick);
-      this.adapt(now);
-      this.skip = !this.skip; // 30 fps cap: draw every other 60 Hz frame
-      if (this.skip) return;
-      this.pointer[0] += (this.pointerTarget[0] - this.pointer[0]) * 0.08;
-      this.pointer[1] += (this.pointerTarget[1] - this.pointer[1]) * 0.08;
-      this.tFrozen = (now - this.t0) / 1000;
-      this.draw(this.tFrozen);
+      if (this.last && now - this.last < MOTION.effectsFrameInterval - 1) return;
+      this.frame(now);
     };
     this.raf = requestAnimationFrame(tick);
   }
 
-  /** Adaptive quality: median rAF delta over 60 frames above 22 ms drops to .66 resolution; still above, give up (static). */
-  private adapt(now: number): void {
-    if (this.last) this.frameTimes.push(now - this.last);
+  /** Advance only by time actually spent running. Resuming never catches up paused wall time. */
+  frame(now: number): boolean {
+    if (!this.running || this.disposed || (this.opts.canWork && !this.opts.canWork())) return false;
+    const elapsed = this.last ? Math.max(0, now - this.last) : 0;
     this.last = now;
+    const delta = Math.min(elapsed, MOTION.effectsMaxDelta);
+    const blend = 1 - Math.exp(-delta / 180);
+    this.pointer[0] += (this.pointerTarget[0] - this.pointer[0]) * blend;
+    this.pointer[1] += (this.pointerTarget[1] - this.pointer[1]) * blend;
+    const time = this.tFrozen + delta / 1000;
+    if (!this.draw(time)) return false;
+    this.tFrozen = time;
+    this.adapt(elapsed);
+    return true;
+  }
+
+  /** Slow submission or sustained missed 30 Hz frames lowers resolution, then freezes. */
+  private adapt(elapsed: number): void {
+    if (elapsed) this.frameTimes.push(elapsed);
+    this.drawTimes.push(this.lastDrawMs);
     if (this.frameTimes.length < 60) return;
-    const sorted = [...this.frameTimes].sort((a, b) => a - b);
-    const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
+    const median = (values: number[]): number => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)] ?? 0;
+    const slow = median(this.frameTimes) > MOTION.effectsFrameInterval * 1.8 || median(this.drawTimes) > MOTION.effectsFrameBudget;
     this.frameTimes = [];
-    if (median <= 22) return;
+    this.drawTimes = [];
+    if (!slow) return;
     if (this.scale > 0.7) {
       this.scale = 0.66;
       this.resize();
@@ -291,6 +354,8 @@ export class RibbonsRenderer {
   stop(): void {
     this.running = false;
     cancelAnimationFrame(this.raf);
+    this.raf = 0;
+    this.last = 0;
   }
 
   get isRunning(): boolean {
@@ -302,10 +367,13 @@ export class RibbonsRenderer {
   }
 
   dispose(): void {
+    if (this.disposed) return;
     this.disposed = true;
+    this.cancelPending();
     this.settle(false);
     this.stop();
     this.canvas.removeEventListener('webglcontextlost', this.onLost);
+    this.canvas.removeEventListener('webglcontextrestored', this.onRestored);
     const gl = this.gl;
     if (gl) {
       if (this.prog) gl.deleteProgram(this.prog);

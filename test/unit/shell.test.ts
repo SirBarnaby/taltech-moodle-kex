@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { adjustForLocation, buildSnapshot, paintSnapshot, removeSnapshot, SNAPSHOT_KEY } from '../../src/content/snapshot';
-import { clickedLink, isPlainClick, PageLoader, prefetchSafe, routeOfDoc, softTarget } from '../../src/content/softnav';
+import { clickedLink, homeTarget, isPlainClick, PageLoader, prefetchSafe, routeOfDoc, softTarget } from '../../src/content/softnav';
 import { scrapeLanguages } from '../../src/content/langs';
 import { filterFeedByCourse, groupDeadlines, startsCourseGroup } from '../../src/lib/feedgroups';
 import type { FeedItem } from '../../src/data/feed';
@@ -56,6 +56,11 @@ describe('faculty themes', () => {
 });
 
 describe('soft navigation targets', () => {
+  it('lands at My courses while preserving explicit dossier links and the original Moodle escape', () => {
+    expect(homeTarget(u('/my/'), CTX.wwwroot).pathname).toBe('/my/courses.php');
+    expect(homeTarget(u('/my/index.php?lang=et'), CTX.wwwroot).href).toContain('/my/courses.php?lang=et');
+    for (const path of ['/my/?view=dossier', '/my/?course=5', '/my/#pinned', '/my/?kex=off']) expect(homeTarget(u(path), CTX.wwwroot).href).toBe(u(path).href);
+  });
   it('opens app views in place; pages Moodle has to run itself (and course tabs it renders) stay normal loads', () => {
     expect(softTarget(u('/my/'), CTX)?.key).toBe('workspace');
     expect(softTarget(u('/my/?course=5'), CTX)?.key).toBe('workspace');

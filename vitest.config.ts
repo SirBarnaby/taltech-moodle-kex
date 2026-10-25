@@ -13,5 +13,5 @@ export default defineConfig({
     // happy-dom reports every external script, stylesheet and iframe it refuses to load; none of it is a test failure.
     onConsoleLog: (log) => (/loading is disabled|moodle strings unavailable/.test(log) ? false : undefined),
   },
-  define: { __DEBUG__: 'true', __VERSION__: '"test"' },
+  define: { __DEBUG__: 'true', __VERSION__: '"test"', __BUILD_ID__: '"test-build"' },
 });

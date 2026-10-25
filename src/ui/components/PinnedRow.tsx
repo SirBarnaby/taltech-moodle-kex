@@ -16,14 +16,14 @@ interface PinnedRowProps {
 export function RenameInput({ pin }: { pin: Pin }) {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    ref.current?.focus();
+    ref.current?.focus({ preventScroll: true });
     ref.current?.select();
   }, []);
   const done = (save: boolean): void => {
     const v = ref.current?.value ?? '';
     pinRenaming.value = undefined;
     if (save) void retitlePin(pin.cmid, v);
-    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-pin="${pin.cmid}"]`)?.focus());
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-pin="${pin.cmid}"]`)?.focus({ preventScroll: true }));
   };
   return (
     <input
@@ -57,7 +57,7 @@ export function editKeys(e: KeyboardEvent, pin: Pin, order: readonly Pin[], hori
     e.preventDefault();
     e.stopPropagation();
     void reorderPin(pin.cmid, e.key === next ? 1 : -1, order).then(() =>
-      requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-pin="${pin.cmid}"]`)?.focus()),
+      requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-kex-pin="${pin.cmid}"]`)?.focus({ preventScroll: true })),
     );
   } else if (e.key === 'F2') {
     e.preventDefault();
@@ -72,6 +72,7 @@ export function editKeys(e: KeyboardEvent, pin: Pin, order: readonly Pin[], hori
 
 /** Three cells: pins of the current course first. Empty cells invite pinning. Edit mode reorders, renames and removes (design-spec §4.4). */
 export function PinnedRow({ pins, courseId }: PinnedRowProps) {
+  if (!pins.length) return <p class="kex-pinned-hint"><PinGlyph />{t('course.pinned.empty')}</p>;
   const cells: (Pin | undefined)[] = [pins[0], pins[1], pins[2]];
   const edit = pinEdit.value;
   const renaming = pinRenaming.value;
@@ -152,7 +153,7 @@ export function PinnedRow({ pins, courseId }: PinnedRowProps) {
       </div>
       <button type="button" class="kex-pinned__edit" data-kex-test="pinned-edit" aria-pressed={edit} onClick={() => {
         pinEdit.value = !pinEdit.value;
-        if (pinEdit.value) requestAnimationFrame(() => document.querySelector<HTMLElement>('.kex-pin--editing')?.focus());
+        if (pinEdit.value) requestAnimationFrame(() => document.querySelector<HTMLElement>('.kex-pin--editing')?.focus({ preventScroll: true }));
       }}>
         <Pencil size={15} strokeWidth={1.75} aria-hidden="true" />
         <span>{edit ? t('pinned.done') : t('course.pinned.edit')}</span>

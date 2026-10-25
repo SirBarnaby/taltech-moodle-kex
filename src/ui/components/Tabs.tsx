@@ -56,7 +56,7 @@ export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, on
     const target = TABS[next];
     if (!target) return;
     onChange(target.key);
-    requestAnimationFrame(() => list.current?.querySelector<HTMLElement>(`[data-tab="${target.key}"]`)?.focus());
+    requestAnimationFrame(() => list.current?.querySelector<HTMLElement>(`[data-tab="${target.key}"]`)?.focus({ preventScroll: true }));
   };
 
   return (

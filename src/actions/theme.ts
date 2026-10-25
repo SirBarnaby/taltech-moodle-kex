@@ -25,5 +25,5 @@ export function toggleSidebar(keyboard = false): void {
   userMenuOpen.value = false;
   const closing = sidebarOverlay.value;
   sidebarOverlay.value = !closing;
-  if (closing && keyboard) document.querySelector<HTMLButtonElement>('[data-kex-test="sidebar-toggle"]')?.focus();
+  if (closing && keyboard) document.querySelector<HTMLButtonElement>('[data-kex-test="sidebar-toggle"]')?.focus({ preventScroll: true });
 }

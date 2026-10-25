@@ -13,9 +13,9 @@ export function KeyboardHelp() {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
-    ref.current?.querySelector<HTMLElement>('button')?.focus();
+    ref.current?.querySelector<HTMLElement>('button')?.focus({ preventScroll: true });
     return () => {
-      if (prev && document.contains(prev)) prev.focus();
+      if (prev && document.contains(prev)) prev.focus({ preventScroll: true });
     };
   }, []);
 

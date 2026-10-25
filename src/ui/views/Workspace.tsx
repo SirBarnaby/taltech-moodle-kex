@@ -1,7 +1,7 @@
 import { ArrowUpRight, Bell, CircleCheck, Eye, Megaphone, MessagesSquare, Pin as PinIcon, X } from 'lucide-preact';
 import { SiteNotices } from '../components/SiteNotices';
 import { Fragment } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import {
   feedPinned, initWorkspace, manualOf, markEverythingRead, markNotifRead, openCourse, openFeedItem, pinFeedItem, recentKind, rowFromRecent, selectFeed, setFeedTab,
   setWsCourse, toggleDoneById,
@@ -12,17 +12,19 @@ import { cmDetails } from '../../data/repo/cmdetails';
 import { typeNameFor } from '../../data/repo/modnames';
 import { eyebrow } from '../../data/topics';
 import type { DueItem } from '../../data/model';
-import { type FeedItem, nearestCourse, nextByCourse, weekSummary, type FeedTab } from '../../data/feed';
+import { type FeedItem, nextByCourse, weekSummary, type FeedTab } from '../../data/feed';
 import { countsStore } from '../../data/repo/counts';
 import { displayName } from '../../data/repo/courses';
 import { eventsStore } from '../../data/repo/events';
 import { isPinned, pinsStore, rowPins } from '../../data/repo/pins';
 import type { RecentItem } from '../../data/repo/recent';
 import { formatDate, lang, t, type MessageKey } from '../../i18n';
-import { clock, greeting, heroDay, relTime, shortDay, studyWeek } from '../../lib/time';
+import { clock, greeting, heroDay, relTime, shortDay } from '../../lib/time';
+import { calendarData } from '../../lib/academic-calendar';
+import { MoodleInfo } from '../components/MoodleInfo';
 import { sidebarCourses, user } from '../../state';
 import { startsCourseGroup } from '../../lib/feedgroups';
-import { dueList, feed, feedError, feedLoading, feedSel, feedTab, nowSec, notifList, recentList, unreadCount, wsCourse, wsPreview } from '../../state/workspace';
+import { dueList, feed, feedError, feedFilter, feedLimit, feedLoading, feedSel, feedTab, filteredFeed, nowSec, notifList, recentList, unreadCount, wsCourse, wsPreview } from '../../state/workspace';
 import { Button } from '../components/Button';
 import { Hero, type HeroLink } from '../components/Hero';
 import { useEffectsConfig, useQuietFocus } from '../components/hooks';
@@ -210,10 +212,10 @@ function UpdateRow({ item, index, selected }: { item: Extract<FeedItem, { type: 
 
 /** The COURSES column: the heading opens My courses, a course card filters the feed to it in place (URL `?course=`), "All" clears it. */
 function CourseColumn() {
+  const [query, setQuery] = useState('');
   const courses = sidebarCourses.value;
   const due = dueList.value;
   const next = nextByCourse(due);
-  const nearest = nearestCourse(due);
   const picked = wsCourse.value;
   const filtered = picked !== undefined;
   const pick = (e: MouseEvent, id: number | undefined): void => {
@@ -226,6 +228,10 @@ function CourseColumn() {
       <h3 class="kex-topics__label kex-mono">
         <a class="kex-wscourses__all" href={homeUrl(PAGES.mycourses)} data-kex-test="ws-courses-link">{t('ws.courses')}<ArrowUpRight size={13} strokeWidth={1.75} aria-hidden="true" /></a>
       </h3>
+      <label class="kex-wssearch">
+        <span class="kex-sr">{t('ws.courseSearch')}</span>
+        <input type="search" placeholder={t('ws.courseSearch')} value={query} onInput={(e) => setQuery(e.currentTarget.value)} />
+      </label>
       <ul class="kex-wscourses__list">
         <li>
           <a
@@ -238,19 +244,18 @@ function CourseColumn() {
             <span class="kex-wc__name">{t('common.all')}</span>
           </a>
         </li>
-        {courses.map((c) => {
+        {courses.filter((c) => `${c.code} ${displayName(c)}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).map((c) => {
           const nx = next.get(c.id);
           const pct = c.progress === null ? undefined : Math.max(0, Math.min(100, Math.round(c.progress)));
           const on = picked === c.id;
-          const active = filtered ? on : c.id === nearest;
           return (
             <li key={c.id}>
               <a
-                class={`kex-wc${active ? ' kex-wc--active' : ''}`}
+                class={`kex-wc${on ? ' kex-wc--active' : ''}`}
                 href={`${homeUrl(PAGES.workspace)}?course=${c.id}`}
                 data-kex-wc={c.id}
                 data-kex-test="ws-course"
-                aria-current={active ? 'true' : undefined}
+                aria-current={on ? 'true' : undefined}
                 title={t('ws.filterCourse', { name: `${c.code} ${displayName(c)}` })}
                 onClick={(e) => pick(e, on ? undefined : c.id)}
               >
@@ -319,8 +324,10 @@ export function WorkspaceView() {
   const pickedName = pickedCourse ? `${pickedCourse.code} ${displayName(pickedCourse)}` : '';
 
   const sum = weekSummary(due, now);
-  const week = studyWeek(courses.map((c) => c.startdate), now);
-  const label = [t('ws.label'), `${heroDay(now * 1000)}${week ? ` · ${t('ws.week', { n: week })}` : ''}`].join(' / ');
+  const calendar = calendarData(now);
+  const period = calendar.data;
+  const periodText = period.kind === 'teaching' ? t('ws.week', { n: period.week }) : period.kind === 'unknown' ? '' : t(`academic.${period.kind}`);
+  const label = [t('ws.label'), `${heroDay(now * 1000)}${periodText ? ` · ${periodText}` : ''}`].join(' / ');
   const name = firstName(u?.fullname);
   const hello = t(`ws.greeting.${greeting(new Date(now * 1000).getHours())}` as MessageKey, { name }).replace(/,\s*$/, '');
   const summary = (() => {
@@ -339,15 +346,18 @@ export function WorkspaceView() {
   ];
 
   const headLabel = tab === 'deadlines' ? t('ws.deadlines') : tab === 'updates' ? t('ws.updates') : t('ws.upNext');
-  const count = list.length === 1 ? t('ws.item') : t('ws.items', { n: list.length });
+  const total = filteredFeed.value.length;
+  const count = total === 1 ? t('ws.item') : t('ws.items', { n: total });
   const unreadInFeed = notifList.value.some((n) => !n.read);
 
   const onlyEmpty = !loading && !failed && list.length === 0;
 
   return (
-    <main class="kex-main kex-workspace" id="kex-main" data-kex-test="workspace" data-tab={tab}>
-      <Hero class="kex-hero--ws" key="ws" label={label} lines={[hello, summary]} links={links} seed={7} />
+    <main class="kex-main kex-workspace" id="kex-main" data-kex-test="workspace" data-tab={tab} data-kex-ready={!loading}>
+      {calendar.maintenance !== 'current' && <p class="kex-calendar-notice" role="status"><a href={calendar.source.originalPath} target="_blank" rel="noopener noreferrer">{t('academic.updateRequired')}</a></p>}
+      <Hero class="kex-hero--ws" key="ws" label={label} lines={[hello, summary]} links={links} />
       <div class="kex-content">
+        <MoodleInfo />
         <SiteNotices />
         <PinnedRow pins={rowPins(pins, null, 3)} courseId={null} />
         <div class="kex-matheader">
@@ -357,6 +367,10 @@ export function WorkspaceView() {
         <div class="kex-body">
           <CourseColumn />
           <section class="kex-detail kex-feed" id="kex-ws-panel" role="tabpanel" aria-labelledby={`kex-ws-tab-${tab}`} data-kex-test="feed">
+            <label class="kex-wssearch kex-wssearch--feed">
+              <span class="kex-sr">{t('ws.search')}</span>
+              <input type="search" placeholder={t('ws.search')} value={feedFilter.value} onInput={(e) => { feedFilter.value = e.currentTarget.value; feedLimit.value = 24; }} />
+            </label>
             <div class="kex-detail__top kex-feedhead">
               <p class="kex-detail__kicker kex-mono" data-kex-test="feed-label">{headLabel}</p>
               <p class="kex-detail__count kex-mono" data-kex-test="feed-count">{loading ? '' : count}</p>
@@ -381,7 +395,7 @@ export function WorkspaceView() {
             ) : onlyEmpty ? (
               <EmptyState
                 kicker={t('ws.emptyKicker')}
-                title={pickedCourse && tab !== 'updates' ? t('ws.noneForCourse') : tab === 'updates' ? t('ws.empty.updates') : t('ws.empty.deadlines')}
+                title={feedFilter.value ? t('mc.emptyFilter') : pickedCourse && tab !== 'updates' ? t('ws.noneForCourse') : tab === 'updates' ? t('ws.empty.updates') : t('ws.empty.deadlines')}
                 text={tab === 'all' && !recentList.value.length ? t('ws.empty.recent') : undefined}
               >
                 {tab !== 'updates' && <Button variant="outlined" arrow={false} href={homeUrl(PAGES.calendar)} onClick={(e) => { e.preventDefault(); go(PAGES.calendar); }}>{t('ws.link.calendar')}</Button>}
@@ -403,6 +417,7 @@ export function WorkspaceView() {
                 })}
               </ul>
             )}
+            {total > list.length && <Button variant="outlined" arrow={false} class="kex-feed__more" onClick={() => { feedLimit.value += 24; }}>{t('ws.showMore', { n: total - list.length })}</Button>}
           </section>
         </div>
       </div>

@@ -109,7 +109,7 @@ function skipToContent(e: MouseEvent): void {
   const target = document.querySelector<HTMLElement>('#kex-main, #maincontent, [role="main"], #page-content');
   if (!target) return;
   if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
-  target.focus();
+  target.focus({ preventScroll: true });
 }
 
 /** The page content for the current route; skin routes have none (Moodle's own content stays in place). */

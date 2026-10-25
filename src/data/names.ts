@@ -1,4 +1,5 @@
 import type { Season } from './model';
+import { t } from '../i18n';
 
 const CODE_RE = /\b[A-Z]{3}\d{4}\b/;
 const CODE_ALL_RE = /\b[A-Z]{3}\d{4}\b/g;
@@ -80,5 +81,4 @@ export function splitTitle(name: string): [string, string?] {
   return [words.slice(0, words.length - tail).join(' '), words.slice(words.length - tail).join(' ')];
 }
 
-const SEASON_LABEL: Record<Season, string> = { autumn: 'AUTUMN', spring: 'SPRING', summer: 'SUMMER', winter: 'WINTER' };
-export const seasonLabel = (s: Season): string => SEASON_LABEL[s];
+export const seasonLabel = (s: Season): string => t(`season.${s}`).toLocaleUpperCase();

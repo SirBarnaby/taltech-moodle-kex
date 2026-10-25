@@ -1,0 +1,228 @@
+{
+  "status": "complete",
+  "verdict": "Ready to merge",
+  "verdict_reason": "No current primary defects remain after reconciliation against the latest source. Planned authenticated Firefox checks are intentionally reserved for the user. This is a code-review verdict; the caller must establish the pending full browser release-gate result before claiming the local release verified.",
+  "scope": {
+    "base": "HEAD",
+    "branch": "codex/kex-interactions",
+    "head_sha": "4e0016b9b58f865ab93ccfa781043e2a4305fbfd",
+    "pr_url": null,
+    "files_changed": 125
+  },
+  "intent": "Complete the approved Moodle KEX epics: one navigation/viewport owner with persistent shell/history/reader, a bounded lifecycle-aware effects runtime, and typed Moodle parity/freshness/calendar adapters with repeatable build provenance. Preserve native Moodle escapes and truthful replay. User performs authenticated Firefox testing.",
+  "intent_confidence": "explicit",
+  "reviewers": [
+    "correctness",
+    "project-standards",
+    "testing",
+    "maintainability",
+    "security",
+    "performance",
+    "reliability",
+    "adversarial",
+    "julik-frontend-races",
+    "correctness-late"
+  ],
+  "findings": [],
+  "actionable_findings": [],
+  "triage_groups": [],
+  "pre_existing_findings": [],
+  "requirements_completeness": {
+    "plan_path": "docs/2026-10-20-local-recon.md",
+    "source": "explicit",
+    "requirements": [
+      {
+        "id": "R1",
+        "requirement": "One typed navigation intent coordinates page/topic/filter/history/reader, cancellation, viewport/focus/readiness and persistent shell; delayed Back/Forward restores topic/scroll without stale overlays.",
+        "status": "met",
+        "evidence": [
+          "Typed coordinator, separate destination-read lifetime, persistent shell, readiness/viewport/focus ownership, reader cancellation, delayed-history and implicit-topic regressions are present."
+        ]
+      },
+      {
+        "id": "R2",
+        "requirement": "Effects lifecycle has compiling/painted/live/paused/static/fallback, shared bounded render budget, deferred decoration, phase continuity, no list-mount shader/readback, and off/static/live/reduced/resize/visibility/context/disposal checks.",
+        "status": "partially addressed",
+        "intentional_deferment": true,
+        "evidence": [
+          "Bounded shared frame pump, lifecycle policies, retained phase/context, per-surface fallbacks and unit/local-browser matrices are present."
+        ],
+        "pending": "Firefox timing measurement and real long-course interaction validation are reserved for the user."
+      },
+      {
+        "id": "R3",
+        "requirement": "Parity inventory gives every hidden stock block a destination or stock escape; typed source/freshness for notices/summaries/deadlines/grades/nav/calendar; finite calendar with maintenance notice, truthful replay, repeatable manifest/build/unit/real-theme-browser provenance gate and live Firefox smoke flow.",
+        "status": "partially addressed",
+        "intentional_deferment": true,
+        "evidence": [
+          "Parity inventory and stock escapes, typed source freshness, calendar maintenance behavior, truthful captured replay, build provenance/release gate and opt-in live-smoke.mjs are present."
+        ],
+        "pending": "Actual authenticated Firefox SSO/native activity and uploaded-document checks are reserved for the user."
+      },
+      {
+        "id": "R4",
+        "requirement": "User explicitly will perform authenticated Firefox testing; no desktop or signed-in browser control for this iteration.",
+        "status": "met",
+        "evidence": [
+          "No desktop or signed-in browser control was used by the review; live smoke is a tester-invoked opt-in flow."
+        ]
+      }
+    ],
+    "implementation_units": [],
+    "unrequested_behavior_rules": []
+  },
+  "learnings": [],
+  "agent_native_gaps": [],
+  "deployment_notes": [],
+  "residual_risks": [
+    "The initial reader probe/HTML body read still has no deadline (src/ui/components/PreviewSheet.tsx:53; src/data/ws.ts:89-92). A stalled response can keep the skeleton busy until dismissal; the original-Moodle link stays available. This is pre-existing behavior, not a new primary defect (HEAD 4e0016b, src/data/ws.ts:88-91).",
+    "Authenticated Firefox extension isolation, current Moodle markup, SSO, submission/native-activity links, and real PDF response headers/viewer behavior remain the tester-run live pass. The isolated replay does not establish them."
+  ],
+  "testing_gaps": [
+    "Add a deferred ws.probe regression around the real loadPreview implementation: abort before resolving, assert AbortError, reopen the same cmid and assert a new probe. Current reader tests mock loadPreview, so they do not prove the late-response cache boundary in src/data/repo/preview.ts:74-96.",
+    "Firefox interaction/rendering measurements on realistic long courses remain a manual follow-up. The local Edge suite and aggregate CPU submission budget do not establish Firefox frame timing or GPU cost; the user explicitly reserved the live pass.",
+    "Decoration-yield coverage dispatches kex:interaction directly rather than using wheel/scroll input. The production publisher covers navigation transactions; no ordinary-scroll pause is demonstrated. Test the intended interaction-burst policy with actual input before claiming scrolling performance coverage.",
+    "The new seed-11 portrait login artwork is not included in fallback-to-first-paint pixel comparison. Existing login-width tests establish layout/backing resolution only; add the same composition assertion used for Dossier, the page band and faculty course.",
+    "Reader coverage does not exercise the 15-second iframe deadline or a never-settling initial probe/body. Add timer-bound cases when extending reader wait policy."
+  ],
+  "coverage": {
+    "depth": "full",
+    "notes": [
+      "Scope: standalone base:HEAD with explicitly authorized untracked source/tests/scripts included.",
+      "Project standards: parent AGENTS.md supplied instruction fallback; no CODING_STANDARDS.md exists.",
+      "Authenticated Firefox/SSO/submissions and real Firefox performance were not tested; user runs live pass.",
+      "Root modified code during review; original findings require validation against current source.",
+      "Release gate became ready after initial scope and was reviewed by testing/adversarial/maintainability. Late assets and smoke additions were reviewed by correctness-late.",
+      "Cross-model pass: not run; no different-provider CLI installed. The in-process adversarial reviewer covered the lens.",
+      "All 10 selected reviewer artifacts, including correctness-late.json, were read before synthesis.",
+      "Five compact defect candidates were checked against current source after root-agent changes; all are corrected in current source. The two destination-read candidates describe one defect and fix path. Distinct phase-retention and context-recovery failures were assessed separately.",
+      "Two earlier testing concerns are now covered: static-to-first-paint composition for Dossier/page band/faculty-course, and deterministic frame-cadence/budget fairness.",
+      "No findings were suppressed at confidence anchors 50 or 25; first_evidence_backfilled=0; quote-gate demotions=0; malformed findings/returns=0.",
+      "No settlement conflicts or protected-artifact cleanup candidates were present. No primary findings remain, so the validation batch is empty; no cross-model evidence shortcut was used.",
+      "Authenticated Firefox/SSO/submission and Firefox timing checks are intentionally reserved for the user, per the invocation constraint; this review does not claim those checks passed.",
+      "Late delta after correctness-late snapshot: src/fx/ribbons.glsl:80-84 now normalizes stroke/glow widths against the 1339x253 artwork reference rather than backing-store resolution. Synthesis inspected that formula and the composition assertions at test/local/polish.spec.ts:295-331, but did not rerun rendering or inspect regenerated binary artwork. Root reports the compact-header comparison failed before this fix and strict comparisons/assets regeneration are running; release-gate success must be established by the caller after this review.",
+      "Current effects tests also cover visibility pause/resume and resize deferred during an interaction; no stale absence-of-coverage concern for these cases is retained.",
+      "Caller update at report completion: production build 447840e4c64e5d4aeeab0b1c is unchanged since the shader reference-space fix; 372 unit tests and all 3 composition cases reportedly pass. The full browser release gate remains pending; this report does not establish its success. The scroll timing test now preserves native requestAnimationFrame while fixing Date, with a repeat check still running.",
+      "Narrow post-review delta on23October2026: Hero/Band canvas keys now track varying renderer options, ensuring disposed WebGL canvases are replaced during faculty theme changes. Current call sites and actual-uniform/lost-context regression inspected; no new defect. Final17case gate not established by this review."
+    ],
+    "peer_outcome": "in-process-fallback",
+    "peer_coverage": "Cross-model pass: not run; no different-provider CLI installed. The in-process adversarial reviewer covered the lens.",
+    "suppressed_by_confidence": {},
+    "first_evidence_backfilled": 0,
+    "quote_gate_demotions": 0,
+    "malformed_findings": 0,
+    "malformed_returns": 0,
+    "mode_aware_demotions": 0,
+    "semantic_duplicate_candidates": 1,
+    "current_source_resolved_candidates": 5,
+    "validator_shortcut_skipped": 0,
+    "validator_selected": 0,
+    "settled_conflicts_suppressed": 0,
+    "late_delta": {
+      "file": "src/fx/ribbons.glsl",
+      "lines": "80-84",
+      "inspection": "bounded source/formula plus relevant assertions",
+      "runtime": "caller rerun pending at synthesis time",
+      "generated_assets_reviewed": false
+    },
+    "validator": {
+      "outcome": "empty-batch",
+      "reason": "Merge leaf re-inspected the current tree and no primary findings remained; all original actionable findings were fixed before merge.",
+      "confirmed": 0,
+      "rejected": 0,
+      "unresolved": 0,
+      "malformed": 0,
+      "failed": 0,
+      "shortcut_skipped": 0
+    },
+    "failed_reviewers": [],
+    "compound_packs": {
+      "roots": [],
+      "warnings": [],
+      "errors": []
+    },
+    "reviewer_selection": [
+      {
+        "reviewer": "correctness",
+        "tier": "session",
+        "reason": "always-on"
+      },
+      {
+        "reviewer": "project-standards",
+        "tier": "mid",
+        "reason": "parent instruction fallback"
+      },
+      {
+        "reviewer": "testing",
+        "tier": "mid",
+        "reason": "changed tests/replay/provenance harness"
+      },
+      {
+        "reviewer": "maintainability",
+        "tier": "mid",
+        "reason": "new runtime abstractions"
+      },
+      {
+        "reviewer": "security",
+        "tier": "session",
+        "reason": "untrusted Moodle HTML/reader inputs"
+      },
+      {
+        "reviewer": "performance",
+        "tier": "mid",
+        "reason": "shared shader frame budget"
+      },
+      {
+        "reviewer": "reliability",
+        "tier": "mid",
+        "reason": "async cancellation/timeout cleanup"
+      },
+      {
+        "reviewer": "adversarial",
+        "tier": "session",
+        "reason": "ordering and silent-pass verification fidelity"
+      },
+      {
+        "reviewer": "julik-frontend-races",
+        "tier": "mid",
+        "reason": "frontend lifecycle races"
+      },
+      {
+        "reviewer": "correctness-late",
+        "tier": "session",
+        "reason": "late assets/manual-smoke correctness"
+      }
+    ]
+  },
+  "peer": {
+    "outcome": "in-process-fallback",
+    "coverage": "Cross-model pass: not run; no different-provider CLI installed. The in-process adversarial reviewer covered the lens."
+  },
+  "artifact_path": "C:\\Users\\barna\\AppData\\Local\\Temp\\compound-engineering-barna\\ce-code-review\\20261022-epics-0936304e",
+  "run_id": "20261022-epics-0936304e",
+  "post_review_deltas": [
+    {
+      "hashes": {
+        "src/ui/components/useRibbons.ts": "00246d6a525bea14e7c97e3916c53bf55783818e3099abe61f71cd8b5760bed3",
+        "test/local/polish.spec.ts": "e3c371ee855bbc717c2e9bd6bc1b4b3b9478c36a735884daec13ef1dc2daadc3",
+        "src/ui/components/Band.tsx": "acba1a203f7627ffb4fe352fb6301654407d1a8b7540bd9c6fd4fb4f5710f63b",
+        "src/ui/components/Hero.tsx": "646eb670bafc5d2f0b21de3f0111ec115efeb55a1b6905e4343a663a8d632d55"
+      },
+      "independent_review": false,
+      "reviewer": "dispatch-context narrow delta",
+      "status": "complete",
+      "build_id": "1149700a411861a279dc5e32",
+      "prior_gate": "Caller reports original16browsercase gate completed at artifacts/releases/2026-10-23T16-18-52-243Z-4e980fbd for build447840e4c64e5d4aeeab0b1c.",
+      "regression": "The real-WebGL colourBySchool true/false/true test checks static readiness, non-lost context, and actual uBody palette uniforms. Caller reports this failed before keying; final17case gate is running and was not awaited or rerun by this read-only review.",
+      "reviewed_at": "2026-10-23T16:24:28.6719013Z",
+      "findings": [],
+      "files": [
+        "src/ui/components/Hero.tsx",
+        "src/ui/components/Band.tsx",
+        "src/ui/components/useRibbons.ts",
+        "test/local/polish.spec.ts"
+      ],
+      "conclusion": "Hero canvas key covers varying school/style and intensity; Band canvas key covers varying school/style. Other renderer options at these call sites remain constant. Option changes therefore replace the disposed canvas before useLayoutEffect registers the next renderer, while existing disposed-entry guards suppress stale callbacks. Login options remain constant. No defect found in the narrow delta."
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import { formatDate, t } from '../i18n';
+import { academicPeriod } from './academic-calendar';
 
 /** Relative phrases for deadlines and "opened" stamps. `delta` is seconds from now to the event (negative = past). */
 export function relTime(deltaSec: number): string {
@@ -33,9 +34,9 @@ export const heroDay = (ms: number): string => shortDay(ms).toUpperCase();
 
 export const greeting = (hour: number): 'morning' | 'afternoon' | 'evening' => (hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening');
 
-/** Study week: whole weeks since the earliest start date among the courses that already started, plus one. */
+/** Compatibility helper: course creation dates never define the university's teaching week. */
 export function studyWeek(startdates: readonly (number | undefined)[], nowSec: number): number | undefined {
-  const started = startdates.filter((s): s is number => !!s && s <= nowSec);
-  if (!started.length) return undefined;
-  return Math.floor((nowSec - Math.min(...started)) / (7 * 86400)) + 1;
+  void startdates;
+  const period = academicPeriod(nowSec);
+  return period.kind === 'teaching' ? period.week : undefined;
 }
