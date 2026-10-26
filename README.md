@@ -24,14 +24,16 @@ published on the store and nobody else sees it.
 
 1. Make a free account on <https://addons.mozilla.org> and create API credentials at
    <https://addons.mozilla.org/developers/addon/api/key/> (a "JWT issuer" and a "JWT secret").
-2. In this folder:
+2. In this folder (web-ext reads the two keys from the environment):
 
-   ```sh
-   export WEB_EXT_API_KEY="user:12345:67"      # JWT issuer
-   export WEB_EXT_API_SECRET="..."             # JWT secret
+   ```powershell
+   $env:WEB_EXT_API_KEY = "user:12345:67"      # JWT issuer
+   $env:WEB_EXT_API_SECRET = "..."             # JWT secret
    npm run build
    npm run sign
    ```
+
+   In a bash shell: `export WEB_EXT_API_KEY="..."` and `export WEB_EXT_API_SECRET="..."` instead.
 
    The signed file appears in `web-ext-artifacts/`. Keep the keys private; they are used only on your machine.
 3. In Firefox: `about:addons` > the gear menu > **Install Add-on From File...** > choose the signed `.xpi`.
