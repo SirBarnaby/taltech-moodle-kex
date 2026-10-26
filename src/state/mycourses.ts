@@ -60,3 +60,9 @@ export function sortCourses(list: readonly Course[], sort: McSort, access: Reado
 }
 
 export { lastAccess };
+
+/**
+ * The "last opened" order My courses shows: taken when the view opens, so the cards never reshuffle under the reader when Moodle's
+ * fresh answer arrives (the course just left is already first: opening a course notes it). Only an empty order takes the answer.
+ */
+export const shownAccess = signal<ReadonlyMap<number, number>>(new Map());

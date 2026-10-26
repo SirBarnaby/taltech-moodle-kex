@@ -1,0 +1,358 @@
+/* The course as one page (round 10): every topic in Moodle's order with its materials under it, an outline of the topics pinned
+   beside them in a wide column, the topic bar pinned under the header in a narrow one. Nothing here is swapped in or out while the
+   reader moves around: topics fold in place, a topic click glides the page (actions/course.ts). */
+/* Scroll anchoring back on for the course page (micro.css turns it off elsewhere): content above the window that changes size, such
+   as a summary that arrives or a row's details, then leaves what is on screen where it is. */
+#kex-root:has(.kex-course) {
+  overflow-anchor: auto;
+}
+#kex-root {
+  .kex-book {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    padding-top: 14px;
+  }
+  .kex-book__pages {
+    min-width: 0;
+  }
+  .kex-book__tools {
+    display: flex;
+    justify-content: flex-end;
+    height: 24px;
+    margin-bottom: 2px;
+  }
+  .kex-book__foldall {
+    font-size: 13px;
+    line-height: 24px;
+    font-weight: 500;
+    color: var(--kex-violet);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+    text-underline-offset: 4px;
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+
+  /* ---- outline (wide columns) ---- */
+  .kex-outline {
+    display: none;
+    position: sticky;
+    top: calc(var(--kex-header-h-compact) + 16px);
+    align-self: start;
+    min-width: 0;
+  }
+  .kex-outline__scroll {
+    max-height: calc(100vh - var(--kex-header-h-compact) - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding: 2px 2px 8px;
+  }
+  .kex-outline__label {
+    height: 16px;
+    margin: 4px 0 10px 12px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.13em;
+    color: var(--kex-mono-strong);
+  }
+  .kex-outline__list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .kex-outline__item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 6px 10px 6px 12px;
+    border-radius: var(--kex-r-l);
+    font-size: 14px;
+    line-height: 18px;
+    color: var(--kex-text-2);
+    transition: background 140ms var(--kex-ease), color 140ms var(--kex-ease);
+    &:hover:not(.kex-outline__item--active) {
+      background: var(--kex-hover);
+      color: var(--kex-text);
+    }
+    &:focus-visible {
+      outline-offset: -2px;
+    }
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 9px;
+      bottom: 9px;
+      width: 3px;
+      border-radius: 2px;
+      background: var(--kex-violet);
+      opacity: 0;
+      transform: scaleY(0.4);
+      transition: opacity 160ms var(--kex-ease), transform 220ms var(--kex-ease);
+    }
+  }
+  .kex-outline__item--active {
+    background: var(--kex-tint);
+    color: var(--kex-violet);
+    &::before {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .kex-outline__item--locked .kex-outline__title {
+    color: var(--kex-text-4);
+  }
+  .kex-outline__num {
+    flex: none;
+    width: 20px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--kex-mono-soft);
+  }
+  .kex-outline__item--active .kex-outline__num {
+    color: var(--kex-violet);
+  }
+  .kex-outline__tile {
+    flex: none;
+    width: 32px;
+    height: 22px;
+    border-radius: var(--kex-r-s);
+    object-fit: cover;
+    background: var(--kex-border);
+  }
+  .kex-outline__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .kex-outline__done {
+    flex: none;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--kex-mono-soft);
+  }
+  .kex-outline .kex-topic__mark {
+    top: 3px;
+    right: 3px;
+  }
+
+  /* ---- topic bar (narrow columns): in the page from the first frame, pinned under the header ---- */
+  .kex-course .kex-cbar-anchor {
+    position: sticky;
+    top: var(--kex-header-h-compact);
+    height: var(--kex-cbar-h);
+    margin: 14px calc(-1 * var(--kex-gutter, var(--kex-pad))) 0;
+  }
+  .kex-course .kex-cbar {
+    position: absolute;
+    inset: 0;
+    background: var(--kex-bg);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    padding: 0 var(--kex-gutter, var(--kex-pad));
+    box-shadow: none;
+    border-top: 1px solid var(--kex-border);
+    transition: none;
+  }
+
+  /* ---- topics ---- */
+  .kex-tsec {
+    padding: 10px 0 26px;
+    border-top: 1px solid var(--kex-border);
+    &:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+  }
+  .kex-tsec__head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 48px;
+  }
+  .kex-tsec__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-family: var(--kex-font-display);
+    font-size: 24px;
+    line-height: 30px;
+    font-weight: 560;
+    letter-spacing: -0.02em;
+    color: var(--kex-text);
+  }
+  .kex-tsec__toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 100%;
+    margin-left: -8px;
+    padding: 6px 10px 6px 8px;
+    border-radius: var(--kex-r-l);
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    text-align: left;
+    &:hover .kex-tsec__text {
+      color: var(--kex-violet);
+    }
+    &:focus-visible {
+      outline-offset: -2px;
+    }
+  }
+  .kex-tsec__chev {
+    flex: none;
+    color: var(--kex-text-4);
+    transform: rotate(90deg);
+    transition: transform 200ms var(--kex-ease), color 160ms var(--kex-ease);
+  }
+  .kex-tsec--folded .kex-tsec__chev {
+    transform: none;
+  }
+  .kex-tsec__num {
+    flex: none;
+    font-family: var(--kex-font-mono);
+    font-size: 13px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--kex-mono-strong);
+  }
+  .kex-tsec__text {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    transition: color 140ms var(--kex-ease);
+  }
+  .kex-tsec__lock {
+    flex: none;
+    color: var(--kex-text-4);
+  }
+  .kex-tsec__range {
+    flex: none;
+    margin: 0;
+    font-size: 14px;
+    color: var(--kex-text-3);
+  }
+  .kex-tsec__count {
+    flex: none;
+    margin: 0;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    letter-spacing: 0.115em;
+    text-transform: uppercase;
+    color: var(--kex-mono-soft);
+  }
+  /* Folding animates the topic's track from 1fr to 0fr; the side margins give the rows' hover and focus room inside the clip. */
+  .kex-tsec__fold {
+    display: grid;
+    grid-template-rows: 1fr;
+    margin-inline: -16px;
+    transition: grid-template-rows 220ms var(--kex-ease);
+  }
+  .kex-tsec--folded .kex-tsec__fold {
+    grid-template-rows: 0fr;
+  }
+  .kex-tsec__foldin {
+    min-height: 0;
+    overflow: hidden;
+    padding-inline: 16px;
+  }
+  .kex-tsec .kex-rows {
+    margin-top: 6px;
+    padding-top: 2px;
+  }
+  .kex-tsec__about {
+    max-width: 960px;
+  }
+  .kex-tsec__summary {
+    margin-top: 2px;
+    max-height: 72px;
+    overflow: hidden;
+  }
+  .kex-tsec__summary--open {
+    max-height: none;
+  }
+  .kex-tsec__summary:not(.kex-tsec__summary--open):has(+ .kex-tsec__more) {
+    mask-image: linear-gradient(#000 calc(100% - 24px), transparent);
+  }
+  .kex-tsec__more {
+    margin: 4px 0 2px;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: var(--kex-violet);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+    text-underline-offset: 4px;
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+  .kex-tsec__empty {
+    margin: 6px 0 0;
+    font-size: 15px;
+    color: var(--kex-text-3);
+  }
+  .kex-tsec--skel {
+    .kex-skel--title {
+      display: block;
+      width: 40%;
+      height: 28px;
+      margin: 8px 0 14px;
+    }
+  }
+  /* Labs inside a topic sit a little tighter than on their own. */
+  .kex-tsec .kex-group--lab {
+    margin: 8px 0;
+  }
+}
+
+/* The side reader narrows the column: the topics keep their place, no topic bar comes in above them meanwhile. */
+:root[data-kex-reader] #kex-root .kex-course .kex-cbar-anchor {
+  display: none;
+}
+/* Wide column: the outline beside the topics, no topic bar. */
+@container kexcol (min-width: 1000px) {
+  #kex-root .kex-book {
+    grid-template-columns: clamp(220px, 21%, 280px) minmax(0, 1fr);
+    column-gap: clamp(24px, 2.6%, 40px);
+  }
+  #kex-root .kex-outline {
+    display: block;
+  }
+  #kex-root .kex-course .kex-cbar-anchor {
+    display: none;
+  }
+}
+@container kexcol (max-width: 660px) {
+  #kex-root .kex-tsec__title {
+    font-size: 20px;
+    line-height: 26px;
+  }
+  #kex-root .kex-tsec__head {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+}
+:root[data-kex-motion="reduced"] #kex-root :is(.kex-tsec__fold, .kex-tsec__chev, .kex-outline__item, .kex-outline__item::before) {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  #kex-root :is(.kex-tsec__fold, .kex-tsec__chev, .kex-outline__item, .kex-outline__item::before) {
+    transition: none;
+  }
+}

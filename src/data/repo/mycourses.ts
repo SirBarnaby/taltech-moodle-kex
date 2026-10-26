@@ -71,13 +71,32 @@ interface RecentCourse {
   timeaccess?: number;
 }
 
+let hydrated = false;
+
+/** The last answer, from the cache, so the "last opened" order is known before Moodle answers again. */
+export function hydrateLastAccess(): void {
+  if (hydrated) return;
+  const cached = cache.peek<[number, number][]>('access')?.data;
+  if (!cache.isReady) return;
+  hydrated = true;
+  if (cached && !lastAccess.value.size) lastAccess.value = new Map(cached);
+}
+
 export async function loadLastAccess(userId: number): Promise<void> {
   try {
     const rows = await ws.call<RecentCourse[]>('core_course_get_recent_courses', { userid: userId, limit: 0 });
     lastAccess.value = new Map(rows.filter((r) => r.timeaccess).map((r) => [r.id, r.timeaccess as number]));
+    void cache.write('access', [...lastAccess.value]);
   } catch {
     /* optional */
   }
+}
+
+/** A course was opened: it is the last opened one from now on (Moodle records the same when the page loads). */
+export function noteCourseVisit(courseId: number): void {
+  hydrateLastAccess();
+  lastAccess.value = new Map([...lastAccess.value, [courseId, Math.floor(Date.now() / 1000)]]);
+  void cache.write('access', [...lastAccess.value]);
 }
 
 // ------------------------------------------------------------------ mutations

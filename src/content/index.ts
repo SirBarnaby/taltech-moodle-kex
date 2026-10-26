@@ -415,6 +415,15 @@ class Controller {
       keyManager.onFire((b) => noteShortcut(b.keys)),
     );
     void countsStore().refresh();
+    // The ribbons' WebGL context is built once the page is idle, not in the middle of the first page change that shows ribbons.
+    if (settings.value.effects !== 'off') {
+      const prewarm = window.setTimeout(() => {
+        const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+        if (w.requestIdleCallback) w.requestIdleCallback(() => heroCanvas.prewarm(), { timeout: 4000 });
+        else heroCanvas.prewarm();
+      }, 1200);
+      this.stops.push(() => window.clearTimeout(prewarm));
+    }
     const countsTimer = window.setInterval(() => document.visibilityState === 'visible' && void countsStore().refresh(), 2 * 60 * 1000);
     this.stops.push(() => window.clearInterval(countsTimer));
     void store.refresh().then(() => {

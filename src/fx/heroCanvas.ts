@@ -36,6 +36,10 @@ export const heroCanvas = {
   warm(): void {
     ensure({ seed: 0, intensity: 1, leftFade: 0.46 });
   },
+  /** Build the context in idle time even when no hero is on screen (a course page opened scrolled down, the Dossier). */
+  prewarm(): void {
+    ensure(last ?? { seed: 0, intensity: 1, leftFade: 0.46 }).handle.prewarm();
+  },
   /** Put the canvas into `host` (first child) with this look. Returns the function that takes it out again. */
   attach(host: HTMLElement, opts: RibbonsOptions): () => void {
     const { canvas: c, handle: h } = ensure(opts);

@@ -36,8 +36,10 @@ export interface Settings {
   routeModes: Record<string, RouteMode>;
   showOffPill: boolean;
   openInNewTab: 'never' | 'external' | 'always';
-  /** Compact course rows (52 px) everywhere; topics with four or more labs always use them. */
+  /** Compact course rows (52 px, the default since round 10) or the larger cards with pictures ("comfortable"). */
   density: Density;
+  /** The iPhone-clock wheel on long lists: rows near the top and bottom edges turn away on a drum and fade. */
+  wheel: boolean;
   reader: ReaderPrefs;
   /** Moodle site notices the user hid, by a hash of their text (a changed notice shows again). */
   hiddenNotices: string[];
@@ -50,7 +52,12 @@ export interface Settings {
   achievementToasts: boolean;
   achievementGrades: boolean;
   debug: { freezeTime?: number; selectorReport?: boolean; logLevel?: 'warn' | 'debug' };
+  /** Settings layout version: stored settings from before round 10 (no version) take its new defaults once. */
+  rev: number;
 }
+
+/** Round 10 made compact rows the default; settings stored before it get them once, after that the reader's choice stays. */
+export const SETTINGS_REV = 10;
 
 export const SETTINGS_KEY = 'kex:settings';
 export const BOOT_KEY = 'kex.boot';
@@ -69,7 +76,8 @@ export const DEFAULT_SETTINGS: Settings = {
   routeModes: {},
   showOffPill: true,
   openInNewTab: 'external',
-  density: 'comfortable',
+  density: 'compact',
+  wheel: true,
   reader: DEFAULT_READER,
   hiddenNotices: [],
   labsView: 'auto',
@@ -78,6 +86,7 @@ export const DEFAULT_SETTINGS: Settings = {
   achievementToasts: true,
   achievementGrades: true,
   debug: {},
+  rev: SETTINGS_REV,
 };
 
 const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T =>
@@ -132,7 +141,8 @@ export function normalizeSettings(raw: unknown): Settings {
     routeModes: modes,
     showOffPill: typeof r.showOffPill === 'boolean' ? r.showOffPill : d.showOffPill,
     openInNewTab: pick(r.openInNewTab, ['never', 'external', 'always'], d.openInNewTab),
-    density: pick(r.density, ['comfortable', 'compact'], d.density),
+    density: (typeof r.rev === 'number' ? r.rev : 0) < SETTINGS_REV ? d.density : pick(r.density, ['comfortable', 'compact'], d.density),
+    wheel: typeof r.wheel === 'boolean' ? r.wheel : d.wheel,
     reader: normalizeReader(r.reader),
     hiddenNotices: Array.isArray(r.hiddenNotices) ? r.hiddenNotices.filter((x): x is string => typeof x === 'string').slice(-50) : [],
     labsView: pick(r.labsView, ['auto', 'off'], d.labsView),
@@ -141,6 +151,7 @@ export function normalizeSettings(raw: unknown): Settings {
     achievementToasts: typeof r.achievementToasts === 'boolean' ? r.achievementToasts : d.achievementToasts,
     achievementGrades: typeof r.achievementGrades === 'boolean' ? r.achievementGrades : d.achievementGrades,
     debug: r.debug && typeof r.debug === 'object' ? (r.debug as Settings['debug']) : {},
+    rev: SETTINGS_REV,
   };
 }
 

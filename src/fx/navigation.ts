@@ -8,6 +8,8 @@ export const MOTION = {
   ease: 'cubic-bezier(.23, 1, .32, 1)',
   /** The copy of the old page fades out. */
   exit: 120,
+  /** A page change: the old page's copy fades out over the new page once that is in. */
+  pageExit: 180,
   /** The new page fades in where it lands; nothing on it moves. */
   enterDelay: 40,
   enter: 200,
@@ -94,6 +96,16 @@ export function scrollViewport(top: number): { finished: Promise<void>; cancel: 
   return { finished, cancel };
 }
 
+/**
+ * The line under everything pinned to the top of the window: the header, and the course's topic bar when it is shown (narrow
+ * columns). Content brought into view stops below it.
+ */
+export function stickyTop(): number {
+  const header = document.querySelector('.kex-header')?.getBoundingClientRect().bottom ?? 64;
+  const bar = document.querySelector<HTMLElement>('.kex-cbar-anchor');
+  return bar && bar.offsetParent !== null ? header + bar.offsetHeight : header;
+}
+
 /** Focus never owns scrolling. Callers explicitly request a reveal for keyboard list navigation. */
 export function focusWithoutJump(element: HTMLElement | null, reveal = false): void {
   if (!element) return;
@@ -105,11 +117,11 @@ export function focusWithoutJump(element: HTMLElement | null, reveal = false): v
       return;
     }
   }
+  // The nearest edge, as the browser's own "nearest" would: a row stepped to below the window comes up just far enough.
   const rect = element.getBoundingClientRect();
-  const header = document.querySelector('.kex-header')?.getBoundingClientRect().bottom ?? 64;
-  if (rect.top < header || rect.bottom > window.innerHeight) {
-    scrollViewport(Math.max(0, window.scrollY + rect.top - header - 16));
-  }
+  const top = stickyTop();
+  if (rect.top < top || rect.height > window.innerHeight - top - 32) scrollViewport(Math.max(0, window.scrollY + rect.top - top - 16));
+  else if (rect.bottom > window.innerHeight - 16) scrollViewport(window.scrollY + rect.bottom - window.innerHeight + 24);
 }
 
 /** Reveal an item inside its own list without scrolling any ancestor or the page. */
@@ -141,8 +153,14 @@ export function preserveViewport(origin: HTMLElement | undefined): () => void {
  * hold it (`ready` says when the real content is in; at most 2 s) so the position is not clamped while the skeleton is short.
  * Content that is already there (a cached course) is scrolled at once.
  */
+let restoring = false;
+
+/** A Back, Forward or Reload position is about to be put back: views leave the scroll to it. */
+export const restorePending = (): boolean => restoring;
+
 export function restoreScroll(y: number, ready: () => boolean): void {
   if (!(y > 0)) return;
+  restoring = true;
   const t0 = performance.now();
   let held: HTMLElement | null = null;
   let placed = false;
@@ -162,7 +180,8 @@ export function restoreScroll(y: number, ready: () => boolean): void {
       scrollInstant(y);
       placed = true;
     }
-    if (!done) requestAnimationFrame(tick);
+    if (done) restoring = false;
+    else requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
 }
@@ -183,19 +202,28 @@ function stripIdentity(ghost: HTMLElement): void {
   ghost.querySelectorAll('iframe, video, audio, canvas').forEach((node) => node.remove());
 }
 
-/** Rows below or above the viewport are not worth painting twice: they keep their height and lose their contents. */
-function pruneOffscreen(source: HTMLElement, copy: HTMLElement): void {
-  const from = Array.from(source.querySelectorAll<HTMLElement>('.kex-rows > *'));
-  const to = Array.from(copy.querySelectorAll<HTMLElement>('.kex-rows > *'));
-  const h = window.innerHeight;
-  from.forEach((node, i) => {
-    const target = to[i];
-    if (!target) return;
-    const r = node.getBoundingClientRect();
-    if (r.bottom >= 0 && r.top <= h) return;
-    target.style.height = `${r.height}px`;
-    target.replaceChildren();
-  });
+/**
+ * A copy of `node` for the page change's cover, built only from what is on screen: a block entirely above or below the window
+ * keeps its box (tag, classes, height) and loses its contents. Copying a whole course page node by node held the main thread for
+ * most of a second before the change could even start.
+ */
+function cloneVisible(node: Element, vh: number): Element {
+  const copy = node.cloneNode(false) as Element;
+  for (const child of Array.from(node.childNodes)) {
+    if (!(child instanceof HTMLElement)) {
+      copy.appendChild(child.cloneNode(true));
+      continue;
+    }
+    const r = child.getBoundingClientRect();
+    if (r.height > 0 && (r.bottom < -40 || r.top > vh + 40)) {
+      const box = child.cloneNode(false) as HTMLElement;
+      Object.assign(box.style, { height: `${r.height}px`, minHeight: '0', maxHeight: 'none' });
+      copy.appendChild(box);
+      continue;
+    }
+    copy.appendChild(cloneVisible(child, vh));
+  }
+  return copy;
 }
 
 /**
@@ -219,9 +247,8 @@ export function beginViewTransition(
   if (!root) return () => Promise.resolve();
   let resolve!: () => void;
   const finished = new Promise<void>((r) => { resolve = r; });
-  const t0 = performance.now();
   const bounds = element.getBoundingClientRect();
-  const copy = element.cloneNode(true) as HTMLElement;
+  const copy = (scope === 'page' ? cloneVisible(element, window.innerHeight) : element.cloneNode(true)) as HTMLElement;
   stripIdentity(copy);
   const ghost = document.createElement('div');
   ghost.classList.add('kex-transition-ghost');
@@ -232,7 +259,6 @@ export function beginViewTransition(
   // new head, whose ribbons canvas carries straight on (and cross-fades its own palette).
   const headOnScreen = scope === 'page' && !!element.querySelector(':scope > :is(.kex-hero, .kex-band)') && element.getBoundingClientRect().top >= 0 && window.scrollY < 4;
   if (scope === 'page') {
-    pruneOffscreen(element, copy);
     Object.assign(ghost.style, base, { top: '0px', height: `${Math.min(window.innerHeight, bounds.bottom)}px` });
     if (headOnScreen) {
       ghost.style.background = 'transparent';
@@ -256,23 +282,29 @@ export function beginViewTransition(
   }
   ghost.appendChild(copy);
   root.appendChild(ghost);
-  const exitMs = scope === 'page' ? (tier === 'full' ? MOTION.exit : MOTION.subtle) : MOTION.topicExit;
-  const exit = ghost.animate(
-    tier === 'full' && scope === 'topic' ? [{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-14px)' }] : [{ opacity: 1 }, { opacity: 0 }],
-    { duration: exitMs, easing: MOTION.ease, fill: 'forwards' },
-  );
+  const exitMs = scope === 'page' ? (tier === 'full' ? MOTION.pageExit : MOTION.subtle) : MOTION.topicExit;
+  // The copy stays fully there until the new view is in (building it can take a long frame on a big course), then the two cross
+  // over: the old page never vanishes in one frame while the new one is still being drawn.
+  let exit: Animation | undefined;
+  const startExit = (): void => {
+    if (exit) return;
+    exit = ghost.animate(
+      tier === 'full' && scope === 'topic' ? [{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-14px)' }] : [{ opacity: 1 }, { opacity: 0 }],
+      { duration: exitMs, easing: scope === 'page' ? 'cubic-bezier(.4, 0, .2, 1)' : MOTION.ease, fill: 'forwards' },
+    );
+    void exit.finished.then(() => ghost.remove(), () => ghost.remove());
+  };
   let frame = 0;
   let enter: Animation | undefined;
   const stop = (): void => {
     cancelAnimationFrame(frame);
-    exit.cancel();
+    exit?.cancel();
     enter?.cancel();
     ghost.remove();
     if (running.get(scope) === stop) running.delete(scope);
     resolve();
   };
   running.set(scope, stop);
-  void exit.finished.then(() => ghost.remove(), () => ghost.remove());
   return (selector) => {
     let tries = 0;
     const reveal = (): void => {
@@ -282,12 +314,12 @@ export function beginViewTransition(
         // The new view can be a frame late (it mounts after the state change): wait a few frames before giving up on the enter.
         if (!incoming && ++tries < 4) return reveal();
         if (!incoming || incoming === element && !incoming.isConnected) return stop();
+        startExit();
         if (scope === 'page') {
           const full = tier === 'full';
-          const lag = performance.now() - t0;
           const timing: KeyframeAnimationOptions = {
             duration: full ? MOTION.enter : MOTION.subtle,
-            delay: Math.max(0, (full ? MOTION.enterDelay : 0) - lag),
+            delay: 0,
             easing: MOTION.ease,
             fill: 'backwards',
           };

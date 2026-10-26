@@ -25,8 +25,9 @@
       border-color 180ms var(--kex-ease);
     gap: 0;
   }
+  /* Solid enough that the titles scrolling under it never read through as doubled text (round 10; it was 82 %). */
   .kex-header[data-compact="true"] {
-    background: color-mix(in srgb, var(--kex-header-bg) 82%, transparent);
+    background: color-mix(in srgb, var(--kex-bg) 96%, transparent);
     -webkit-backdrop-filter: saturate(140%) blur(14px);
     backdrop-filter: saturate(140%) blur(14px);
     border-bottom-color: var(--kex-border);

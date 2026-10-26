@@ -8,7 +8,7 @@ import type { TopicModel } from '../../data/topics';
 import { t } from '../../i18n';
 import { PinGlyph } from './Glyphs';
 import { PinMark } from './PinnedRow';
-import { TopicMark, topicDisplayTitle } from './TopicList';
+import { TopicMark, topicDisplayTitle } from './TopicMark';
 
 interface CourseBarProps {
   topics: TopicModel[];
@@ -19,29 +19,6 @@ interface CourseBarProps {
   pins: Pin[];
   courseId: number;
   marks?: ReadonlyMap<number, LabState>;
-}
-
-const cssPx = (el: Element, name: string, fallback: number): number => Number.parseFloat(getComputedStyle(el).getPropertyValue(name)) || fallback;
-
-/**
- * Shown while the TOPICS grid is scrolled away, judged by an IntersectionObserver on the grid itself (Firefox has no CSS
- * scroll-state queries). The bar is laid over the page, so showing it moves nothing and cannot feed back into the measurement.
- */
-function useGridGone(): boolean {
-  const [gone, setGone] = useState(false);
-  useEffect(() => {
-    const grid = document.querySelector<HTMLElement>('#kex-main .kex-topics--grid');
-    const root = document.getElementById('kex-root');
-    if (!grid || !root || typeof IntersectionObserver === 'undefined') return;
-    // The grid counts as gone once it is behind the compact header and the bar itself.
-    const top = cssPx(root, '--kex-header-h-compact', 52) + cssPx(root, '--kex-cbar-h', 48);
-    const io = new IntersectionObserver(([e]) => {
-      if (e) setGone(!e.isIntersecting && e.boundingClientRect.top < top);
-    }, { rootMargin: `-${top}px 0px 0px 0px` });
-    io.observe(grid);
-    return () => io.disconnect();
-  }, []);
-  return gone;
 }
 
 /** One row of topic chips that scrolls sideways: the active chip stays in view, edges fade where more wait, the wheel scrolls it. */
@@ -201,17 +178,16 @@ function PinMenu({ pins, asking }: { pins: Pin[]; asking: boolean }) {
 }
 
 /**
- * The course bar (round 8): once the TOPICS grid scrolls away, a 48 px bar slides in under the compact header with one row of
- * topic chips and this course's three pins. It sits in a zero-height sticky anchor, so it never takes space or moves the page.
+ * The topic bar (round 10): in a column too narrow for the topic outline beside the materials, one row of topic chips (and this
+ * course's three pins) stays pinned under the header while the page scrolls; the chip of the topic being read is lit and kept in
+ * view. It takes its place in the page from the first frame, so nothing moves when it pins. A wide column hides it (book.css).
  */
 export function CourseBar({ topics, active, onSelect, onKeyDown, pins, courseId, marks }: CourseBarProps) {
-  const gone = useGridGone();
   const waiting = pinReplace.value;
   const asking = !!waiting && waiting.courseId === courseId && pins.length > 0;
-  const shown = gone;
   return (
     <div class="kex-cbar-anchor">
-      <div class={`kex-cbar${asking ? ' kex-cbar--asking' : ''}`} data-shown={shown ? '' : undefined} aria-hidden={shown ? undefined : 'true'} inert={!shown} data-kex-test="course-bar">
+      <div class={`kex-cbar${asking ? ' kex-cbar--asking' : ''}`} data-shown="" data-kex-test="course-bar">
         <Chips topics={topics} active={active} onSelect={onSelect} onKeyDown={onKeyDown} marks={marks} />
         {pins.length > 0 && (
           <div class="kex-cbar__pins" role="group" aria-label={t('course.pinned')}>

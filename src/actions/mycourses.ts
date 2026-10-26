@@ -1,10 +1,10 @@
 import { cache } from '../data/cache';
 import type { Course } from '../data/model';
-import { COURSE_TABS, invalidateCourseLists, loadLastAccess, setFavourite, setHidden, tabStore, type CoursesCtx, type CoursesTab } from '../data/repo/mycourses';
+import { COURSE_TABS, hydrateLastAccess, invalidateCourseLists, lastAccess, loadLastAccess, setFavourite, setHidden, tabStore, type CoursesCtx, type CoursesTab } from '../data/repo/mycourses';
 import type { MyoverviewGrouping } from '../data/scrape/myoverview';
 import { lang, t } from '../i18n';
 import { hash, pageInfo } from '../state';
-import { mcFilter, mcHasArchived, mcSel } from '../state/mycourses';
+import { mcFilter, mcHasArchived, mcSel, shownAccess } from '../state/mycourses';
 import { nowSec } from '../state/workspace';
 import { pushToast } from './toasts';
 import { setUndo } from './undo';
@@ -20,12 +20,21 @@ export function coursesCtx(): CoursesCtx {
   };
 }
 
+/** The order My courses shows while it is open (before its first paint): the last known one. */
+export function prepareMyCourses(): void {
+  hydrateLastAccess();
+  shownAccess.value = lastAccess.peek();
+  // Before the first paint too: an Archived tab added a frame later made the tab row wrap and pushed the cards down 68 px.
+  mcHasArchived.value = !!coursesCtx().customFieldName();
+}
+
 export function initMyCourses(): () => void {
   nowSec.value = Math.floor(Date.now() / 1000);
   mcFilter.value = '';
   mcSel.value = undefined;
-  mcHasArchived.value = !!coursesCtx().customFieldName();
-  void loadLastAccess(pageInfo.value?.userId ?? 0);
+  void loadLastAccess(pageInfo.value?.userId ?? 0).then(() => {
+    if (!shownAccess.peek().size) shownAccess.value = lastAccess.peek();
+  });
   return () => undefined;
 }
 

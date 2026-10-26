@@ -1,18 +1,18 @@
 import { EyeOff, Eye, Star } from 'lucide-preact';
 import { SiteNotices } from '../components/SiteNotices';
 import { Reveal } from '../components/Reveal';
-import { useEffect, useRef } from 'preact/hooks';
-import { initMyCourses, setMcTab, storeOf, toggleHide, toggleStar } from '../../actions/mycourses';
+import { useEffect, useRef, useState } from 'preact/hooks';
+import { initMyCourses, prepareMyCourses, setMcTab, storeOf, toggleHide, toggleStar } from '../../actions/mycourses';
 import { go } from '../../actions/navigate';
 import { seasonLabel } from '../../data/names';
 import type { Course } from '../../data/model';
-import { COURSE_TABS, lastAccess, type CoursesTab } from '../../data/repo/mycourses';
+import { COURSE_TABS, type CoursesTab } from '../../data/repo/mycourses';
 import { applyAliases, currentSemester, displayName } from '../../data/repo/courses';
 import { t, type MessageKey } from '../../i18n';
 import { relTime } from '../../lib/time';
 import { schoolFor } from '../../lib/school';
 import { settings, sidebarCourses } from '../../state';
-import { mcFilter, mcHasArchived, mcSel, mcSort, mcTab, matchesFilter, setMcSort, sortCourses, type McSort } from '../../state/mycourses';
+import { mcFilter, mcHasArchived, mcSel, mcSort, mcTab, matchesFilter, setMcSort, shownAccess, sortCourses, type McSort } from '../../state/mycourses';
 import { nowSec } from '../../state/workspace';
 import { Band } from '../components/Band';
 import { Button } from '../components/Button';
@@ -106,6 +106,7 @@ function CourseRow({ course, selected, index, access, now, bySchool }: { course:
 export function MyCoursesView() {
   useEffectsConfig();
   useQuietFocus();
+  useState(prepareMyCourses);
   useEffect(() => initMyCourses(), []);
 
   const tab = mcTab.value;
@@ -114,7 +115,7 @@ export function MyCoursesView() {
   const status = store.status.value;
   const filter = mcFilter.value;
   const sort = mcSort.value;
-  const access = lastAccess.value;
+  const access = shownAccess.value;
   const now = nowSec.value;
   const sel = mcSel.value;
   const bySchool = settings.value.colourBySchool;

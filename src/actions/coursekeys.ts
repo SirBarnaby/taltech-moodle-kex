@@ -1,15 +1,15 @@
 import type { MessageKey } from '../i18n';
 import type { Binding } from '../lib/keys';
-import { closePreview, copyLink, currentRow, enterRows, enterTopics, moveRow, moveTopic, openCm, previewCm, setTopic, stepGroup, stepPreview, togglePin, toggleDone, undoLast, topicHash } from './course';
+import { closePreview, copyLink, currentRow, enterRows, enterTopics, moveRow, moveTopic, openCm, previewCm, setTopic, stepPreview, togglePin, toggleDone, undoLast, topicHash } from './course';
 import { stepReaderSize } from './reader';
-import { focusZone, labTrack, previewCmId, topicNumber, topics } from '../state/course';
+import { focusZone, previewCmId, topicNumber, topics } from '../state/course';
 
 /** Course-page and preview key bindings (happy-path §3 and §7). Registered while the course view is mounted. */
 
 const d = (k: MessageKey): MessageKey => k;
 
 const interactive = (t: EventTarget | null): boolean => t instanceof Element && !!t.closest('a[href], button, summary, iframe, select, [role="tab"]');
-const inLists = (t: EventTarget | null): boolean => t instanceof Element && !!t.closest('.kex-topics, .kex-cbar__topics, .kex-rows');
+const inLists = (t: EventTarget | null): boolean => t instanceof Element && !!t.closest('.kex-outline, .kex-cbar__topics, .kex-rows');
 const bodyLike = (t: EventTarget | null): boolean => !(t instanceof Element) || t === document.body || t === document.documentElement || t.id === 'kex-root';
 const idle = (): boolean => previewCmId.value === undefined;
 
@@ -65,8 +65,8 @@ export function courseBindings(): Binding[] {
       if (row) void copyLink(row);
     }, (e) => idle() && !!currentRow() && (inLists(e.target) || bodyLike(e.target))),
     b('z', d('help.course.undo'), undoLast, () => true),
-    b('[', d('help.course.labs'), () => stepGroup(-1), () => idle() && !!labTrack.value),
-    b(']', d('help.course.labs'), () => stepGroup(1), () => idle() && !!labTrack.value),
+    b('[', d('help.course.topicStep'), () => moveTopic(-1), idle),
+    b(']', d('help.course.topicStep'), () => moveTopic(1), idle),
   ];
 }
 

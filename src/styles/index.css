@@ -17,6 +17,7 @@
 @import "./course/thumb.css";
 @import "./course/sheet.css";
 @import "./course/track.css";
+@import "./course/book.css";
 @import "./components/band.css";
 @import "./components/schools.css";
 @import "./views/workspace.css";

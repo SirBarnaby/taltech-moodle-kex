@@ -8,7 +8,7 @@ import { restoreScroll } from '../../src/fx/navigation';
 import { DEFAULT_READER } from '../../src/lib/settings';
 import * as previews from '../../src/data/repo/preview';
 import { settings } from '../../src/state';
-import { LabTrack } from '../../src/ui/components/LabTrack';
+import { labOpen } from '../../src/state/course';
 import { PreviewSheet } from '../../src/ui/components/PreviewSheet';
 import { SubsectionCard } from '../../src/ui/components/SubsectionCard';
 
@@ -133,44 +133,32 @@ describe('site notices (round 7)', () => {
   });
 });
 
-describe('lab board', () => {
+describe('labs on the one-page course (round 10)', () => {
   const items = (): LabTrackItem[] => [
     { group: group(1, 'Lab 1: GPIO and interrupts', 2, 2), state: 'done', short: 'Lab 1' },
     { group: group(2, 'Lab 2: Timers', 0, 3), state: 'overdue', short: 'Lab 2', dueText: 'Fri 18 Sept' },
     { group: group(3, 'Lab 3: UART', 0, 3), state: 'next', short: 'Lab 3', dueText: 'Fri 25 Sept' },
   ];
 
-  it('each lab button carries its full title, deadline, state and progress for the wide list; arrow keys move along it', async () => {
-    document.body.innerHTML = '<div id="mount"></div>';
-    const mount = document.getElementById('mount')!;
-    const onShow = vi.fn();
-    await act(async () => render(createElement(LabTrack, { items: items(), open: new Set([3]), onShow }), mount));
-    const buttons = Array.from(mount.querySelectorAll<HTMLButtonElement>('.kex-chip-lab'));
-    expect(buttons.map((b) => b.querySelector('.kex-chip-lab__title')?.textContent)).toEqual(['Lab 1: GPIO and interrupts', 'Lab 2: Timers', 'Lab 3: UART']);
-    expect(buttons[1]?.querySelector('.kex-chip-lab__due--late')?.textContent).toBe('Fri 18 Sept');
-    expect(buttons[0]?.querySelector('.kex-chip-lab__meta')?.textContent).toContain('2/2');
-    expect(buttons[2]?.getAttribute('aria-current')).toBe('true');
-    expect(buttons[2]?.tabIndex).toBe(0);
-    buttons[0]!.focus();
-    buttons[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-    expect(document.activeElement).toBe(buttons[1]);
-    buttons[1]!.click();
-    expect(onShow).toHaveBeenCalledWith(2);
-    await act(async () => render(null, mount));
+  it('every lab is on the page: a finished one starts folded, the rest open, and the reader’s own choice wins', () => {
+    const [done, overdue, next] = items();
+    expect(labOpen(1, done, new Map())).toBe(false);
+    expect(labOpen(2, overdue, new Map())).toBe(true);
+    expect(labOpen(3, next, new Map())).toBe(true);
+    expect(labOpen(1, done, new Map([[1, true]]))).toBe(true);
+    expect(labOpen(3, next, new Map([[3, false]]))).toBe(false);
   });
 
-  it('in the wide board the open lab\'s own header does not fold it (the list is where labs are chosen)', async () => {
-    document.body.innerHTML = '<div class="kex-labs" style="--kex-board: 1"><ul id="mount"></ul></div>';
+  it('a lab’s header folds and unfolds it, with its state and deadline beside the title', async () => {
+    document.body.innerHTML = '<ul id="mount"></ul>';
     const mount = document.getElementById('mount')!;
     const onToggle = vi.fn();
-    const lab = items()[2]!;
-    await act(async () => render(createElement(SubsectionCard, { group: lab.group, index: 3, lab, open: true, onToggle, children: [] }), mount));
+    const lab = items()[1]!;
+    await act(async () => render(createElement(SubsectionCard, { group: lab.group, index: 2, lab, open: false, onToggle, children: [] }), mount));
+    expect(mount.querySelector('.kex-groupcard__due--late')?.textContent).toBe('Fri 18 Sept');
+    expect(mount.querySelector('.kex-groupcard__fold')?.hasAttribute('inert')).toBe(true);
     mount.querySelector<HTMLButtonElement>('.kex-groupcard__toggle')!.click();
-    expect(onToggle).not.toHaveBeenCalled();
-    // Narrow column (no board): the header folds as before.
-    mount.closest<HTMLElement>('.kex-labs')!.style.removeProperty('--kex-board');
-    mount.querySelector<HTMLButtonElement>('.kex-groupcard__toggle')!.click();
-    expect(onToggle).toHaveBeenCalledWith(false);
+    expect(onToggle).toHaveBeenCalledWith(true);
     await act(async () => render(null, mount));
   });
 });

@@ -8,8 +8,8 @@ import { modTypeNames } from '../data/repo/modnames';
 import { pinsStore, rowPins } from '../data/repo/pins';
 import type { NavTab } from '../data/scrape/secondarynav';
 import { buildSectionView, buildTopics, type RowModel, type SectionView, type TopicModel } from '../data/topics';
-import { buildTrack, defaultOpen, type LabTrackItem } from '../data/labtrack';
-import { detectCourseSeries, detectTopicSeries, WORK_MODS, type TopicSeries } from '../data/series';
+import { buildTrack, type LabTrackItem } from '../data/labtrack';
+import { detectCourseSeries, detectTopicSeries, WORK_MODS } from '../data/series';
 import { recordError } from '../lib/log';
 import { activeCourseId, settings } from './index';
 
@@ -20,11 +20,11 @@ export const courseState = signal<CourseState | undefined>(undefined);
 export const courseStatus = signal<'loading' | 'ready' | 'error'>('loading');
 export const courseError = signal<string | undefined>(undefined);
 
-/** Selected topic number (0 is section 0, when it is shown as the first topic). */
+/** The topic being read: the one at the top of the window (0 is section 0, when it is shown as the first topic). */
 export const topicNumber = signal<number | undefined>(undefined);
 export type FocusZone = 'topics' | 'rows';
 export const focusZone = signal<FocusZone>('topics');
-/** Selected row (cmid) inside the detail list. */
+/** Selected row (cmid). */
 export const selectedCmId = signal<number | undefined>(undefined);
 /** cmid of the material shown in the preview sheet. */
 export const previewCmId = signal<number | undefined>(undefined);
@@ -52,62 +52,62 @@ export const currentTopic = computed<TopicModel | undefined>(() => topics.value.
 
 export const mergedSummaries = computed<ReadonlyMap<number, string>>(() => new Map([...fetchedSummaries.value, ...summaries.value]));
 
-const EMPTY_VIEW: SectionView = { blocks: [], rows: [] };
+/** One topic of the course page: Moodle's rows and subsection cards in order, and the lab state of each subsection when they are a series of labs. */
+export interface TopicBlock {
+  topic: TopicModel;
+  view: SectionView;
+  /** Lab states by subsection id; undefined for an ordinary topic. */
+  labs?: ReadonlyMap<number, LabTrackItem>;
+}
 
-/** The selected topic as Moodle has it: rows and subsection group cards in order. */
-const baseView = computed<SectionView>(() => {
+/** Every topic of the course, in Moodle's order (round 10: the whole course is one page). */
+export const courseBlocks = computed<TopicBlock[]>(() => {
   const st = courseState.value;
-  const section = currentTopic.value?.section;
-  if (!st || !section) return EMPTY_VIEW;
-  return buildSectionView(
-    section,
-    { state: st, details: cmDetails.value, events: courseEvents.value, fmtDue, typeNames: modTypeNames.value },
-    { summaries: mergedSummaries.value, tiles: tileImages.value },
-  );
+  if (!st) return [];
+  const ctx = { state: st, details: cmDetails.value, events: courseEvents.value, fmtDue, typeNames: modTypeNames.value };
+  const opts = { summaries: mergedSummaries.value, tiles: tileImages.value };
+  const labsOn = settings.value.labsView !== 'off';
+  const now = Math.floor(Date.now() / 1000);
+  return topics.value.map((topic) => {
+    const view = buildSectionView(topic.section, ctx, opts);
+    let labs: ReadonlyMap<number, LabTrackItem> | undefined;
+    if (labsOn) {
+      try {
+        // Only real subsections become labs: numbered rows stay in Moodle's order, as on Moodle's own page.
+        const s = detectTopicSeries(view, topic.section);
+        if (s?.shape === 'groups') labs = new Map(buildTrack(s.groups, now).map((i) => [i.group.section.id, i]));
+      } catch (e) {
+        recordError('series', e);
+      }
+    }
+    return { topic, view, labs };
+  });
 });
 
-/** `courseId:sectionId`, the key of the reader's Labs or List choice. */
-export const seriesKey = computed<string | undefined>(() => {
-  const id = activeCourseId.value;
-  const section = currentTopic.value?.section;
-  return id && section ? `${id}:${section.id}` : undefined;
-});
+/** Every row of the course in page order, subsection rows included (notes too). */
+export const rows = computed<RowModel[]>(() => courseBlocks.value.flatMap((b) => b.view.rows));
 
-/** Topics whose board crashed in this page: they show the list (the error is in Details). */
-export const boardFailed = signal<ReadonlySet<string>>(new Set());
+/** Topics the reader folded (section ids), remembered per course. */
+export const foldedTopics = signal<ReadonlySet<number>>(new Set());
+/** Labs the reader opened or folded by hand (subsection id: open). Without a choice a finished lab is folded. */
+export const labChoice = signal<ReadonlyMap<number, boolean>>(new Map());
 
-/** The series of the selected topic (labs, numbered home assignments), when the detector is sure enough; never with labs off. */
-export const topicSeries = computed<TopicSeries | null>(() => {
-  const section = currentTopic.value?.section;
-  if (!section || settings.value.labsView === 'off') return null;
-  try {
-    return detectTopicSeries(baseView.value, section);
-  } catch (e) {
-    recordError('series', e);
-    return null;
+export const labOpen = (id: number, item: LabTrackItem | undefined, choice: ReadonlyMap<number, boolean> = labChoice.value): boolean =>
+  choice.get(id) ?? item?.state !== 'done';
+
+/** Rows the keyboard can reach: rows of folded topics and folded labs are left out. */
+export const visibleRows = computed<RowModel[]>(() => {
+  const folded = foldedTopics.value;
+  const choice = labChoice.value;
+  const out: RowModel[] = [];
+  for (const b of courseBlocks.value) {
+    if (folded.has(b.topic.section.id)) continue;
+    for (const block of b.view.blocks) {
+      if (block.type === 'row') out.push(block.row);
+      else if (!b.labs || labOpen(block.group.section.id, b.labs.get(block.group.section.id), choice)) out.push(...block.group.rows);
+    }
   }
-});
-
-/** The board is on: the reader chose Labs for this topic, or did not choose and the detector is sure. */
-export const seriesOn = computed<boolean>(() => {
-  const s = topicSeries.value;
-  const key = seriesKey.value;
-  if (!s || !key || boardFailed.value.has(key)) return false;
-  const choice = settings.value.seriesChoice[key];
-  return choice ? choice === 'labs' : s.confidence === 'high';
-});
-
-/** The detail pane of the selected topic: Moodle's order, or numbered activities gathered into lab cards while the board is on. */
-export const sectionView = computed<SectionView>(() => (seriesOn.value && topicSeries.value ? topicSeries.value.view : baseView.value));
-
-/** Every row of the detail pane, subsection rows included (notes too). */
-export const rows = computed<RowModel[]>(() => sectionView.value.rows);
-
-/** The lab track of the selected topic while its board is on, else undefined (an ordinary topic). */
-export const labTrack = computed<LabTrackItem[] | undefined>(() => {
-  const s = topicSeries.value;
-  if (!s || !seriesOn.value) return undefined;
-  return buildTrack(s.groups, Math.floor(Date.now() / 1000));
+  return out;
 });
 
 /**
@@ -145,34 +145,6 @@ export const topicMarks = computed<ReadonlyMap<number, LabTrackItem['state']>>((
     recordError('series.course', e);
     return new Map();
   }
-});
-
-/** Labs the user opened or folded in this topic; until then the next lab (and anything overdue) is open. */
-export const openGroupsSet = signal<{ topic: number | undefined; ids: ReadonlySet<number> } | undefined>(undefined);
-
-/**
- * Whether the track knows its next lab: once the deadlines are in (at once when they are cached). Completion alone is not
- * enough, since a past deadline makes a lab overdue and "next" skips it. Until then no lab is opened by default, so the first
- * lab does not open and then give way to the real next one a second later.
- */
-export const labTrackSettled = computed(() => !labTrack.value || courseEventsReady.value);
-
-export const openGroups = computed<ReadonlySet<number>>(() => {
-  const track = labTrack.value;
-  if (!track) return new Set();
-  const chosen = openGroupsSet.value;
-  if (chosen && chosen.topic === topicNumber.value) return chosen.ids;
-  return labTrackSettled.value ? new Set(defaultOpen(track)) : new Set();
-});
-
-/** Rows the keyboard can reach: rows of folded labs are left out. */
-export const visibleRows = computed<RowModel[]>(() => {
-  const track = labTrack.value;
-  if (!track) return rows.value;
-  const open = openGroups.value;
-  const hidden = new Set<number>();
-  for (const item of track) if (!open.has(item.group.section.id)) item.group.rows.forEach((r) => hidden.add(r.cm.id));
-  return rows.value.filter((r) => !hidden.has(r.cm.id));
 });
 
 /** Pins for the PINNED row: this course first. */

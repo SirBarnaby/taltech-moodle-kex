@@ -605,3 +605,23 @@
     transition: none;
   }
 }
+
+/* Folding the menu (round 10): the course list takes another shape in the rail (codes instead of names), which moved every entry
+   in one frame. Through the change it fades out and back in as the width settles, so the new places are never seen jumping. */
+:root[data-kex-sb-switch][data-kex-sidebar="rail"] #kex-root :is(.kex-sb__courses, .kex-sb__label) {
+  animation: kex-sb-swap-rail 320ms linear both;
+}
+:root[data-kex-sb-switch][data-kex-sidebar="full"] #kex-root :is(.kex-sb__courses, .kex-sb__label) {
+  animation: kex-sb-swap-full 320ms linear both;
+}
+@keyframes kex-sb-swap-rail {
+  0%, 35% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes kex-sb-swap-full {
+  0%, 35% { opacity: 0; }
+  100% { opacity: 1; }
+}
+:root[data-kex-motion="reduced"] #kex-root :is(.kex-sb__courses, .kex-sb__label) {
+  animation: none !important;
+}

@@ -7,7 +7,7 @@ import { pinEdit } from './pins';
 import { markEverythingRead, markNotifRead, manualOf, openFeedItem, pinFeedItem, rowFromRecent, selectFeed, setFeedTab, toggleDoneById } from './workspace';
 import { undoLast } from './undo';
 import { feed, feedSel, wsPreview } from '../state/workspace';
-import { mcFilter, mcSel, mcSort, mcTab, matchesFilter, sortCourses, lastAccess } from '../state/mycourses';
+import { mcFilter, mcSel, mcSort, mcTab, matchesFilter, sortCourses, shownAccess } from '../state/mycourses';
 import { readPins } from '../data/repo/pins';
 import { unpinItem } from './pins';
 
@@ -154,7 +154,7 @@ export function pinnedBindings(): Binding[] {
 
 function visibleCourses() {
   const raw = storeOf(mcTab.value).value.value ?? [];
-  return sortCourses(raw.filter((c) => matchesFilter(c, mcFilter.value)), mcSort.value, lastAccess.value);
+  return sortCourses(raw.filter((c) => matchesFilter(c, mcFilter.value)), mcSort.value, shownAccess.value);
 }
 
 /** Cards per row of the course grid (cards on the first row share their top edge). */

@@ -1,10 +1,11 @@
 import type { ComponentChildren } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { arrivalWelcome, WELCOME_MS } from '../../fx/handoff';
+import { heroCanvas } from '../../fx/heroCanvas';
 import { t } from '../../i18n';
 import { firstName } from '../../lib/contacts';
 import { activeRibbons, user } from '../../state';
-import { useRibbons } from './useRibbons';
+import { heroEffectMode } from '../../state/effects';
 import { Crosshair } from './Hero';
 import { SlideUpText } from './SlideUpText';
 
@@ -27,7 +28,15 @@ interface BandProps {
  */
 export function Band({ label, title, size = 'page', actions, meta, testId = 'band' }: BandProps) {
   const style = activeRibbons.value;
-  const { canvas, mode } = useRibbons({ seed: 0, intensity: 0.4, leftFade: 0.46, style });
+  const mode = heroEffectMode.value;
+  const root = useRef<HTMLElement>(null);
+  // The one ribbons canvas every hero uses moves in here, compiled shader and all: a band of its own compiled a second program,
+  // which froze the page for most of a second each time My courses or the Dossier opened.
+  useLayoutEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    return heroCanvas.attach(el, { seed: 0, intensity: 0.4, leftFade: 0.46, style });
+  }, [style]);
   // Just signed in: Moodle's own dashboard greeting stands where the label is, for a few seconds.
   const name = arrivalWelcome.value && size === 'page' ? firstName(user.value?.fullname) : '';
   useEffect(() => {
@@ -36,8 +45,7 @@ export function Band({ label, title, size = 'page', actions, meta, testId = 'ban
     return () => window.clearTimeout(id);
   }, [!!name]);
   return (
-    <section class={`kex-band kex-band--${size}${title.length > 44 ? ' kex-band--long' : ''}`} data-kex-test={testId} data-mode={mode}>
-      <canvas key={JSON.stringify(style)} class="kex-hero__canvas" ref={canvas} aria-hidden="true" />
+    <section class={`kex-band kex-band--${size}${title.length > 44 ? ' kex-band--long' : ''}`} ref={root} data-kex-test={testId} data-mode={mode}>
       <Crosshair class="kex-cross--b" />
       <div class="kex-band__inner">
         <div class="kex-band__text">

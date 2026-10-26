@@ -232,30 +232,25 @@ export function parseTopicHash(hash: string): number | undefined {
   return m ? Number(m[1]) : undefined;
 }
 
-export interface InitialInput {
+export interface StartInput {
   topics: readonly Pick<TopicModel, 'section'>[];
-  /** (a) `#topic-N`, `section.php?id=` or Moodle's `#section-N`. */
+  /** `#topic-N`, `section.php?id=` or Moodle's `#section-N`. */
   fromUrl?: number;
-  /** (b) the saved UI memory. */
+  /** The saved UI memory. */
   ui?: CourseUi;
-  /** (d) the topic number holding the nearest open deadline. */
-  deadlineTopic?: number;
-  /** (e) the first topic with an incomplete tracked activity. */
-  incompleteTopic?: number;
   now?: number;
 }
 
-/** The first rule that applies (happy-path §3.3); always returns an existing topic number when there are topics. */
-export function initialTopic(i: InitialInput): number | undefined {
+/**
+ * Where the course page opens (round 10, the whole course is one page): the topic the address names, else where the reader left
+ * it (within 14 days), else the top of the page (undefined).
+ */
+export function startPlace(i: StartInput): { topic: number; offset: number } | undefined {
   const has = (n: number | undefined): n is number => n !== undefined && i.topics.some((t) => t.section.number === n);
-  if (has(i.fromUrl)) return i.fromUrl;
-  if (isRecentUi(i.ui, i.now) && has(i.ui?.topic)) return i.ui?.topic;
-  const current = i.topics.find((t) => t.section.current);
-  if (current) return current.section.number;
-  if (has(i.deadlineTopic)) return i.deadlineTopic;
-  if (has(i.incompleteTopic)) return i.incompleteTopic;
-  // Section 0 leads the list, but the course opens on its first numbered topic.
-  return (i.topics.find((t) => t.section.number > 0) ?? i.topics[0])?.section.number;
+  if (has(i.fromUrl)) return { topic: i.fromUrl, offset: 0 };
+  const anchor = isRecentUi(i.ui, i.now) ? i.ui?.anchor : undefined;
+  if (anchor && has(anchor.topic) && Number.isFinite(anchor.offset)) return { topic: anchor.topic, offset: Math.max(0, anchor.offset) };
+  return undefined;
 }
 
 /** (d) the topic of the nearest not-yet-overdue event. */

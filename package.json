@@ -16,6 +16,8 @@
     "verify:release": "node scripts/release-gate.mjs",
     "verify:build": "node scripts/provenance.mjs",
     "test:live": "node scripts/live-smoke.mjs",
+    "live": "node test/live/wd.mjs",
+    "audit:live": "node test/live/audit.mjs",
     "build:probe": "node scripts/build.mjs --dev --mv3-probe",
     "watch": "node scripts/build.mjs --dev --watch",
     "typecheck": "tsc --noEmit",

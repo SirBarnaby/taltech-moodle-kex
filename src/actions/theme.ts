@@ -59,9 +59,16 @@ export function toggleMotion(): void {
 }
 
 /** Full <-> rail where the window is wide enough for the full menu; otherwise open the menu above the page. */
+let swapTimer = 0;
+
 export function toggleSidebar(keyboard = false): void {
   sidebarInstant.value = keyboard;
   if (!sidebarOverlays.value) {
+    // The course list changes shape between the full menu and the rail; it fades through the change instead of snapping (sidebar.css).
+    const html = document.documentElement;
+    html.dataset.kexSbSwitch = '';
+    window.clearTimeout(swapTimer);
+    swapTimer = window.setTimeout(() => delete html.dataset.kexSbSwitch, 420);
     updateSettings({ sidebarCollapsed: sidebarMode.value === 'full' });
     return;
   }

@@ -183,3 +183,9 @@
 :root[data-kex-theme-fade] *::after {
   transition: background-color 180ms linear, color 180ms linear, border-color 180ms linear, fill 180ms linear, stroke 180ms linear !important;
 }
+
+/* Room for the scrollbar is kept on every page (round 10): a page that becomes scrollable when its content arrives (a course
+   opening) no longer slides 8 px sideways as Windows' scrollbar appears. */
+:root:is([data-kex="app"], [data-kex="boot"]):not([data-kex-view="login"]) {
+  scrollbar-gutter: stable;
+}

@@ -25,6 +25,8 @@ interface Entry {
   dirty: boolean;
   state: EffectState;
   mode: EffectMode | null;
+  /** Build the context and compile while the page is idle, even before the canvas is on screen. */
+  prewarm?: boolean;
   cancelIdle?: () => void;
   io?: IntersectionObserver;
   ro?: ResizeObserver;
@@ -39,6 +41,11 @@ export interface EffectHandle {
   snapshot(): HTMLCanvasElement | null;
   /** 0..1: faster and brighter ribbons (the sign-in departure). */
   setRush(r: number): void;
+  /**
+   * Create the context and compile now, in idle time, even off screen. Creating a WebGL context blocks the main thread (about
+   * 600 ms with Firefox on Windows); done when the page is first idle, it no longer freezes the first page change that shows ribbons.
+   */
+  prewarm(): void;
 }
 
 /** One owner for context creation, readiness, visibility and the 30 Hz drawing budget. */
@@ -122,6 +129,11 @@ export class EffectsController {
         entry.opts = { ...entry.opts, ...o };
         entry.renderer?.setOptions(o);
       },
+      prewarm: () => {
+        if (entry.disposed || entry.renderer) return;
+        entry.prewarm = true;
+        this.scheduleInit(entry);
+      },
       snapshot: () => (entry.disposed || entry.mode === 'fallback' ? null : entry.renderer?.snapshot() ?? null),
     };
   }
@@ -170,13 +182,13 @@ export class EffectsController {
     this.mark(entry, 'deferred');
     const initialize = (): void => {
       entry.cancelIdle = undefined;
-      if (entry.disposed || this.busy || document.hidden || !entry.visible || this.cfg.effects === 'off') return;
+      if (entry.disposed || this.busy || document.hidden || (!entry.visible && !entry.prewarm) || this.cfg.effects === 'off') return;
       this.mark(entry, 'compiling');
       // Callbacks can arrive after settings changed or the owning view was removed.
       const current = (): boolean => !entry.disposed && entry.renderer === renderer;
       const renderer: RibbonsRenderer = new RibbonsRenderer(entry.canvas, {
         ...entry.opts,
-        canWork: () => !entry.disposed && !this.busy && !document.hidden && entry.visible && this.cfg.effects !== 'off',
+        canWork: () => !entry.disposed && !this.busy && !document.hidden && (entry.visible || !!entry.prewarm) && this.cfg.effects !== 'off',
         onFallback: (reason) => queueMicrotask(() => {
           if (!current()) return;
           entry.painted = false;

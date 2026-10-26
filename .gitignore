@@ -8,3 +8,4 @@ test-results/
 playwright-report/
 web-ext-artifacts/
 git-history.bundle
+artifacts/live/

@@ -34,6 +34,14 @@ describe('language resolution', () => {
     expect(resolveLang('et', 'en')).toBe('et');
     expect(langFromTag('ru')).toBe('en');
   });
+
+  it('settings stored before round 10 get compact rows and the wheel once; a later choice of big cards stays', () => {
+    expect(normalizeSettings({ density: 'comfortable' }).density).toBe('compact');
+    expect(normalizeSettings({ density: 'comfortable' }).wheel).toBe(true);
+    const saved = normalizeSettings({ ...normalizeSettings({}), density: 'comfortable', wheel: false });
+    expect(normalizeSettings(saved).density).toBe('comfortable');
+    expect(normalizeSettings(saved).wheel).toBe(false);
+  });
 });
 
 describe('faculty themes', () => {

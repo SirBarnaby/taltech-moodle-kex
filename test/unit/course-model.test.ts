@@ -5,7 +5,7 @@ import {
 import { downloadUrl, domainOf, previewFromHtml } from '../../src/data/repo/preview';
 import type { CmEvent } from '../../src/data/repo/courseevents';
 import {
-  buildRows, buildSectionView, buildTopics, deadlineTopic, dueTextFromDates, incompleteTopic, initialTopic, isDateRange, parseTopicHash, primaryIndex,
+  buildRows, buildSectionView, buildTopics, deadlineTopic, dueTextFromDates, incompleteTopic, isDateRange, parseTopicHash, primaryIndex, startPlace,
   resourceCount, subtitleForRows,
 } from '../../src/data/topics';
 
@@ -135,26 +135,18 @@ describe('topic model', () => {
   });
 });
 
-describe('which topic opens first', () => {
+describe('where the course page opens', () => {
   const topics = buildTopics(state, new Map());
 
-  it('URL wins, then recent memory, then the current section, then deadline, incomplete, first', () => {
+  it('the address wins, then where the reader left it (14 days), else the top', () => {
     const recent = Date.now();
-    expect(initialTopic({ topics, fromUrl: 7 })).toBe(7);
-    expect(initialTopic({ topics, fromUrl: 99 })).toBe(6); // unknown topic falls through to "current"
-    expect(initialTopic({ topics, ui: { topic: 1, at: recent } })).toBe(1);
-    expect(initialTopic({ topics, ui: { topic: 1, at: recent - 20 * 86_400_000 } })).toBe(6);
-    const noCurrent = topics.map((t) => ({ section: { ...t.section, current: false } }));
-    expect(initialTopic({ topics: noCurrent, deadlineTopic: 7 })).toBe(7);
-    expect(initialTopic({ topics: noCurrent, incompleteTopic: 8 })).toBe(8);
-    expect(initialTopic({ topics: noCurrent })).toBe(1);
-    expect(initialTopic({ topics: [] })).toBeUndefined();
-  });
-
-  it('the course opens on its first numbered topic, not on section 0, unless the URL asks for 0', () => {
-    const tps = buildTopics(st45, new Map());
-    expect(initialTopic({ topics: tps })).toBe(1);
-    expect(initialTopic({ topics: tps, fromUrl: 0 })).toBe(0);
+    expect(startPlace({ topics, fromUrl: 7 })).toEqual({ topic: 7, offset: 0 });
+    expect(startPlace({ topics, fromUrl: 99 })).toBeUndefined(); // an unknown topic opens at the top
+    expect(startPlace({ topics, ui: { anchor: { topic: 1, offset: 240 }, at: recent } })).toEqual({ topic: 1, offset: 240 });
+    expect(startPlace({ topics, fromUrl: 6, ui: { anchor: { topic: 1, offset: 240 }, at: recent } })).toEqual({ topic: 6, offset: 0 });
+    expect(startPlace({ topics, ui: { anchor: { topic: 1, offset: 240 }, at: recent - 20 * 86_400_000 } })).toBeUndefined();
+    expect(startPlace({ topics, ui: { topic: 1, at: recent } })).toBeUndefined(); // an old memory without a place
+    expect(startPlace({ topics: [] })).toBeUndefined();
   });
 
   it('deadline and incomplete topics come from the state', () => {
