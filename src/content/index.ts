@@ -1,6 +1,7 @@
 import { playArrival, watchDepartures, markDeparture } from '../fx/arrival';
 import { discardHandoff, dropVeil, playHandoff, showVeil } from '../fx/handoff';
 import { heroCanvas } from '../fx/heroCanvas';
+import { fontsSettled, warmFonts } from '../fx/fonts';
 import { batch, effect, untracked } from '@preact/signals';
 import { seedDetails } from '../data/repo/cmdetails';
 import { parseCmItems } from '../data/scrape/cm';
@@ -162,6 +163,7 @@ class Controller {
     try {
       this.applyAttrs(readBootMirror());
       setMode('boot');
+      void warmFonts();
       this.paintEarly();
       // Just signed in: the login's last frame covers the window until the shell can take it over.
       if (resolveRoute({ path: location.pathname, bodyId: '', bodyClasses: [] }).key !== 'login') showVeil();
@@ -232,7 +234,21 @@ class Controller {
       // the explicit dossier URL remains bookmarkable and works with Back/Forward.
       const landing = homeTarget(new URL(location.href), info.wwwroot);
       if (landing.href !== location.href) {
-        location.replace(landing.href);
+        // The dashboard's page already has all the shell needs: My courses opens right here (the address is rewritten, as the
+        // redirect did) instead of loading a second page, and its own document follows in the background.
+        const target = softTarget(landing, this.softCtx());
+        if (!target || target.route.effective !== 'app') {
+          location.replace(landing.href);
+          return;
+        }
+        history.replaceState(history.state, '', landing.href);
+        this.route = target.route;
+        routeSig.value = target.route;
+        searchSig.value = location.search;
+        // The live DOM is the dashboard's, not this address's page.
+        this.softNavigated = true;
+        await this.mount(target.route);
+        void this.loadLandingDoc(landing, target);
         return;
       }
       await this.mount(eff);
@@ -267,7 +283,7 @@ class Controller {
     dropVeil();
     // Back on the sign-in page without being signed in: that sign-in did not happen, its frame goes.
     if (info.isGuest) discardHandoff();
-    await this.dcl;
+    await Promise.all([this.dcl, fontsSettled()]);
     this.syncAttrs();
     const root = document.createElement('div');
     root.id = 'kex-root';
@@ -300,6 +316,8 @@ class Controller {
     configureCounts(info.userId);
     configureNotifs(info.userId);
 
+    // The first render lays out in the real fonts (the snapshot stays up for those few milliseconds).
+    await fontsSettled();
     this.syncAttrs();
     // The painted snapshot gives way to the real shell in this same task: no frame without chrome in between.
     removeSnapshot();
@@ -371,7 +389,7 @@ class Controller {
     setMode(eff.effective === 'app' ? 'app' : 'boot');
     if (eff.effective === 'app') {
       playArrival(root.querySelector<HTMLElement>('.kex-main'));
-      void playHandoff(root);
+      playHandoff();
     }
     // A full load reached by Back, Forward or Reload (from an activity, Participants, …): the page goes back to where it was.
     // Scroll restoration is manual for the soft navigations, so the browser no longer does this itself.
@@ -534,7 +552,7 @@ class Controller {
     ttLinks.value = scrapeTtLinks(document);
     languages.value = scrapeLanguages(document, document.documentElement.lang);
     const logo = qs<HTMLImageElement>(document, SEL.logo);
-    logoSrc.value = logo?.getAttribute('src') ?? undefined;
+    logoSrc.value = logo?.getAttribute('src') ?? null;
   }
 
   /** The view's own data from a page document (the live one, or the one a soft navigation fetched). */
@@ -772,6 +790,21 @@ class Controller {
       if (abort.signal.aborted) return;
       recordError('softnav', e);
       hard();
+    }
+  }
+
+  /** After the in-place landing on /my/: My courses' own document, for its title and page data, as a soft navigation would. */
+  private async loadLandingDoc(url: URL, target: SoftTarget): Promise<void> {
+    const seq = this.navSeq;
+    try {
+      await this.dcl;
+      const doc = await this.loader.load(url);
+      if (!this.mounted || seq !== this.navSeq || location.pathname + location.search !== url.pathname + url.search) return;
+      const real = routeOfDoc(doc, target.path, settings.value.routeModes);
+      if (real.key === target.key && real.effective === 'app') this.applyPageDoc(target.route, doc);
+    } catch (e) {
+      // The view works without it (the title stays the dashboard's).
+      recordError('landing', e);
     }
   }
 

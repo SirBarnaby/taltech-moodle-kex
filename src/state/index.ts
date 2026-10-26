@@ -16,7 +16,8 @@ export const route = signal<EffectiveRoute | null>(null);
 export const user = signal<UserInfo | undefined>(undefined);
 export const userMenuItems = signal<UserMenuItem[]>([]);
 export const ttLinks = signal<{ ois?: string; mail?: string }>({});
-export const logoSrc = signal<string | undefined>(undefined);
+/** The site logo: undefined until the page has been read, null when it has none. */
+export const logoSrc = signal<string | null | undefined>(undefined);
 
 /** Courses exactly as the data layer returned them. */
 export const coursesRaw = signal<Course[]>([]);

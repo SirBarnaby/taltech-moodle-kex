@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { NavTab } from '../../data/scrape/secondarynav';
+import { TabLabel } from './Tabs';
 import { scrollBehavior } from '../../fx/motion';
 import { t } from '../../i18n';
 
@@ -44,7 +45,7 @@ export function CourseNav({ tabs }: CourseNavProps) {
           aria-current={tb.active ? 'page' : undefined}
           onClick={tb.active ? (e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: scrollBehavior() }); } : undefined}
         >
-          <span class="kex-tab__label">{tb.label}</span>
+          <TabLabel text={tb.label} />
         </a>
       ))}
       <span

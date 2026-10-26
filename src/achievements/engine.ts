@@ -35,6 +35,8 @@ interface Stored {
   earned: Partial<Record<AchId, Earned>>;
   /** The first run (quiet backfill) is done. */
   init: boolean;
+  /** The last run's progress bars: the page opens with them, so the cards do not grow when the first run in this page lands. */
+  progress?: Partial<Record<AchId, { n: number; of: number }>>;
 }
 
 export interface Unlock {
@@ -198,7 +200,15 @@ function run(): void {
     if (quiet) backfilled.value = backfilled.peek() + fresh.length;
     else if (s.achievementToasts) unlocks.value = [...unlocks.peek(), ...fresh];
   });
-  if (fresh.length || !stored.init) void cache.write(STATE, { earned: next, init: true } satisfies Stored);
+  const progress: Partial<Record<AchId, { n: number; of: number }>> = {};
+  for (const id of ACH_IDS) if (result[id].progress) progress[id] = result[id].progress;
+  const progressChanged = JSON.stringify(progress) !== JSON.stringify(stored.progress ?? {});
+  if (fresh.length || !stored.init || progressChanged) void cache.write(STATE, { earned: next, init: true, progress } satisfies Stored);
+}
+
+/** The Achievements page opens before the first idle-time run: run it now, so its cards open with their progress bars. */
+export function evaluateNow(): void {
+  if (!Object.keys(statuses.peek()).length) run();
 }
 
 const idle = (fn: () => void): void => {
@@ -217,7 +227,13 @@ export function startAchievements(): () => void {
   if (running) return stopAchievements;
   running = true;
   journal = readJournal(cache.peek<Journal>(JOURNAL)?.data);
-  earned.value = cache.peek<Stored>(STATE)?.data.earned ?? {};
+  const stored = cache.peek<Stored>(STATE)?.data;
+  earned.value = stored?.earned ?? {};
+  if (stored?.progress && !Object.keys(statuses.peek()).length) {
+    const seed: Partial<Record<AchId, Status>> = {};
+    for (const [id, progress] of Object.entries(stored.progress) as [AchId, { n: number; of: number }][]) seed[id] = { earned: !!stored.earned[id], progress };
+    statuses.value = seed;
+  }
   const now = Date.now();
   const term = termAt(now / 1000);
   setJournal(noteVisit(journal, now, term?.start, term?.week !== undefined && term.week <= 2));

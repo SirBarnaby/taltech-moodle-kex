@@ -209,6 +209,31 @@
       color: inherit;
     }
   }
+  /* A soft light passes across a sign-in button once on hover; a press sinks it a little. */
+  .kex-login__idp,
+  .kex-login__btn--primary {
+    overflow: hidden;
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.16) 48%, transparent 66%);
+      transform: translateX(-110%);
+      pointer-events: none;
+    }
+    &:hover::after {
+      transform: translateX(110%);
+      transition: transform 720ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    &:active {
+      transform: scale(0.985);
+      transition: transform 80ms var(--kex-ease);
+    }
+  }
+  .kex-login__idp--primary::after,
+  .kex-login__btn--primary::after {
+    background: linear-gradient(105deg, transparent 30%, rgba(122, 86, 230, 0.16) 48%, transparent 66%);
+  }
   .kex-login__idp--primary {
     background: #f7f6fa;
     border-color: #f7f6fa;
@@ -258,6 +283,7 @@
     font-size: 17px;
   }
   .kex-login__btn {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -558,4 +584,35 @@
 }
 :root[data-kex-view="login"] body > .eupopup-container .eupopup-closebutton {
   color: var(--kex-sb-text-2) !important;
+}
+
+/* The panel comes in once, top to bottom, while the title slides up beside it (motion off: base.css stills it). */
+:root:not([data-kex-leaving]) #kex-root .kex-login {
+  .kex-login__top,
+  .kex-login__kicker,
+  .kex-login__welcome,
+  .kex-login__alert,
+  .kex-login__signed,
+  .kex-login__idps > *,
+  .kex-login__more,
+  .kex-login__foot {
+    animation: kex-login-in 640ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  .kex-login__top { animation-delay: 60ms; }
+  .kex-login__kicker { animation-delay: 140ms; }
+  .kex-login__welcome { animation-delay: 190ms; }
+  .kex-login__alert,
+  .kex-login__signed { animation-delay: 250ms; }
+  .kex-login__idps > :nth-child(1) { animation-delay: 260ms; }
+  .kex-login__idps > :nth-child(2) { animation-delay: 300ms; }
+  .kex-login__idps > :nth-child(3) { animation-delay: 340ms; }
+  .kex-login__idps > :nth-child(n + 4) { animation-delay: 380ms; }
+  .kex-login__more { animation-delay: 430ms; }
+  .kex-login__foot { animation-delay: 480ms; }
+}
+@keyframes kex-login-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
 }

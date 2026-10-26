@@ -1,5 +1,5 @@
 /**
- * Points of light (round 8): the sign-in hand-off sheds them from the ribbons, achievements burst with them. Canvas 2D with
+ * Points of light (round 8): achievements burst with them. Canvas 2D with
  * additive blending on one full-window overlay that ignores the pointer; no shader to compile, so it draws on the first frame.
  */
 
@@ -103,66 +103,4 @@ export function playSparks(sparks: Spark[], opts: SparkOptions = {}): SparkRun {
   };
   raf = requestAnimationFrame(frame);
   return { stop, done };
-}
-
-export interface BrightPoint {
-  u: number;
-  v: number;
-  /** The colour brightened toward white (a point of light). */
-  rgb: string;
-  /** The colour as it is, deepened a little (a fleck that shows on white). */
-  ink: string;
-}
-
-/** Up to `n` bright points of an image, as fractions of its size with their colour, brightest most often. */
-export function brightPoints(img: CanvasImageSource, n: number, threshold = 0.5): BrightPoint[] {
-  const w = 192;
-  const h = 108;
-  const c = document.createElement('canvas');
-  c.width = w;
-  c.height = h;
-  const ctx = c.getContext('2d', { willReadFrequently: true });
-  if (!ctx) return [];
-  try {
-    ctx.drawImage(img, 0, 0, w, h);
-  } catch {
-    return [];
-  }
-  const data = ctx.getImageData(0, 0, w, h).data;
-  const pool: (BrightPoint & { weight: number })[] = [];
-  let total = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4;
-      const r = data[i] ?? 0;
-      const g = data[i + 1] ?? 0;
-      const b = data[i + 2] ?? 0;
-      const luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-      if (luma < threshold) continue;
-      const weight = luma * luma;
-      total += weight;
-      // Brightened toward white: a point of light, not a pixel.
-      const lift = (v: number): number => Math.round(v + (255 - v) * 0.35);
-      const deep = (v: number): number => Math.round(v * 0.82);
-      pool.push({ u: (x + Math.random()) / w, v: (y + Math.random()) / h, rgb: `${lift(r)},${lift(g)},${lift(b)}`, ink: `${deep(r)},${deep(g)},${deep(b)}`, weight });
-    }
-  }
-  if (!pool.length) return [];
-  const cumulative: number[] = [];
-  let run = 0;
-  for (const q of pool) cumulative.push((run += q.weight));
-  const out: BrightPoint[] = [];
-  for (let k = 0; k < n; k++) {
-    const pick = Math.random() * total;
-    let lo = 0;
-    let hi = cumulative.length - 1;
-    while (lo < hi) {
-      const mid = (lo + hi) >> 1;
-      if ((cumulative[mid] ?? 0) < pick) lo = mid + 1;
-      else hi = mid;
-    }
-    const p = pool[lo]!;
-    out.push({ u: p.u, v: p.v, rgb: p.rgb, ink: p.ink });
-  }
-  return out;
 }

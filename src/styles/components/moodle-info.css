@@ -14,3 +14,7 @@
   .kex-moodle-info__sources { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 0 0 18px; font-size: 13px; }
   .kex-calendar-notice { padding: 12px 24px; background: var(--kex-tint); color: var(--kex-text-2); font-size: 14px; }
 }
+
+/* Reveal: the slot that late notices and the dashboard info open into (components/Reveal.tsx). */
+#kex-root .kex-reveal__in { display: flow-root; }
+#kex-root .kex-reveal--held { overflow: clip; overflow-clip-margin: 6px; }

@@ -1,5 +1,6 @@
 import { EyeOff, Eye, Star } from 'lucide-preact';
 import { SiteNotices } from '../components/SiteNotices';
+import { Reveal } from '../components/Reveal';
 import { useEffect, useRef } from 'preact/hooks';
 import { initMyCourses, setMcTab, storeOf, toggleHide, toggleStar } from '../../actions/mycourses';
 import { go } from '../../actions/navigate';
@@ -141,8 +142,10 @@ export function MyCoursesView() {
     <main class="kex-main kex-mycourses" id="kex-main" data-kex-test="mycourses" data-tab={tab} data-kex-ready={!loading}>
       <Band label={`${t('mc.label')} / ${seasonLabel(sem.season)} ${sem.year}`} title={t('mc.title')} />
       <div class="kex-content">
-        <MoodleInfo />
-        <SiteNotices />
+        <Reveal>
+          <MoodleInfo />
+          <SiteNotices />
+        </Reveal>
         <div class="kex-matheader kex-mcbar">
           <Tabs<CoursesTab> value={tab} onChange={setMcTab} items={tabs} label={t('mc.tabs')} idPrefix="kex-mc-tab" panelId="kex-mc-panel" />
           <div class="kex-mcbar__tools">

@@ -57,7 +57,20 @@ function Art() {
   useLayoutEffect(() => {
     const el = host.current;
     if (!el) return;
-    return heroCanvas.attach(el, { seed: 11, intensity: 1.15, leftFade: 0 });
+    const detach = heroCanvas.attach(el, { seed: 11, intensity: 1.15, leftFade: 0 });
+    // The ribbons lean toward the pointer, as on a course hero.
+    const onMove = (e: PointerEvent): void => {
+      const rect = el.getBoundingClientRect();
+      heroCanvas.setPointer(((e.clientX - rect.left) / rect.width) * 2 - 1, -(((e.clientY - rect.top) / rect.height) * 2 - 1));
+    };
+    const onLeave = (): void => heroCanvas.setPointer(0, 0);
+    el.addEventListener('pointermove', onMove, { passive: true });
+    el.addEventListener('pointerleave', onLeave);
+    return () => {
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerleave', onLeave);
+      detach();
+    };
   }, []);
   return (
     <section class="kex-login__art" ref={host} data-mode={mode} aria-hidden="true">

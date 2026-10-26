@@ -230,7 +230,18 @@
     color: var(--kex-violet);
   }
   .kex-tab__label {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .kex-tab__ghost {
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    font-size: 17px;
+    font-weight: 600;
+    pointer-events: none;
+    user-select: none;
   }
   .kex-fade-in {
     animation: kex-fade 120ms var(--kex-ease) both;

@@ -210,6 +210,8 @@
     margin-bottom: -0.16em;
     background-image: var(--kex-hero-gradient-text);
     background-repeat: no-repeat;
+    /* Past the measured gradient (a late font made a word wider) the text keeps the accent instead of vanishing. */
+    background-color: var(--kex-hero-accent-solid, #e3a6f8);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

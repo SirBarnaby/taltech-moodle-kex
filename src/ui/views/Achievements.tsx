@@ -1,8 +1,8 @@
-import { useEffect } from 'preact/hooks';
+import { useEffect, useLayoutEffect } from 'preact/hooks';
 import { go } from '../../actions/navigate';
 import { updateSettings } from '../../actions/settings';
 import { ACH_GROUPS, CATALOG, type AchDef } from '../../achievements/catalog';
-import { achCount, earned, focusAch, statuses, type Earned } from '../../achievements/engine';
+import { achCount, earned, evaluateNow, focusAch, statuses, type Earned } from '../../achievements/engine';
 import type { Status } from '../../achievements/rules';
 import { formatDate, t, type MessageKey } from '../../i18n';
 import { pageInfo, settings } from '../../state';
@@ -70,6 +70,8 @@ export function AchievementsView() {
   const got = earned.value;
   const st = statuses.value;
   const count = achCount();
+  // Before the first paint (a state change here re-renders in a microtask).
+  useLayoutEffect(() => { if (settings.peek().achievements) evaluateNow(); }, []);
 
   useEffect(() => {
     const id = focusAch.value;

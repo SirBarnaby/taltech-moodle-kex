@@ -1,5 +1,6 @@
 import { ArrowUpRight, Bell, CircleCheck, Eye, Megaphone, MessagesSquare, Pin as PinIcon, X } from 'lucide-preact';
 import { SiteNotices } from '../components/SiteNotices';
+import { Reveal } from '../components/Reveal';
 import { Fragment } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import {
@@ -357,8 +358,10 @@ export function WorkspaceView() {
       {calendar.maintenance !== 'current' && <p class="kex-calendar-notice" role="status"><a href={calendar.source.originalPath} target="_blank" rel="noopener noreferrer">{t('academic.updateRequired')}</a></p>}
       <Hero class="kex-hero--ws" key="ws" label={label} lines={[hello, summary]} links={links} />
       <div class="kex-content">
-        <MoodleInfo />
-        <SiteNotices />
+        <Reveal>
+          <MoodleInfo />
+          <SiteNotices />
+        </Reveal>
         <PinnedRow pins={rowPins(pins, null)} courseId={null} />
         <div class="kex-matheader">
           <SlideUpText as="h2" class="kex-matheader__title" text={t('ws.thisWeek')} split="words" stagger={0.08} duration={0.6} inView />

@@ -27,6 +27,16 @@ interface TabsProps<K extends string = 'all' | 'lectures' | 'labs'> {
 }
 
 /** Everything / Lectures / Labs with a sliding underline. ARIA tabs with arrow-key navigation. */
+/** A tab's text, as wide as its bolder, larger active form (a hidden copy holds the width): switching tabs moves no neighbour. */
+export function TabLabel({ text }: { text: string }) {
+  return (
+    <span class="kex-tab__label">
+      {text}
+      <span class="kex-tab__ghost" aria-hidden="true">{text}</span>
+    </span>
+  );
+}
+
 export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, onChange, items, label, idPrefix = 'kex-tab', panelId = 'kex-tabpanel' }: TabsProps<K>) {
   const TABS = (items ?? COURSE_TABS) as readonly TabDef<K>[];
   const list = useRef<HTMLDivElement>(null);
@@ -75,7 +85,7 @@ export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, on
           onClick={() => onChange(tb.key)}
           title={tb.digit ? `${tb.text ?? t(tb.label)} (${tb.digit})` : (tb.text ?? t(tb.label))}
         >
-          <span class="kex-tab__label">{tb.text ?? t(tb.label)}</span>
+          <TabLabel text={tb.text ?? t(tb.label)} />
         </button>
       ))}
       <span

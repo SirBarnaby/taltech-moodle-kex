@@ -118,14 +118,24 @@ class Cache {
   }
 
   async write<T>(name: string, data: T): Promise<Envelope<T>> {
+    const env = this.put(name, data);
+    await this.persist(name, env);
+    return env;
+  }
+
+  /** In memory now (readers see it at once); `persist` stores it. */
+  private put<T>(name: string, data: T): Envelope<T> {
     const env: Envelope<T> = { v: 1, at: Date.now(), data: scrub(data) };
     this.mem.set(this.key(name), env);
+    return env;
+  }
+
+  private async persist<T>(name: string, env: Envelope<T>): Promise<void> {
     try {
       await storageSet({ [this.key(name)]: env });
     } catch (e) {
       log.warn('cache write failed', name, e);
     }
-    return env;
   }
 
   swr<T>(name: string, ttlMs: number, fetcher: () => Promise<T>): Store<T> {
@@ -150,8 +160,10 @@ class Cache {
       if (!force && age < ttlMs) return Promise.resolve();
       status.value = 'loading';
       inflight = fetcher()
-        .then(async (data) => {
-          const env = await this.write(name, data);
+        .then((data) => {
+          // The view gets the data in this task; storing it does not hold it back.
+          const env = this.put(name, data);
+          void this.persist(name, env);
           value.value = env.data;
           at.value = env.at;
           error.value = undefined;

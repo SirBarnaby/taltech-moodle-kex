@@ -29,6 +29,10 @@
     object-fit: contain;
     object-position: left center;
   }
+  .kex-sb__logo--wait {
+    display: block;
+    width: 52px;
+  }
   .kex-sb__wordmark {
     display: flex;
     flex-direction: column;
@@ -147,17 +151,18 @@
   /* ---- section label ---- */
   .kex-sb__label {
     flex: none;
-    margin: 16px 16px 0 24px;
+    /* "KURSUSED / SÜGIS 2026" fits the narrowest full menu (204 px) whole. */
+    margin: 16px 12px 0 24px;
     font-family: var(--kex-font-mono);
     font-size: 11px;
     line-height: 14px;
     font-weight: 500;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--kex-sb-label);
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: clip;
+    text-overflow: ellipsis;
   }
 
   /* ---- course list ---- */

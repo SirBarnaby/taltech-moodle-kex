@@ -1,16 +1,10 @@
-/* Sign-in hand-off (round 8, fx/handoff.ts). Leaving: the panel's words lift away while the ribbons widen to the window (a
-   transform, so the canvas keeps its size and nothing is laid out again). Arriving: the login's last frame covers the window from
-   document_start and closes in on the band or hero; points of light come off its edges; the sidebar rows and the header settle
-   in behind. */
+/* Sign-in hand-off (round 9, fx/handoff.ts). White is the colour in between: the identity provider's pages are white.
+   Leaving: the panel's words lift away, the ribbons speed up (in the shader), and the window eases to white. Arriving: the first
+   signed-in page starts white at document_start and lifts it once the shell is there; the menu, its rows, the header and the
+   content come in underneath. */
 
 /* ---- leaving the login ---- */
 :root[data-kex-leaving] #kex-root {
-  .kex-login__art {
-    z-index: 1;
-    transform-origin: 0 50%;
-    transform: scaleX(calc(100 / 58));
-    transition: transform 640ms cubic-bezier(0.65, 0, 0.2, 1);
-  }
   .kex-login__art-text,
   .kex-login__art .kex-cross {
     opacity: 0;
@@ -29,11 +23,38 @@
     transition-delay: 80ms;
   }
 }
-/* One column: the art is a band on top; it grows down over the panel instead. */
-@media (max-width: 900px) {
-  :root[data-kex-leaving] #kex-root .kex-login__art {
-    transform-origin: 50% 0;
-    transform: scaleY(5);
+.kex-leave-wash {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: #fff;
+  pointer-events: none;
+  animation: kex-wash-in 560ms cubic-bezier(0.4, 0, 0.2, 1) 220ms both;
+}
+/* Still waiting for the provider after a moment: a thin bar says something is on its way. */
+.kex-leave-wash::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32%;
+  height: 2px;
+  /* (The wash is white in both themes, so the light theme's violet.) */
+  background: #1a0f8f;
+  border-radius: 0 2px 2px 0;
+  animation: kex-wash-bar 1300ms cubic-bezier(0.65, 0, 0.35, 1) 1200ms infinite both;
+}
+@keyframes kex-wash-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes kex-wash-bar {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(320%);
   }
 }
 
@@ -42,11 +63,8 @@
   position: fixed;
   inset: 0;
   z-index: 2147483000;
-  background: var(--kex-login-fallback, #1d1238);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
+  background: #fff;
   pointer-events: none;
-  will-change: clip-path, opacity;
   contain: strict;
 }
 .kex-sparks {
@@ -58,28 +76,40 @@
   pointer-events: none;
 }
 :root[data-kex-arrive] #kex-root {
+  .kex-sidebar {
+    animation: kex-arrive-side 620ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
   /* (The glide is the sliding highlight: it keeps its own transform.) */
   .kex-sb__nav > li:not(.kex-sb__glide),
   .kex-sb__courses > li:not(.kex-sb__glide),
   .kex-sb__foot {
     animation: kex-arrive-row 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
-    animation-delay: 220ms;
+    animation-delay: 160ms;
   }
-  .kex-sb__nav > li:nth-child(2) { animation-delay: 250ms; }
-  .kex-sb__nav > li:nth-child(3) { animation-delay: 280ms; }
-  .kex-sb__nav > li:nth-child(4) { animation-delay: 310ms; }
-  .kex-sb__nav > li:nth-child(5) { animation-delay: 340ms; }
-  .kex-sb__nav > li:nth-child(6) { animation-delay: 370ms; }
-  .kex-sb__nav > li:nth-child(n + 7) { animation-delay: 400ms; }
-  .kex-sb__courses > li { animation-delay: 430ms; }
-  .kex-sb__courses > li:nth-child(2) { animation-delay: 465ms; }
-  .kex-sb__courses > li:nth-child(3) { animation-delay: 500ms; }
-  .kex-sb__courses > li:nth-child(4) { animation-delay: 535ms; }
-  .kex-sb__courses > li:nth-child(5) { animation-delay: 570ms; }
-  .kex-sb__courses > li:nth-child(n + 6) { animation-delay: 605ms; }
-  .kex-sb__foot { animation-delay: 640ms; }
+  .kex-sb__nav > li:nth-child(2) { animation-delay: 185ms; }
+  .kex-sb__nav > li:nth-child(3) { animation-delay: 210ms; }
+  .kex-sb__nav > li:nth-child(4) { animation-delay: 235ms; }
+  .kex-sb__nav > li:nth-child(5) { animation-delay: 260ms; }
+  .kex-sb__nav > li:nth-child(6) { animation-delay: 285ms; }
+  .kex-sb__nav > li:nth-child(n + 7) { animation-delay: 310ms; }
+  .kex-sb__courses > li { animation-delay: 330ms; }
+  .kex-sb__courses > li:nth-child(2) { animation-delay: 355ms; }
+  .kex-sb__courses > li:nth-child(3) { animation-delay: 380ms; }
+  .kex-sb__courses > li:nth-child(4) { animation-delay: 405ms; }
+  .kex-sb__courses > li:nth-child(5) { animation-delay: 430ms; }
+  .kex-sb__courses > li:nth-child(n + 6) { animation-delay: 455ms; }
+  .kex-sb__foot { animation-delay: 480ms; }
   .kex-header {
-    animation: kex-arrive-head 520ms cubic-bezier(0.23, 1, 0.32, 1) 160ms both;
+    animation: kex-arrive-head 520ms cubic-bezier(0.23, 1, 0.32, 1) 120ms both;
+  }
+  #kex-main > .kex-content {
+    animation: kex-arrive-content 640ms cubic-bezier(0.23, 1, 0.32, 1) 180ms both;
+  }
+}
+@keyframes kex-arrive-side {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
   }
 }
 @keyframes kex-arrive-row {
@@ -92,6 +122,12 @@
   from {
     opacity: 0;
     transform: translateY(-10px);
+  }
+}
+@keyframes kex-arrive-content {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
   }
 }
 

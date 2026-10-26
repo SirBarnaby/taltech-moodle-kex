@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { RefObject } from 'preact';
 import { effects, type EffectMode } from '../../fx/effects';
+import { followArrivalRush } from '../../fx/rush';
 import type { RibbonsOptions } from '../../fx/ribbons';
 import { resolvedMotion, settings } from '../../state';
 
@@ -18,6 +19,7 @@ export function useRibbons(opts: RibbonsOptions, pointerRoot?: RefObject<HTMLEle
     const c = canvas.current;
     if (!c) return;
     const handle = effects.register(c, { seed, intensity, leftFade, style }, setMode);
+    const rushing = followArrivalRush((r) => handle.setRush(r));
     const root = pointerRoot?.current;
     const move = (e: PointerEvent): void => {
       const r = c.getBoundingClientRect();
@@ -27,6 +29,7 @@ export function useRibbons(opts: RibbonsOptions, pointerRoot?: RefObject<HTMLEle
     root?.addEventListener('pointermove', move, { passive: true });
     root?.addEventListener('pointerleave', leave);
     return () => {
+      rushing();
       root?.removeEventListener('pointermove', move);
       root?.removeEventListener('pointerleave', leave);
       handle.dispose();

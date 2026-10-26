@@ -158,15 +158,21 @@ export function slideUp(target: HTMLElement, text: string, opts: SlideUpOptions 
   if (o.gradient) {
     const gradient = o.gradient;
     applyGradient(target, lineItems, gradient);
-    // Measured again once the web font is in (widths change) and when the box is resized.
+    // Measured again once a web font is in and whenever a word or the box changes size: a word that grows in a late font
+    // must not run past the end of the gradient (Firefox showed "Moodle KE" with the X past it).
     const again = (): void => {
       if (target.isConnected) applyGradient(target, lineItems, gradient);
     };
     void document.fonts?.ready.then(again);
+    document.fonts?.addEventListener?.('loadingdone', again);
     if (typeof ResizeObserver !== 'undefined') {
       const ro = new ResizeObserver(again);
       ro.observe(target);
-      void finished.then(() => window.setTimeout(() => ro.disconnect(), 2000));
+      for (const item of items) ro.observe(item.parentElement ?? item);
+      void finished.then(() => window.setTimeout(() => {
+        ro.disconnect();
+        document.fonts?.removeEventListener?.('loadingdone', again);
+      }, 2000));
     }
   }
 

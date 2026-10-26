@@ -62,22 +62,28 @@ function useShellEffects(): void {
 
 /**
  * Sidebar full <-> rail (Ctrl+B): the page and the header land in their new place at once (no layout transition) and slide there
- * with a transform, so both move together. Not on window resizes, and not with reduced motion.
+ * with a transform, so both move together; the menu's own edge travels with them (its width), so no strip of page opens or
+ * closes beside it. Not on window resizes, and not with reduced motion.
  */
 function useSidebarSlide(): void {
   const mode = sidebarMode.value;
   const width = viewportWidth.value;
-  const prev = useRef<{ width: number; main: number; header: number } | null>(null);
+  const prev = useRef<{ width: number; main: number; header: number; side: number } | null>(null);
   useLayoutEffect(() => {
     const main = document.getElementById('kex-main');
     const header = document.querySelector<HTMLElement>('.kex-header');
-    const now = { width, main: main?.getBoundingClientRect().left ?? 0, header: header?.getBoundingClientRect().left ?? 0 };
+    const side = document.querySelector<HTMLElement>('#kex-root .kex-sidebar');
+    const now = { width, main: main?.getBoundingClientRect().left ?? 0, header: header?.getBoundingClientRect().left ?? 0, side: side?.getBoundingClientRect().width ?? 0 };
     const before = prev.current;
     prev.current = now;
     if (!before || before.width !== width || motionTier() === 'none') return;
+    const timing = { duration: 220, easing: MOTION.ease };
     for (const [el, from, to] of [[main, before.main, now.main], [header, before.header, now.header]] as const) {
       if (!el || typeof el.animate !== 'function' || Math.abs(from - to) < 1) continue;
-      el.animate([{ transform: `translateX(${from - to}px)` }, { transform: 'translateX(0)' }], { duration: 220, easing: MOTION.ease });
+      el.animate([{ transform: `translateX(${from - to}px)` }, { transform: 'translateX(0)' }], timing);
+    }
+    if (side && typeof side.animate === 'function' && Math.abs(before.side - now.side) >= 1 && side.dataset.open !== 'true') {
+      side.animate([{ width: `${before.side}px` }, { width: `${now.side}px` }], timing);
     }
   }, [mode, width]);
 }

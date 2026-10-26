@@ -29,12 +29,48 @@ export function splitCode(code: string): [string, string] {
   return m ? [m[1] ?? code, m[2] ?? ''] : [code.slice(0, 3), code.slice(3)];
 }
 
+/** The site logo from the last page, with its natural size: the first render already has it at its final width (otherwise the
+ *  wordmark showed until the page was read, then a zero-width image until it loaded, and "moodle" beside it moved twice). */
+const LOGO_KEY = 'kex.logo';
+interface KnownLogo { src: string; w: number; h: number }
+let knownLogo: KnownLogo | null | undefined;
+function readLogo(): KnownLogo | null {
+  if (knownLogo === undefined) {
+    try {
+      const v = JSON.parse(localStorage.getItem(LOGO_KEY) ?? 'null') as KnownLogo | null;
+      knownLogo = v && typeof v.src === 'string' && v.w > 0 && v.h > 0 ? v : null;
+    } catch {
+      knownLogo = null;
+    }
+  }
+  return knownLogo;
+}
+function rememberLogo(img: HTMLImageElement): void {
+  const src = img.getAttribute('src');
+  if (!src || !img.naturalWidth || !img.naturalHeight) return;
+  const next = { src, w: img.naturalWidth, h: img.naturalHeight };
+  const known = readLogo();
+  if (known && known.src === next.src && known.w === next.w && known.h === next.h) return;
+  knownLogo = next;
+  try {
+    localStorage.setItem(LOGO_KEY, JSON.stringify(next));
+  } catch {
+    /* storage blocked: the logo settles as before */
+  }
+}
+
 function Wordmark() {
-  const src = logoSrc.value;
+  const known = readLogo();
+  const read = logoSrc.value;
+  const src = read ?? (read === null ? undefined : known?.src);
+  const size = known && known.src === src ? { width: known.w, height: known.h } : {};
   return (
     <a class="kex-sb__brand" href={homeUrl(PAGES.mycourses)} data-kex-test="sb-brand">
       {src ? (
-        <img class="kex-sb__logo" src={src} alt="" />
+        <img class="kex-sb__logo" src={src} alt="" {...size} decoding="sync" onLoad={(e) => rememberLogo(e.currentTarget)} />
+      ) : read === undefined ? (
+        // Not read yet and never seen: hold the logo's square, so nothing beside it moves when it comes.
+        <span class="kex-sb__logo kex-sb__logo--wait" aria-hidden="true" />
       ) : (
         <span class="kex-sb__wordmark" aria-hidden="true">
           <span>TAL</span>
