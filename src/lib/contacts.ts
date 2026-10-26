@@ -12,6 +12,9 @@ interface RawCourse {
   contacts?: { id: number; fullname: string }[];
 }
 
+/** "Marten" of "Marten Mets". */
+export const firstName = (full: string | undefined): string => (full ?? '').trim().split(/\s+/)[0] ?? '';
+
 export const CONTACTS_TTL_MS = 24 * 60 * 60 * 1000;
 
 export function mapContacts(res: { courses?: RawCourse[] } | undefined, courseId: number): Contact[] {

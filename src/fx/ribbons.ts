@@ -61,6 +61,8 @@ export class RibbonsRenderer {
   private pending = false;
   /** Called with `'static'` when adaptive quality gives up. */
   public onGiveUp?: () => void;
+  /** 0..1: the sign-in departure speeds the ribbons up and brightens them (round 8). */
+  private rush = 0;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -254,6 +256,10 @@ export class RibbonsRenderer {
     return snap;
   }
 
+  setRush(r: number): void {
+    this.rush = Math.max(0, Math.min(1, r));
+  }
+
   setPointer(x: number, y: number): void {
     this.pointerTarget = [Math.max(-1, Math.min(1, x)), Math.max(-1, Math.min(1, y))];
   }
@@ -267,7 +273,7 @@ export class RibbonsRenderer {
     gl.uniform2f(this.loc.uRes ?? null, this.canvas.width, this.canvas.height);
     gl.uniform1f(this.loc.uTime ?? null, time);
     gl.uniform2f(this.loc.uPointer ?? null, this.pointer[0], this.pointer[1]);
-    gl.uniform1f(this.loc.uIntensity ?? null, this.opts.intensity ?? 1);
+    gl.uniform1f(this.loc.uIntensity ?? null, (this.opts.intensity ?? 1) * (1 + 0.45 * this.rush));
     gl.uniform1f(this.loc.uLeftFade ?? null, this.opts.leftFade ?? 0.46);
     const st = this.opts.style ?? DEFAULT_RIBBONS;
     gl.uniform1f(this.loc.uSeed ?? null, ((this.opts.seed ?? 0) + st.seed) * 0.37);
@@ -325,7 +331,7 @@ export class RibbonsRenderer {
     const blend = 1 - Math.exp(-delta / 180);
     this.pointer[0] += (this.pointerTarget[0] - this.pointer[0]) * blend;
     this.pointer[1] += (this.pointerTarget[1] - this.pointer[1]) * blend;
-    const time = this.tFrozen + delta / 1000;
+    const time = this.tFrozen + (delta / 1000) * (1 + 2.6 * this.rush);
     if (!this.draw(time)) return false;
     this.tFrozen = time;
     this.adapt(elapsed);

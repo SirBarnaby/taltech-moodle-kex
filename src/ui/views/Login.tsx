@@ -1,5 +1,6 @@
 import { ArrowRight, ChevronDown, CircleHelp, X } from 'lucide-preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { leaveLogin } from '../../fx/handoff';
 import { heroCanvas } from '../../fx/heroCanvas';
 import { MOTION } from '../../fx/navigation';
 import { primaryIdp, type LoginModel } from '../../data/scrape/login';
@@ -21,6 +22,9 @@ function readLast(): string | undefined {
     return undefined;
   }
 }
+
+/** A left click that opens the link here (not in a new tab or window). */
+const plainClick = (e: MouseEvent): boolean => e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey;
 
 function saveLast(href: string): void {
   try {
@@ -99,8 +103,18 @@ export function LoginView({ model, loggedIn, continueHref }: LoginViewProps) {
     if (!idp) return;
     saveLast(idp.href);
     setLast(idp.href);
+    leaveLogin();
     location.assign(idp.href);
   };
+
+  // Signing in with Moodle's own form: the hand-off starts once the submit is really going ahead.
+  useEffect(() => {
+    const form = model.form;
+    if (!form) return;
+    const onSubmit = (e: Event): void => void window.setTimeout(() => !e.defaultPrevented && leaveLogin());
+    form.addEventListener('submit', onSubmit);
+    return () => form.removeEventListener('submit', onSubmit);
+  }, [model.form]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
@@ -119,7 +133,10 @@ export function LoginView({ model, loggedIn, continueHref }: LoginViewProps) {
         e.preventDefault();
         setMore((v) => !v);
       } else if (e.key === 'Enter' && !onControl) {
-        if (loggedIn) location.assign(continueHref);
+        if (loggedIn) {
+          leaveLogin();
+          location.assign(continueHref);
+        }
         else if (model.idps.length) {
           e.preventDefault();
           follow(primary);
@@ -166,7 +183,7 @@ export function LoginView({ model, loggedIn, continueHref }: LoginViewProps) {
           {loggedIn ? (
             <div class="kex-login__signed">
               <p>{t('login.loggedIn')}</p>
-              <a class="kex-login__btn kex-login__btn--primary" href={continueHref} data-kex-test="login-continue">
+              <a class="kex-login__btn kex-login__btn--primary" href={continueHref} data-kex-test="login-continue" onClick={(e) => plainClick(e) && leaveLogin()}>
                 {t('login.continue')}
                 <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
               </a>
@@ -183,7 +200,10 @@ export function LoginView({ model, loggedIn, continueHref }: LoginViewProps) {
                       title={idp.title}
                       data-kex-test="login-idp"
                       data-primary={i === primary}
-                      onClick={() => saveLast(idp.href)}
+                      onClick={(e) => {
+                        saveLast(idp.href);
+                        if (plainClick(e)) leaveLogin();
+                      }}
                     >
                       <span>{idp.title}</span>
                       {i < 9 && <kbd class="kex-kbd">{i + 1}</kbd>}

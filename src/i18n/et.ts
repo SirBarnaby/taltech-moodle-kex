@@ -491,6 +491,7 @@ export const et: Record<MessageKey, string> = {
   'login.label': 'TALTECH / ÕPIKESKKOND',
   'login.kicker': 'SISENE',
   'login.welcome': 'Tere tulemast tagasi',
+  'handoff.welcome': 'Tere tulemast tagasi, {$a}! 👋',
   'login.more': 'Rohkem sisselogimise võimalusi',
   'login.less': 'Vähem sisselogimise võimalusi',
   'login.help': 'Abi',

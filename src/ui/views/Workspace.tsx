@@ -21,6 +21,7 @@ import type { RecentItem } from '../../data/repo/recent';
 import { formatDate, lang, t, type MessageKey } from '../../i18n';
 import { clock, greeting, heroDay, relTime, shortDay } from '../../lib/time';
 import { calendarData } from '../../lib/academic-calendar';
+import { firstName } from '../../lib/contacts';
 import { MoodleInfo } from '../components/MoodleInfo';
 import { sidebarCourses, user } from '../../state';
 import { startsCourseGroup } from '../../lib/feedgroups';
@@ -44,7 +45,6 @@ const FEED_TABS: readonly TabDef<FeedTab>[] = [
 
 const DAY = 86400;
 
-export const firstName = (full: string | undefined): string => (full ?? '').trim().split(/\s+/)[0] ?? '';
 
 /** The mono word in front of a deadline row's course code. */
 function dueWord(d: DueItem): string {

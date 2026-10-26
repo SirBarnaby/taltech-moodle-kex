@@ -73,6 +73,8 @@ export const MOODLE_KEYS: Partial<Record<MessageKey, Src>> = {
   'common.all': core('all'),
   'course.topicsMore': core('showmore'),
   'course.topicsLess': core('showless'),
+  // The dashboard's greeting (Moodle 4.0+), shown in the page band after signing in.
+  'handoff.welcome': core('welcomeback'),
 };
 
 const TTL = 7 * 24 * 60 * 60 * 1000;

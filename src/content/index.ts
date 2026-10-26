@@ -1,4 +1,5 @@
 import { playArrival, watchDepartures, markDeparture } from '../fx/arrival';
+import { discardHandoff, dropVeil, playHandoff, showVeil } from '../fx/handoff';
 import { heroCanvas } from '../fx/heroCanvas';
 import { batch, effect } from '@preact/signals';
 import { seedDetails } from '../data/repo/cmdetails';
@@ -161,12 +162,17 @@ class Controller {
       this.applyAttrs(readBootMirror());
       setMode('boot');
       this.paintEarly();
+      // Just signed in: the login's last frame covers the window until the shell can take it over.
+      if (resolveRoute({ path: location.pathname, bodyId: '', bodyClasses: [] }).key !== 'login') showVeil();
       if (DEBUG) startFirstFrameProbe(this.html);
       window.clearTimeout(this.failTimer);
       this.failTimer = window.setTimeout(() => this.failOpen('timeout'), FAILSAFE_MS);
 
       const body = await waitForBody(this.html);
-      if (!looksLikeMoodle(body)) return this.settleOff(false);
+      if (!looksLikeMoodle(body)) {
+        dropVeil(true);
+        return this.settleOff(false);
+      }
 
       const s = await (this.settingsLoaded ?? loadSettings());
       await this.preload;
@@ -197,6 +203,7 @@ class Controller {
       }
       if (info.isGuest || !info.sesskey) {
         // Signed-out pages: the skin plus a small guest header (login button, language menu); embedded layouts stay plain Moodle.
+        dropVeil();
         const guestRoot = await mountGuestSkin({ html: this.html, doc: document, wwwroot: info.wwwroot, route: eff, settings: s, onError: (e) => this.failOpen('guest', e) });
         if (!guestRoot) return this.settleOff(false);
         this.route = eff;
@@ -240,6 +247,7 @@ class Controller {
   private settleOff(pill: boolean, reason: OffReason = 'route'): void {
     window.clearTimeout(this.failTimer);
     removeSnapshot();
+    dropVeil();
     setMode('off');
     if (pill) {
       showOffPill({
@@ -255,6 +263,9 @@ class Controller {
     // The guest page has no shell, and what was stored belonged to a signed-in user.
     removeSnapshot();
     clearSnapshot();
+    dropVeil();
+    // Back on the sign-in page without being signed in: that sign-in did not happen, its frame goes.
+    if (info.isGuest) discardHandoff();
     await this.dcl;
     this.syncAttrs();
     const root = document.createElement('div');
@@ -357,7 +368,10 @@ class Controller {
     this.mounted = true;
     this.html.dataset.kexShell = 'ready';
     setMode(eff.effective === 'app' ? 'app' : 'boot');
-    if (eff.effective === 'app') playArrival(root.querySelector<HTMLElement>('.kex-main'));
+    if (eff.effective === 'app') {
+      playArrival(root.querySelector<HTMLElement>('.kex-main'));
+      void playHandoff(root);
+    }
     // A full load reached by Back, Forward or Reload (from an activity, Participants, …): the page goes back to where it was.
     // Scroll restoration is manual for the soft navigations, so the browser no longer does this itself.
     const entry = performance.getEntriesByType?.('navigation')[0] as PerformanceNavigationTiming | undefined;
@@ -387,6 +401,7 @@ class Controller {
     this.refreshViewFromDoc(eff, document);
     if (eff.effective === 'skin') {
       setMode('skin');
+      dropVeil();
       if (chromeKeys.has(eff.key) || eff.key === 'quiz-focus') this.routeStops.push(watchSkinPage());
       this.routeStops.push(watchInk());
     }
@@ -892,6 +907,7 @@ class Controller {
     }
     this.unmount();
     setMode('off');
+    dropVeil();
     showOffPill({
       variant: 'error',
       onPrimary: () => {
@@ -909,6 +925,7 @@ class Controller {
     }
     this.unmount();
     setMode('off');
+    dropVeil();
     this.syncLang(s);
     if (s.showOffPill && document.body) {
       showOffPill({ variant: 'disabled', onPrimary: () => updateSettings({ enabled: true }) });

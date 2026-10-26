@@ -60,4 +60,20 @@ export const heroCanvas = {
   setPointer(x: number, y: number): void {
     handle?.setPointer(x, y);
   },
+  /** The frame on screen as a 2D canvas (null before the first frame, or with effects off). */
+  snapshot(): HTMLCanvasElement | null {
+    return handle?.snapshot() ?? null;
+  },
+  /** Ease the ribbons' rush (speed and brightness) to `to` over `ms`. */
+  rush(to: number, ms: number): void {
+    const h = handle;
+    if (!h) return;
+    const start = performance.now();
+    const step = (now: number): void => {
+      const k = Math.min(1, (now - start) / ms);
+      h.setRush(to * (1 - (1 - k) ** 3));
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  },
 };

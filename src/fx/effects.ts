@@ -37,6 +37,8 @@ export interface EffectHandle {
   update(opts: RibbonsOptions): void;
   /** The current frame as a 2D canvas, for a cross-fade to the next look. */
   snapshot(): HTMLCanvasElement | null;
+  /** 0..1: faster and brighter ribbons (the sign-in departure). */
+  setRush(r: number): void;
 }
 
 /** One owner for context creation, readiness, visibility and the 30 Hz drawing budget. */
@@ -115,6 +117,7 @@ export class EffectsController {
         if (!this.entries.size) this.unlisten();
       },
       setPointer: (x, y) => { if (!entry.disposed) entry.renderer?.setPointer(x, y); },
+      setRush: (r) => { if (!entry.disposed) entry.renderer?.setRush(r); },
       update: (o) => {
         entry.opts = { ...entry.opts, ...o };
         entry.renderer?.setOptions(o);

@@ -490,6 +490,7 @@ export const en = {
   'login.label': 'TALTECH / LEARNING ENVIRONMENT',
   'login.kicker': 'SIGN IN',
   'login.welcome': 'Welcome back',
+  'handoff.welcome': 'Welcome back, {$a}! 👋',
   'login.more': 'More sign-in options',
   'login.less': 'Fewer sign-in options',
   'login.help': 'Help',
