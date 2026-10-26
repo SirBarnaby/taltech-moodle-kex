@@ -1,0 +1,450 @@
+/* Achievements (round 8): the medallions, the Saavutused page and the unlock messages. Each group has its own ink;
+   `--kex-ach-rgb` is the same ink as numbers, for the points of light. */
+:root[data-kex] {
+  --kex-ach-courses: #5b3ee8;
+  --kex-ach-courses-rgb: 91, 62, 232;
+  --kex-ach-labs: #0d8a7f;
+  --kex-ach-labs-rgb: 13, 138, 127;
+  --kex-ach-deadlines: #b86e00;
+  --kex-ach-deadlines-rgb: 184, 110, 0;
+  --kex-ach-grades: #2a8452;
+  --kex-ach-grades-rgb: 42, 132, 82;
+  --kex-ach-kex: #b012e8;
+  --kex-ach-kex-rgb: 176, 18, 232;
+  --kex-ach-habits: #2c66d6;
+  --kex-ach-habits-rgb: 44, 102, 214;
+}
+:root[data-kex][data-kex-theme="dark"] {
+  --kex-ach-courses: #a493ff;
+  --kex-ach-courses-rgb: 164, 147, 255;
+  --kex-ach-labs: #4fd2c2;
+  --kex-ach-labs-rgb: 79, 210, 194;
+  --kex-ach-deadlines: #f2b450;
+  --kex-ach-deadlines-rgb: 242, 180, 80;
+  --kex-ach-grades: #63d293;
+  --kex-ach-grades-rgb: 99, 210, 147;
+  --kex-ach-kex: #e07cff;
+  --kex-ach-kex-rgb: 224, 124, 255;
+  --kex-ach-habits: #7fa9ff;
+  --kex-ach-habits-rgb: 127, 169, 255;
+}
+
+#kex-root {
+  [data-group="courses"] { --kex-ach-ink: var(--kex-ach-courses); --kex-ach-rgb: var(--kex-ach-courses-rgb); }
+  [data-group="labs"] { --kex-ach-ink: var(--kex-ach-labs); --kex-ach-rgb: var(--kex-ach-labs-rgb); }
+  [data-group="deadlines"] { --kex-ach-ink: var(--kex-ach-deadlines); --kex-ach-rgb: var(--kex-ach-deadlines-rgb); }
+  [data-group="grades"] { --kex-ach-ink: var(--kex-ach-grades); --kex-ach-rgb: var(--kex-ach-grades-rgb); }
+  [data-group="kex"] { --kex-ach-ink: var(--kex-ach-kex); --kex-ach-rgb: var(--kex-ach-kex-rgb); }
+  [data-group="habits"] { --kex-ach-ink: var(--kex-ach-habits); --kex-ach-rgb: var(--kex-ach-habits-rgb); }
+
+  /* ---- the medallion ---- */
+  .kex-medal {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    width: var(--kex-medal-size);
+    height: var(--kex-medal-size);
+    border-radius: 50%;
+    color: var(--kex-ach-ink);
+  }
+  .kex-medal svg {
+    display: block;
+    overflow: visible;
+  }
+  .kex-medal__ring {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    opacity: 0.45;
+  }
+  .kex-medal__cross {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    opacity: 0.55;
+  }
+  .kex-medal__disc {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1;
+    stroke-dasharray: 2 3;
+    vector-effect: non-scaling-stroke;
+    opacity: 0.4;
+  }
+  .kex-medal__glyph {
+    color: currentColor;
+    opacity: 0.32;
+  }
+  .kex-medal__secret {
+    fill: currentColor;
+    opacity: 0.5;
+    font: 600 17px var(--kex-font-mono);
+  }
+  .kex-medal__tier rect {
+    fill: var(--kex-bg);
+    stroke: currentColor;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .kex-medal__tier text {
+    fill: currentColor;
+    font: 600 7px var(--kex-font-mono);
+    letter-spacing: 0.04em;
+  }
+  .kex-medal--earned {
+    .kex-medal__ring,
+    .kex-medal__cross {
+      opacity: 1;
+    }
+    .kex-medal__disc {
+      fill: currentColor;
+      stroke: none;
+      opacity: 1;
+    }
+    .kex-medal__glyph {
+      color: #fff;
+      opacity: 1;
+    }
+    .kex-medal__tier rect {
+      fill: currentColor;
+    }
+    .kex-medal__tier text {
+      fill: #fff;
+    }
+  }
+  :root[data-kex-theme="dark"] & .kex-medal--earned {
+    .kex-medal__glyph {
+      color: #140e2b;
+    }
+    .kex-medal__tier text {
+      fill: #140e2b;
+    }
+  }
+  .kex-medal--top {
+    color: #d8a6fa;
+    .kex-medal__glyph {
+      color: #2a1153;
+    }
+    .kex-medal__tier rect {
+      fill: #e3a6f8;
+    }
+    .kex-medal__tier text {
+      fill: #2a1153;
+    }
+  }
+  /* A slow sheen over earned medallions on the page (the top tier always; others once, on hover). */
+  .kex-medal__sheen {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%) no-repeat;
+    background-size: 250% 100%;
+    background-position: 130% 0;
+    mix-blend-mode: soft-light;
+    -webkit-mask: radial-gradient(circle, #000 64%, transparent 66%);
+    mask: radial-gradient(circle, #000 64%, transparent 66%);
+  }
+  .kex-medal--top .kex-medal__sheen {
+    animation: kex-medal-sheen 4.8s ease-in-out 1.2s infinite;
+  }
+  .kex-ach__card:hover .kex-medal__sheen {
+    animation: kex-medal-sheen 900ms ease-out;
+  }
+
+  /* The unlock: the medallion pops, its ring draws itself, the sheen sweeps once. */
+  .kex-medal--unlock {
+    animation: kex-medal-pop 560ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    .kex-medal__ring {
+      stroke-dasharray: 100;
+      animation: kex-medal-draw 700ms cubic-bezier(0.65, 0, 0.35, 1) 120ms both;
+    }
+    .kex-medal__glyph {
+      animation: kex-medal-glyph 420ms cubic-bezier(0.23, 1, 0.32, 1) 300ms both;
+    }
+    .kex-medal__sheen {
+      animation: kex-medal-sheen 900ms ease-out 620ms both;
+    }
+  }
+
+  /* ---- the page ---- */
+  .kex-achpage .kex-content {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding-top: 30px;
+    padding-bottom: 48px;
+  }
+  .kex-achgroup__kicker {
+    margin: 0 0 12px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--kex-mono);
+  }
+  .kex-achgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .kex-ach__card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    height: 100%;
+    padding: 16px 18px;
+    border: 1px solid var(--kex-border-card);
+    border-radius: var(--kex-r-l);
+    background: var(--kex-surface-1, #fff);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 160ms var(--kex-ease), background-color 160ms var(--kex-ease);
+  }
+  a.kex-ach__card:hover {
+    border-color: var(--kex-ach-ink);
+    background: var(--kex-hover);
+  }
+  .kex-ach--focus .kex-ach__card {
+    border-color: var(--kex-ach-ink);
+    box-shadow: 0 0 0 3px rgba(var(--kex-ach-rgb), 0.18);
+  }
+  .kex-ach__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding-top: 4px;
+  }
+  .kex-ach__name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--kex-text);
+  }
+  .kex-ach:not(.kex-ach--earned) .kex-ach__name {
+    color: var(--kex-text-2);
+  }
+  .kex-ach__tier {
+    padding: 1px 5px;
+    border-radius: var(--kex-r-s);
+    background: rgba(var(--kex-ach-rgb), 0.14);
+    color: var(--kex-ach-ink);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+  .kex-ach__line {
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--kex-text-3);
+  }
+  .kex-ach__meta {
+    margin-top: 2px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--kex-ach-ink);
+  }
+  .kex-ach__progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--kex-mono);
+  }
+  .kex-ach__bar {
+    flex: 1;
+    max-width: 160px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--kex-border);
+    overflow: hidden;
+  }
+  .kex-ach__bar > span {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--kex-ach-ink);
+  }
+
+  /* ---- unlock messages ---- */
+  .kex-achtoasts {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: var(--kex-z-toast);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    pointer-events: none;
+  }
+  .kex-achtoast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: min(420px, calc(100vw - 32px));
+    padding: 14px 14px 14px 16px;
+    border-radius: var(--kex-r-xl);
+    background: #1b1334;
+    color: #f2f1f8;
+    box-shadow: 0 18px 48px -12px rgba(16, 6, 50, 0.45), 0 0 0 1px rgba(var(--kex-ach-rgb), 0.35);
+    animation: kex-achtoast-in 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  .kex-achtoast .kex-medal {
+    color: var(--kex-ach-ink);
+  }
+  .kex-achtoast .kex-medal--earned .kex-medal__tier rect {
+    fill: var(--kex-ach-ink);
+  }
+  .kex-achtoast__text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+  }
+  .kex-achtoast__kicker {
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    color: var(--kex-ach-ink);
+  }
+  .kex-achtoast__name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .kex-achtoast__line {
+    font-size: 13px;
+    line-height: 18px;
+    color: #c6c1d9;
+  }
+  .kex-achtoast__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    align-self: flex-start;
+  }
+  .kex-achtoast__view {
+    height: 30px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: var(--kex-r-m);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .kex-achtoast__view:hover {
+    border-color: var(--kex-ach-ink);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .kex-achtoast__close {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: var(--kex-r-m);
+    background: transparent;
+    color: #a5a3c5;
+    cursor: pointer;
+  }
+  .kex-achtoast__close:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .kex-achtoasts__more {
+    pointer-events: auto;
+    height: 28px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 14px;
+    background: #1b1334;
+    color: #e6e4ef;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+  /* The light ink is for light pages: on the dark message, the dark-theme ink of each group. */
+  :root[data-kex-theme="light"] & .kex-achtoast[data-group="courses"] { --kex-ach-ink: #a493ff; }
+  :root[data-kex-theme="light"] & .kex-achtoast[data-group="labs"] { --kex-ach-ink: #4fd2c2; }
+  :root[data-kex-theme="light"] & .kex-achtoast[data-group="deadlines"] { --kex-ach-ink: #f2b450; }
+  :root[data-kex-theme="light"] & .kex-achtoast[data-group="grades"] { --kex-ach-ink: #63d293; }
+  :root[data-kex-theme="light"] & .kex-achtoast[data-group="kex"] { --kex-ach-ink: #e07cff; }
+  :root[data-kex-theme="light"] & .kex-achtoast[data-group="habits"] { --kex-ach-ink: #7fa9ff; }
+  :root[data-kex-theme="light"] & .kex-achtoast .kex-medal--earned .kex-medal__glyph { color: #140e2b; }
+  :root[data-kex-theme="light"] & .kex-achtoast .kex-medal--earned .kex-medal__tier text { fill: #140e2b; }
+  :root[data-kex-theme="dark"] & .kex-achtoast {
+    background: #241d40;
+    box-shadow: 0 18px 48px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(var(--kex-ach-rgb), 0.4);
+  }
+  @media (max-width: 640px) {
+    .kex-achtoasts {
+      right: 16px;
+      left: 16px;
+      bottom: 16px;
+      align-items: stretch;
+    }
+    .kex-achtoast {
+      width: auto;
+    }
+  }
+}
+
+:root[data-kex-motion="reduced"] #kex-root {
+  .kex-medal--unlock,
+  .kex-medal--unlock .kex-medal__ring,
+  .kex-medal--unlock .kex-medal__glyph,
+  .kex-medal--unlock .kex-medal__sheen,
+  .kex-medal--top .kex-medal__sheen,
+  .kex-achtoast {
+    animation: none;
+  }
+}
+
+@keyframes kex-medal-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+@keyframes kex-medal-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes kex-medal-glyph {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+@keyframes kex-medal-sheen {
+  from {
+    background-position: 130% 0;
+  }
+  to {
+    background-position: -30% 0;
+  }
+}
+@keyframes kex-achtoast-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+}

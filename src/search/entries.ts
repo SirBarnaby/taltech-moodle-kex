@@ -24,6 +24,7 @@ function pageEntries(): Entry[] {
   const pages: [string, string, string][] = [
     ['workspace', t('nav.workspace'), PAGES.workspace],
     ['pinned', t('nav.pinned'), PAGES.pinned],
+    ['achievements', t('nav.achievements'), PAGES.achievements],
     ['mycourses', t('nav.mycourses'), PAGES.mycourses],
     ['calendar', t('nav.calendar'), PAGES.calendar],
     ['grades', t('nav.grades'), PAGES.grades],

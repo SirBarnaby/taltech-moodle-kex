@@ -1,7 +1,7 @@
 import { playArrival, watchDepartures, markDeparture } from '../fx/arrival';
 import { discardHandoff, dropVeil, playHandoff, showVeil } from '../fx/handoff';
 import { heroCanvas } from '../fx/heroCanvas';
-import { batch, effect } from '@preact/signals';
+import { batch, effect, untracked } from '@preact/signals';
 import { seedDetails } from '../data/repo/cmdetails';
 import { parseCmItems } from '../data/scrape/cm';
 import type { NavTab } from '../data/scrape/secondarynav';
@@ -64,6 +64,7 @@ import { scrapeLanguages } from './langs';
 import { mountGuestSkin, unmountGuestSkin } from './skinguest';
 import { clickedLink, homeTarget, isPlainClick, PageLoader, prefetchSafe, routeOfDoc, softTarget, type SoftTarget } from './softnav';
 import { watchLiveNotices } from './sitenotice';
+import { noteShortcut, startAchievements, stopAchievements } from '../achievements/engine';
 import { clearSnapshot, hasSnapshot, paintSnapshot, removeSnapshot, saveSnapshot } from './snapshot';
 
 /** Failsafe from architecture §5.2: if the shell has not mounted after 3 s, show plain Moodle. */
@@ -387,6 +388,13 @@ class Controller {
         const cs = sidebarCourses.value;
         if (cs.length) prefetchStates(cs);
       }),
+      effect(() => {
+        // Achievements are worked out in this page, in idle time, from what the other stores already hold.
+        const on = settings.value.achievements;
+        untracked(() => (on ? startAchievements() : stopAchievements()));
+      }),
+      stopAchievements,
+      keyManager.onFire((b) => noteShortcut(b.keys)),
     );
     void countsStore().refresh();
     const countsTimer = window.setInterval(() => document.visibilityState === 'visible' && void countsStore().refresh(), 2 * 60 * 1000);

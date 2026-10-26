@@ -195,6 +195,19 @@ function Options() {
         <Row label={t('ext.labsView')} hint={t('ext.labsViewHint')} htmlFor="o-labs">
           <Switch id="o-labs" label={t('ext.labsView')} checked={s.labsView === 'auto'} onChange={(on) => update({ labsView: on ? 'auto' : 'off' })} />
         </Row>
+        <Row label={t('ext.achievements')} hint={t('ext.achievementsHint')} htmlFor="o-ach">
+          <Switch id="o-ach" label={t('ext.achievements')} checked={s.achievements} onChange={(achievements) => update({ achievements })} />
+        </Row>
+        {s.achievements && (
+          <>
+            <Row label={t('ext.achievementToasts')} hint={t('ext.achievementToastsHint')} htmlFor="o-ach-toasts">
+              <Switch id="o-ach-toasts" label={t('ext.achievementToasts')} checked={s.achievementToasts} onChange={(achievementToasts) => update({ achievementToasts })} />
+            </Row>
+            <Row label={t('ext.achievementGrades')} hint={t('ext.achievementGradesHint')} htmlFor="o-ach-grades">
+              <Switch id="o-ach-grades" label={t('ext.achievementGrades')} checked={s.achievementGrades} onChange={(achievementGrades) => update({ achievementGrades })} />
+            </Row>
+          </>
+        )}
         <Row label={t('settings.motion')} hint={t('ext.motionHint')}>
           <Segmented
             label={t('settings.motion')}

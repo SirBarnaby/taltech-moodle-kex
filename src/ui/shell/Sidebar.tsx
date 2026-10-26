@@ -1,6 +1,6 @@
 import {
   BookMarked, CalendarDays, ChevronRight, GraduationCap, House, LibraryBig, Mail, MessageSquare, Settings as SettingsIcon, SlidersHorizontal,
-  SquareArrowOutUpRight, type LucideIcon,
+  SquareArrowOutUpRight, Trophy, type LucideIcon,
 } from 'lucide-preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { setCourseAlias } from '../../actions/settings';
@@ -12,8 +12,8 @@ import { seasonLabel } from '../../data/names';
 import { currentSemester, displayName } from '../../data/repo/courses';
 import { t } from '../../i18n';
 import {
-  activeCourseId, coursesLoading, hash, logoSrc, pageInfo, quickSettingsOpen, route, sidebarCourses, sidebarInstant, sidebarMode, sidebarOverlay,
-  ttLinks, user, userMenuOpen,
+  activeCourseId, coursesLoading, hash, logoSrc, pageInfo, quickSettingsOpen, route, settings, sidebarCourses, sidebarInstant, sidebarMode,
+  sidebarOverlay, ttLinks, user, userMenuOpen,
 } from '../../state';
 import { pressedCourseId } from '../../state/navigation';
 import { QuickSettings } from './QuickSettings';
@@ -246,8 +246,9 @@ export function Sidebar() {
   const label = `${t('sidebar.courses')} / ${seasonLabel(sem.season)} ${sem.year}`;
   const links = ttLinks.value;
   const key = r?.key;
-  const isHome = key === 'workspace' && hash.value !== '#pinned';
+  const isHome = key === 'workspace' && hash.value !== '#pinned' && hash.value !== '#achievements';
   const isPinned = key === 'workspace' && hash.value === '#pinned';
+  const isAch = key === 'workspace' && hash.value === '#achievements';
   const counts = countsStore().value.value;
   const unread = counts?.notifs ?? 0;
   const messages = counts?.messages ?? 0;
@@ -300,6 +301,14 @@ export function Sidebar() {
               <span class="kex-sb__rowlabel">{t('nav.pinned')}</span>
             </a>
           </li>
+          {settings.value.achievements && (
+            <li>
+              <a class="kex-sb__row kex-sb__row--sub" href={homeUrl(PAGES.achievements)} aria-current={isAch ? 'page' : undefined} data-tip={t('nav.achievements')} data-kex-test="sb-achievements" onClick={(e) => here(e, PAGES.achievements)}>
+                <Trophy size={22} strokeWidth={1.5} aria-hidden="true" />
+                <span class="kex-sb__rowlabel">{t('nav.achievements')}</span>
+              </a>
+            </li>
+          )}
           <NavRow href={homeUrl(PAGES.calendar)} label={t('nav.calendar')} icon={CalendarDays} current={nav === 'calendar'} testId="sb-calendar" />
           <NavRow
             href={homeUrl(PAGES.messages)} label={t('nav.messages')} icon={MessageSquare} current={nav === 'messages'} testId="sb-messages"

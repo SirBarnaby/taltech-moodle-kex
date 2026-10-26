@@ -11,6 +11,8 @@ import { NotificationsView } from '../views/Notifications';
 import { SkinChrome } from '../views/SkinChrome';
 import { chromeKeys } from '../../state/skin';
 import { PinnedView } from '../views/Pinned';
+import { AchievementsView } from '../views/Achievements';
+import { AchievementToasts } from './AchievementToasts';
 import { WorkspaceView } from '../views/Workspace';
 import { Header } from './Header';
 import { KeyboardHelp } from './KeyboardHelp';
@@ -120,7 +122,7 @@ function View() {
   if (hardNavigating.value || (r.key === 'grades' && navigationLoading.value)) return <NavigationSkeleton />;
   // Keyed by course: a soft navigation from one course to another mounts a fresh view (state, hero, effects).
   if (r.key === 'course' || r.key === 'section') return <CourseView key={activeCourseId.value ?? 0} />;
-  if (r.key === 'workspace') return hash.value === '#pinned' ? <PinnedView /> : <WorkspaceView />;
+  if (r.key === 'workspace') return hash.value === '#pinned' ? <PinnedView /> : hash.value === '#achievements' ? <AchievementsView /> : <WorkspaceView />;
   if (r.key === 'mycourses') return <MyCoursesView />;
   if (r.key === 'grades') return <GradesOverviewView />;
   if (r.key === 'notifications') return <NotificationsView />;
@@ -143,6 +145,7 @@ export function Shell() {
         {paletteOpen.value && <Palette />}
         {helpOpen.value && <KeyboardHelp />}
         <Toasts />
+        <AchievementToasts />
       </div>
     </>
   );

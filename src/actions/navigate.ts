@@ -21,6 +21,7 @@ export function homeUrl(path: string): string {
 export const PAGES = {
   workspace: '/my/?view=dossier',
   pinned: '/my/?view=dossier#pinned',
+  achievements: '/my/?view=dossier#achievements',
   deadlines: '/my/?view=dossier#deadlines',
   updates: '/my/?view=dossier#updates',
   mycourses: '/my/courses.php',

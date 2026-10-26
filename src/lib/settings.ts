@@ -45,6 +45,10 @@ export interface Settings {
   labsView: 'auto' | 'off';
   /** The reader's own Labs or List choice per topic, by `courseId:sectionId`. */
   seriesChoice: Record<string, 'labs' | 'list'>;
+  /** Achievements on at all; their unlock toasts; and the ones read from grades (grades are personal). */
+  achievements: boolean;
+  achievementToasts: boolean;
+  achievementGrades: boolean;
   debug: { freezeTime?: number; selectorReport?: boolean; logLevel?: 'warn' | 'debug' };
 }
 
@@ -70,6 +74,9 @@ export const DEFAULT_SETTINGS: Settings = {
   hiddenNotices: [],
   labsView: 'auto',
   seriesChoice: {},
+  achievements: true,
+  achievementToasts: true,
+  achievementGrades: true,
   debug: {},
 };
 
@@ -130,6 +137,9 @@ export function normalizeSettings(raw: unknown): Settings {
     hiddenNotices: Array.isArray(r.hiddenNotices) ? r.hiddenNotices.filter((x): x is string => typeof x === 'string').slice(-50) : [],
     labsView: pick(r.labsView, ['auto', 'off'], d.labsView),
     seriesChoice: seriesChoices(r.seriesChoice),
+    achievements: typeof r.achievements === 'boolean' ? r.achievements : d.achievements,
+    achievementToasts: typeof r.achievementToasts === 'boolean' ? r.achievementToasts : d.achievementToasts,
+    achievementGrades: typeof r.achievementGrades === 'boolean' ? r.achievementGrades : d.achievementGrades,
     debug: r.debug && typeof r.debug === 'object' ? (r.debug as Settings['debug']) : {},
   };
 }

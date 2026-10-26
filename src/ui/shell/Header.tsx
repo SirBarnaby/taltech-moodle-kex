@@ -89,7 +89,8 @@ export function Header() {
         { home: t('crumb.home'), workspace: t('crumb.workspace'), mycourses: t('crumb.mycourses'), grades: t('nav.grades'), notifications: t('nav.notifications') },
       )
     : [];
-  if (hash.value === '#pinned' && crumbs.length === 2 && /\/my\/?$/.test(info?.wwwroot ? stripBase(location.pathname, info.wwwroot) : '')) crumbs[1] = { text: t('pinned.title'), href: null };
+  const myPage = hash.value === '#pinned' ? t('pinned.title') : hash.value === '#achievements' ? t('ach.title') : null;
+  if (myPage && crumbs.length === 2 && /\/my\/?$/.test(info?.wwwroot ? stripBase(location.pathname, info.wwwroot) : '')) crumbs[1] = { text: myPage, href: null };
   const mac = isMac();
 
   return (

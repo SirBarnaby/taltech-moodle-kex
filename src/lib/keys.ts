@@ -71,7 +71,15 @@ export class KeyManager {
   private attached = false;
   private suspended = false;
 
+  private fired = new Set<(b: Binding) => void>();
+
   constructor(private readonly target: Document | Window = window) {}
+
+  /** Told about every shortcut that ran (the achievements count distinct ones). Returns the function that stops it. */
+  onFire(cb: (b: Binding) => void): () => void {
+    this.fired.add(cb);
+    return () => this.fired.delete(cb);
+  }
 
   register(bindings: Binding[]): () => void {
     const added = bindings.map((b) => ({ b, p: parse(b.keys) }));
@@ -134,6 +142,7 @@ export class KeyManager {
         e.stopPropagation();
         this.resetChord();
         b.run(e);
+        this.fired.forEach((cb) => cb(b));
         return 'fired';
       }
     }

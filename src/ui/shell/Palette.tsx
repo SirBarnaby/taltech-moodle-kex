@@ -2,6 +2,7 @@ import { revealInScroller } from '../../fx/navigation';
 import { BookOpen, FileText, GraduationCap, Hash, PanelsTopLeft, Pin, Search, Zap, type LucideIcon } from 'lucide-preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { go } from '../../actions/navigate';
+import { noteSearch } from '../../achievements/engine';
 import { pinItem } from '../../actions/pins';
 import { searchCourses } from '../../data/repo/coursesearch';
 import type { Pin as PinModel } from '../../data/model';
@@ -113,6 +114,7 @@ export function Palette() {
     if (!row) return;
     const e = row.entry;
     close();
+    noteSearch();
     if (e.run) e.run();
     else if (e.url) go(e.url, newTab);
   };

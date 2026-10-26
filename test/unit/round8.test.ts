@@ -3,6 +3,8 @@ import { contrast, inkPage, parseColor, resolved } from '../../src/content/darki
 import type { Section } from '../../src/data/model';
 import { detectCourseSeries, detectTopicSeries, sameCms } from '../../src/data/series';
 import type { BlockModel, GroupModel, RowModel, SectionView } from '../../src/data/topics';
+import { dayKey, emptyJournal, noteDeadlines, noteVisit } from '../../src/achievements/journal';
+import { cleanDays, evaluate, weekdayRun, type Facts } from '../../src/achievements/rules';
 
 const KIND: Record<string, RowModel['kind']> = { assign: 'assignment', quiz: 'quiz', page: 'reading', resource: 'material', url: 'tool', book: 'reading', questionnaire: 'survey', choicegroup: 'tool' };
 let nextId = 1000;
@@ -89,5 +91,55 @@ describe('round 8', () => {
     expect(detectCourseSeries(ias0230.map((title, i) => ({ number: i + 3, title, work: false })))).toBeNull();
     expect(detectCourseSeries(['1. LEADING SELF', '2. LEADING TEAMS', '3. LEADING ORGANIZATIONS', 'Independent digital exam'].map((title, i) => ({ number: i + 1, title, work: true })))).toEqual([1, 2, 3]);
     expect(detectCourseSeries(['7 September - 13 September', '14 September - 20 September', '21 September - 27 September'].map((title, i) => ({ number: i + 1, title, work: true })))).toEqual([1, 2, 3]);
+  });
+
+  it('achievements: progress, labs, grades and KEX use earn; deadlines handed in early or at the last minute are noticed safely', () => {
+    const H = 3600_000;
+    const now = new Date('2026-10-26T10:00:00').getTime();
+    const facts = (over: Partial<Facts> = {}): Facts => ({
+      now, courses: [], states: [], labs: [], grades: [], pins: 0, journal: emptyJournal(), earned: new Set(), ...over,
+    });
+    expect(Object.values(evaluate(facts())).filter((s) => s.earned)).toHaveLength(0);
+    const r = evaluate(facts({
+      courses: [{ id: 1, progress: 100, opened: true }, { id: 2, progress: 55, opened: true }, { id: 3, progress: null, opened: false }],
+      states: [{ courseId: 1, ticks: 4, clearedTopic: 2 }],
+      labs: [{ courseId: 2, topic: 3, done: [true, true, true, false, true] }],
+      grades: [{ courseId: 1, cmid: 9, pct: 100 }, { courseId: 1, cmid: 8, pct: 91 }],
+      pins: 1,
+    }));
+    expect(r['first-tick'].earned && r['topic-cleared'].topic === 2 && r.halfway.earned && r.pinned.earned).toBe(true);
+    expect(r['course-complete']).toMatchObject({ earned: true, tier: 1, progress: { n: 1, of: 3 } });
+    expect(r['lab-done']).toMatchObject({ earned: true, tier: 1, progress: { n: 4, of: 5 } });
+    expect(r['lab-streak'].earned && !r['every-lab'].earned && r['every-lab'].progress?.n === 4).toBe(true);
+    expect(r['full-marks'].earned && !r['steady-hand'].earned && r['steady-hand'].progress?.n === 2).toBe(true);
+    expect(r.explorer).toMatchObject({ earned: false, progress: { n: 2, of: 3 } });
+
+    // Weekdays in a row: a weekend does not break the run (Thu, Fri, Mon, Tue, Wed).
+    expect(weekdayRun(['2026-10-22', '2026-10-23', '2026-10-26', '2026-10-27', '2026-10-28'])).toBe(5);
+    expect(weekdayRun(['2026-10-22', '2026-10-26'])).toBe(1);
+    // Clean slate: the days since the last overdue day.
+    expect(cleanDays({ '2026-10-01': 2, '2026-10-12': 0, '2026-10-20': 0, '2026-10-26': 0 }, now)).toEqual({ days: 15, records: 3 });
+    // Night owl at 1:30; a new term after another is a fresh start; the very first visit is neither.
+    let j = noteVisit(emptyJournal(), new Date('2026-10-26T01:30:00').getTime(), '2026-08-31');
+    expect([!!j.nightAt, !!j.earlyAt, !!j.freshAt, j.days]).toEqual([true, false, false, ['2026-10-26']]);
+    j = noteVisit(j, new Date('2027-02-02T09:00:00').getTime(), '2027-02-01');
+    expect(!!j.freshAt).toBe(true);
+
+    // Deadlines: seen open at 10:00, gone at 10:05 while due in three days, the course says done: handed in early.
+    const due = (ms: number): number => Math.floor(ms / 1000);
+    let d = noteDeadlines(emptyJournal(), [{ cmid: 5, courseId: 1, due: due(now + 72 * H), overdue: false }, { cmid: 6, courseId: 1, due: due(now + 0.75 * H), overdue: false }], now, () => undefined);
+    d = noteDeadlines(d, [{ cmid: 6, courseId: 1, due: due(now + 0.75 * H), overdue: false }], now + 5 * 60_000, (cm) => (cm === 5 ? true : undefined));
+    expect(d.handed).toEqual([{ cmid: 5, courseId: 1, due: due(now + 72 * H) * 1000, after: now, before: now + 5 * 60_000 }]);
+    // Gone while the course says not done (hidden, moved): nothing. An older look than the last one: nothing.
+    const notDone = noteDeadlines(d, [], now + 10 * 60_000, () => false);
+    expect(notDone.handed).toHaveLength(1);
+    expect(noteDeadlines(d, [], now, () => true).handed).toHaveLength(1);
+    // The last-hour one, seen open 45 min before and gone 40 min before: a photo finish. A full list proves nothing.
+    d = noteDeadlines(d, [], now + 10 * 60_000, () => true);
+    const e = evaluate(facts({ journal: d }));
+    expect([e['early-bird'].earned, e['photo-finish'].earned]).toEqual([true, true]);
+    const full = Array.from({ length: 50 }, (_, i) => ({ cmid: 100 + i, courseId: 1, due: due(now + 90 * H), overdue: false }));
+    expect(noteDeadlines({ ...emptyJournal(), watch: { 7: { courseId: 1, due: now + 80 * H, seen: now - 60_000 } } }, full, now, () => true).handed).toHaveLength(0);
+    expect(dayKey(now)).toBe('2026-10-26');
   });
 });

@@ -32,6 +32,16 @@ export function academicPeriod(nowSec: number): AcademicPeriod {
   return { kind: 'unknown' };
 }
 
+/** The term (by its start date) a time falls in, from the first teaching day to the end of its exams, and its teaching week. */
+export function termAt(nowSec: number): { start: string; week?: number } | undefined {
+  if (!Number.isFinite(nowSec)) return undefined;
+  const date = new Intl.DateTimeFormat('sv', { timeZone: 'Europe/Tallinn' }).format(new Date(nowSec * 1000));
+  const term = TERMS.find((t) => date >= t.start && date <= t.end);
+  if (!term) return undefined;
+  const p = academicPeriod(nowSec);
+  return { start: term.start, week: p.kind === 'teaching' ? p.week : undefined };
+}
+
 export function calendarData(nowSec: number) {
   const period = academicPeriod(nowSec);
   const date = new Intl.DateTimeFormat('sv', { timeZone: 'Europe/Tallinn' }).format(new Date(nowSec * 1000));
