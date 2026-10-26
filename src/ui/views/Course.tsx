@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'preact/hooks';
-import { courseCode, closePreview, initCourse, openCm, openCmOriginal, previewCm, retryCourse, setGroupOpen, setTopic, showGroup, stepPreview, togglePin, toggleDone } from '../../actions/course';
+import { courseCode, closePreview, initCourse, markBoardFailed, openCm, openCmOriginal, previewCm, retryCourse, setGroupOpen, setSeriesChoice, setTopic, showGroup, stepPreview, togglePin, toggleDone } from '../../actions/course';
 import { MOTION, sinceNavigation } from '../../fx/navigation';
 import { softEntered } from '../../state/navigation';
 import { courseGradesStore } from '../../data/repo/grades';
@@ -11,7 +11,7 @@ import { t } from '../../i18n';
 import { sanitizeHtml } from '../../lib/sanitize';
 import { activeCourseId, headerTitle, pageInfo, settings, sidebarCourses } from '../../state';
 import {
-  courseError, courseState, courseStatus, focusZone, labTrack, labTrackSettled, mergedSummaries, openGroups, pinnedRow, previewCmId, rows, sectionView, secondaryNav, selectedCmId, topicNumber, topics, currentTopic,
+  courseError, courseState, courseStatus, focusZone, labTrack, labTrackSettled, mergedSummaries, openGroups, pinnedRow, previewCmId, rows, sectionView, secondaryNav, selectedCmId, seriesOn, topicMarks, topicNumber, topicSeries, topics, currentTopic,
 } from '../../state/course';
 import { Button } from '../components/Button';
 import { CourseBar } from '../components/CourseBar';
@@ -24,6 +24,8 @@ import { ResourceRow } from '../components/ResourceRow';
 import { SlideUpText } from '../components/SlideUpText';
 import { EmptyState, RowSkeleton, TopicSkeleton } from '../components/States';
 import { LabTrack } from '../components/LabTrack';
+import { Segmented } from '../components/Segmented';
+import { ErrorBoundary } from '../shell/Shell';
 import { SubsectionCard } from '../components/SubsectionCard';
 import { TopicList, topicDisplayTitle } from '../components/TopicList';
 
@@ -97,6 +99,10 @@ export function CourseView() {
   const track = labTrack.value;
   const open = openGroups.value;
   const labOf = new Map(track?.map((i) => [i.group.section.id, i]) ?? []);
+  const series = topicSeries.value;
+  // The board's own word: "Labs" for labs, else the topic's title ("Home assignments").
+  const labish = !!series && /^(lab|labor|labori|praktikum|harjutus)/.test(series.key);
+  const boardLabel = labish ? t('track.nav') : (topic?.title ?? t('track.nav'));
   const compact = !!track || settings.value.density === 'compact';
 
   const code = course?.code ?? courseCode();
@@ -189,7 +195,7 @@ export function CourseView() {
             group={block.group}
             index={bi + 1}
             lab={labOf.get(block.group.section.id)}
-            open={!track || open.has(block.group.section.id)}
+            open={!labOf.has(block.group.section.id) || open.has(block.group.section.id)}
             onToggle={(o) => setGroupOpen(block.group.section.id, o)}
           >
             {block.group.rows.map((r) => renderRow(r, orderOf.get(r.cm.id) ?? bi))}
@@ -210,7 +216,7 @@ export function CourseView() {
       />
       <div class="kex-content">
         {id && !loading && !failed && tps.length > 0 && (
-          <CourseBar topics={tps} active={topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} pins={pinnedRow.value} courseId={id} />
+          <CourseBar topics={tps} active={topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} pins={pinnedRow.value} courseId={id} marks={topicMarks.value} />
         )}
         <PinnedRow pins={pinnedRow.value} courseId={id} />
         <div class="kex-matheader">
@@ -221,7 +227,7 @@ export function CourseView() {
           {loading ? (
             <TopicSkeleton />
           ) : failed ? null : tps.length ? (
-            <TopicList topics={tps} active={topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} />
+            <TopicList topics={tps} active={topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} marks={topicMarks.value} />
           ) : null}
           <section class="kex-detail" id="kex-detail" data-kex-test="detail" aria-busy={loading}>
             {failed ? (
@@ -253,17 +259,31 @@ export function CourseView() {
                     <SlideUpText as="h3" class="kex-detail__title" testId="detail-title" text={detailTitle} split="characters" stagger={0.018} maxStagger={MOTION.topicStagger / 1000} duration={MOTION.topic / 1000} delay={topicDelay} />
                     {topic?.isRange && <p class="kex-detail__range">{topic.title}</p>}
                   </div>
+                  {series && (
+                    <div class="kex-detail__series" data-kex-test="series-switch">
+                      <Segmented
+                        value={seriesOn.value ? 'labs' : 'list'}
+                        label={t('series.label')}
+                        options={[{ value: 'labs', label: labish ? t('series.board') : t('series.boardOther') }, { value: 'list', label: t('series.list') }]}
+                        onChange={setSeriesChoice}
+                        slide
+                      />
+                    </div>
+                  )}
                 </div>
                 {summaryHtml && <div class="kex-detail__summary" data-kex-test="detail-summary" dangerouslySetInnerHTML={{ __html: summaryHtml }} />}
                 {track ? (
                   // Labs: a list of every lab beside the open one in a wide column, chips over folded cards in a narrow one (track.css).
-                  <div class="kex-labs" data-kex-test="labs">
-                    <LabTrack items={track} open={open} onShow={(gid) => showGroup(gid)} />
-                    {list}
-                    {!track.some((i) => open.has(i.group.section.id)) && (labTrackSettled.value
-                      ? <p class="kex-labs__none">{t('track.pick')}</p>
-                      : <div class="kex-labs__none kex-labs__none--wait" aria-hidden="true"><span class="kex-skel kex-skel--kicker" /><span class="kex-skel kex-skel--line kex-skel--w1" /><span class="kex-skel kex-skel--line kex-skel--w2" /></div>)}
-                  </div>
+                  // A board that fails shows the plain list instead (markBoardFailed), never an empty topic.
+                  <ErrorBoundary onError={markBoardFailed}>
+                    <div class="kex-labs" data-kex-test="labs">
+                      <LabTrack items={track} open={open} label={boardLabel} onShow={(gid) => showGroup(gid)} />
+                      {list}
+                      {!track.some((i) => open.has(i.group.section.id)) && (labTrackSettled.value
+                        ? <p class="kex-labs__none">{t('track.pick')}</p>
+                        : <div class="kex-labs__none kex-labs__none--wait" aria-hidden="true"><span class="kex-skel kex-skel--kicker" /><span class="kex-skel kex-skel--line kex-skel--w1" /><span class="kex-skel kex-skel--line kex-skel--w2" /></div>)}
+                    </div>
+                  </ErrorBoundary>
                 ) : list}
               </>
             )}

@@ -236,6 +236,10 @@ export const en = {
   'track.expand': 'Show {title}',
   'track.progress': '{done} of {total} done',
   'track.pick': 'Choose a lab from the list.',
+  'series.label': 'Show this topic as',
+  'series.board': 'Labs',
+  'series.list': 'List',
+  'series.boardOther': 'Board',
   'help.course.labs': 'Previous / next lab',
   'settings.compact': 'Compact rows',
   'ext.compactHint': 'Shorter material rows on every course page. Topics with four or more labs always use them.',
@@ -546,6 +550,8 @@ export const en = {
   'ext.langHint': "Follow Moodle uses the language Moodle itself is shown in. Moodle's own wording is used wherever Moodle has it.",
   'ext.colourSchool': 'Colour courses by school',
   'ext.colourSchoolHint': 'Course pages and heroes take a palette from the first letter of the course code (IT, engineering, science, business, maritime).',
+  'ext.labsView': 'Labs view',
+  'ext.labsViewHint': 'Labs, home assignments and weekly work show as a board with done, overdue and next when KEX is sure from the titles and activities. Off keeps every topic as Moodle\'s list.',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -1,7 +1,7 @@
 import { createElement, render } from 'preact';
 import { act } from 'preact/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { buildTrack, defaultOpen, isTrack, shortLabel } from '../../src/data/labtrack';
+import { buildTrack, defaultOpen, shortLabel } from '../../src/data/labtrack';
 import type { GroupModel, RowModel } from '../../src/data/topics';
 import { scanNotices } from '../../src/content/sitenotice';
 import { DEFAULT_READER, normalizeSettings } from '../../src/lib/settings';
@@ -18,7 +18,7 @@ const group = (id: number, title: string, done: number, total: number, rows: Row
 });
 
 describe('lab track', () => {
-  it('turns four or more subsections into a track, labels chips briefly, and opens only the next lab', () => {
+  it('labels lab chips briefly, marks done, overdue and next, and opens only the next lab', () => {
     expect(shortLabel('Lab 3: GPIO and interrupts')).toBe('Lab 3');
     expect(shortLabel('3. praktikum – taimerid')).toBe('3. praktikum');
     expect(shortLabel('Week 12 recap and exam prep')).toBe('Week 12');
@@ -30,8 +30,6 @@ describe('lab track', () => {
       group(3, 'Lab 3', 0, 2, [row(30, { due: now + 100, dueText: 'Due Fri 9 Oct' })]),
       group(4, 'Lab 4', 0, 2),
     ];
-    expect(isTrack(groups.map((g) => ({ type: 'group' as const, group: g })))).toBe(true);
-    expect(isTrack(groups.slice(0, 3).map((g) => ({ type: 'group' as const, group: g })))).toBe(false);
     const track = buildTrack(groups, now);
     expect(track.map((i) => i.state)).toEqual(['done', 'overdue', 'next', 'todo']);
     expect(track[2]?.dueText).toBe('Due Fri 9 Oct');

@@ -16,14 +16,15 @@ import { scrapeTiles, type Tile } from '../data/scrape/tiles';
 import { deadlineTopic, incompleteTopic, initialTopic, parseTopicHash, type RowModel } from '../data/topics';
 import { ws } from '../data/ws';
 import { t } from '../i18n';
-import { log } from '../lib/log';
+import { log, recordError } from '../lib/log';
 import {
   hooks, livePageDoc, pageInfo, settings, sidebarCourses,
 } from '../state';
 import {
-  courseError, courseEvents, courseEventsReady, courseState, courseStatus, fetchedSummaries, focusZone, labTrack, openGroups, openGroupsSet, previewCmId, rows, secondaryNav, selectedCmId, summaries, tileImages, topicNumber, topics, visibleRows,
+  boardFailed, courseError, courseEvents, courseEventsReady, courseState, courseStatus, fetchedSummaries, focusZone, labTrack, openGroups, openGroupsSet, previewCmId, rows, secondaryNav, selectedCmId, seriesKey, summaries, tileImages, topicNumber, topics, visibleRows,
 } from '../state/course';
 import { go } from './navigate';
+import { updateSettings } from './settings';
 import { pinItem } from './pins';
 import { pushToast } from './toasts';
 import { setUndo, undoLast } from './undo';
@@ -439,6 +440,21 @@ export function setGroupOpen(id: number, open: boolean): void {
   if (open) ids.add(id);
   else ids.delete(id);
   openGroupsSet.value = { topic: topicNumber.value, ids };
+}
+
+/** Labs or List for the selected topic, remembered for this course and topic. */
+export function setSeriesChoice(choice: 'labs' | 'list'): void {
+  const key = seriesKey.value;
+  if (!key) return;
+  updateSettings({ seriesChoice: { ...settings.value.seriesChoice, [key]: choice } });
+  openGroupsSet.value = undefined;
+}
+
+/** The board of the selected topic crashed: note it in Details and show the list for the rest of this page. */
+export function markBoardFailed(e: unknown): void {
+  recordError('series.board', e);
+  const key = seriesKey.value;
+  if (key) queueMicrotask(() => (boardFailed.value = new Set([...boardFailed.value, key])));
 }
 
 /** Open one lab on its own (chip strip, [ and ]), bring it into view and focus its header. */

@@ -1,8 +1,8 @@
-import type { BlockModel, GroupModel, RowModel } from './topics';
+import type { GroupModel, RowModel } from './topics';
 
 /**
- * Lab track: a topic made of many subsections (Embedded Systems has 13 labs in one topic) reads as a strip of labs, with the
- * next one open and the rest folded to one line. Pure over the section view; the folding itself lives in state.
+ * Lab track: a topic holding a series of labs (Embedded Systems has 13 in one topic; which topics qualify is series.ts) reads as
+ * a strip of labs, with the next one open and the rest folded to one line. Pure over the groups; the folding lives in state.
  */
 
 export type LabState = 'done' | 'overdue' | 'next' | 'todo';
@@ -15,13 +15,6 @@ export interface LabTrackItem {
   /** The deadline that matters: the earliest one still to do, else the last one. Unix seconds. */
   due?: number;
   dueText?: string;
-}
-
-/** Topics with this many subsections become a track. */
-export const TRACK_MIN = 4;
-
-export function isTrack(blocks: readonly BlockModel[]): boolean {
-  return blocks.filter((b) => b.type === 'group').length >= TRACK_MIN;
 }
 
 const NUMBERED = /^\s*(?:(lab(?:or(?:atoorne|i)?)?|praktikum|harjutus|homework|kodut[öo]{2}|exercise|practice|assignment|week|n[äa]dal|workshop|seminar|tund|task|[üu]lesanne)\s*\.?\s*(?:no\.?\s*)?(\d{1,3}[a-z]?))\b/iu;

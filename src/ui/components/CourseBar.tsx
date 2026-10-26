@@ -2,12 +2,13 @@ import { ChevronLeft, ChevronRight } from 'lucide-preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { go } from '../../actions/navigate';
 import { pinReplace, replacePinAt } from '../../actions/pins';
+import type { LabState } from '../../data/labtrack';
 import type { Pin } from '../../data/model';
 import type { TopicModel } from '../../data/topics';
 import { t } from '../../i18n';
 import { PinGlyph } from './Glyphs';
 import { PinMark } from './PinnedRow';
-import { topicDisplayTitle } from './TopicList';
+import { TopicMark, topicDisplayTitle } from './TopicList';
 
 interface CourseBarProps {
   topics: TopicModel[];
@@ -17,6 +18,7 @@ interface CourseBarProps {
   /** The course's own row pins (at most three). */
   pins: Pin[];
   courseId: number;
+  marks?: ReadonlyMap<number, LabState>;
 }
 
 const cssPx = (el: Element, name: string, fallback: number): number => Number.parseFloat(getComputedStyle(el).getPropertyValue(name)) || fallback;
@@ -43,7 +45,7 @@ function useGridGone(): boolean {
 }
 
 /** One row of topic chips that scrolls sideways: the active chip stays in view, edges fade where more wait, the wheel scrolls it. */
-function Chips({ topics, active, onSelect, onKeyDown }: Pick<CourseBarProps, 'topics' | 'active' | 'onSelect' | 'onKeyDown'>) {
+function Chips({ topics, active, onSelect, onKeyDown, marks }: Pick<CourseBarProps, 'topics' | 'active' | 'onSelect' | 'onKeyDown' | 'marks'>) {
   const row = useRef<HTMLOListElement>(null);
   const [edges, setEdges] = useState({ start: false, end: false });
   const measure = (): void => {
@@ -121,6 +123,7 @@ function Chips({ topics, active, onSelect, onKeyDown }: Pick<CourseBarProps, 'to
               >
                 <span class="kex-cbar__num">{tp.number}</span>
                 <span class="kex-cbar__title">{title}</span>
+                <TopicMark state={marks?.get(tp.section.number)} />
               </a>
             </li>
           );
@@ -201,7 +204,7 @@ function PinMenu({ pins, asking }: { pins: Pin[]; asking: boolean }) {
  * The course bar (round 8): once the TOPICS grid scrolls away, a 48 px bar slides in under the compact header with one row of
  * topic chips and this course's three pins. It sits in a zero-height sticky anchor, so it never takes space or moves the page.
  */
-export function CourseBar({ topics, active, onSelect, onKeyDown, pins, courseId }: CourseBarProps) {
+export function CourseBar({ topics, active, onSelect, onKeyDown, pins, courseId, marks }: CourseBarProps) {
   const gone = useGridGone();
   const waiting = pinReplace.value;
   const asking = !!waiting && waiting.courseId === courseId && pins.length > 0;
@@ -209,7 +212,7 @@ export function CourseBar({ topics, active, onSelect, onKeyDown, pins, courseId 
   return (
     <div class="kex-cbar-anchor">
       <div class={`kex-cbar${asking ? ' kex-cbar--asking' : ''}`} data-shown={shown ? '' : undefined} aria-hidden={shown ? undefined : 'true'} inert={!shown} data-kex-test="course-bar">
-        <Chips topics={topics} active={active} onSelect={onSelect} onKeyDown={onKeyDown} />
+        <Chips topics={topics} active={active} onSelect={onSelect} onKeyDown={onKeyDown} marks={marks} />
         {pins.length > 0 && (
           <div class="kex-cbar__pins" role="group" aria-label={t('course.pinned')}>
             <div class="kex-cbar__pinrow">

@@ -1,5 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { contrast, inkPage, parseColor, resolved } from '../../src/content/darkink';
+import type { Section } from '../../src/data/model';
+import { detectCourseSeries, detectTopicSeries, sameCms } from '../../src/data/series';
+import type { BlockModel, GroupModel, RowModel, SectionView } from '../../src/data/topics';
+
+const KIND: Record<string, RowModel['kind']> = { assign: 'assignment', quiz: 'quiz', page: 'reading', resource: 'material', url: 'tool', book: 'reading', questionnaire: 'survey', choicegroup: 'tool' };
+let nextId = 1000;
+const row = (name: string, modname: string): RowModel => {
+  const id = nextId++;
+  return {
+    cm: { id, courseId: 1, sectionId: 1, sectionNumber: 1, name, modname, url: `/mod/${modname}/view.php?id=${id}`, uservisible: true, restricted: false, tracked: true } as RowModel['cm'],
+    kind: KIND[modname] ?? 'material', format: 'PAGE', title: name, label: modname, typeName: modname, verb: 'open', locked: false, incomplete: true, provisional: false,
+  } as RowModel;
+};
+const section = (id: number, title: string): Section => ({ id, number: 1, title, url: '', visible: true, current: false, restricted: false, hasSummary: false, cmIds: [] });
+const group = (title: string, ...mods: string[]): BlockModel => ({ type: 'group', group: { section: section(nextId++, title), title, rows: mods.map((m) => row(`${title} ${m}`, m)), total: mods.length, done: 0 } as GroupModel });
+const view = (...blocks: (BlockModel | RowModel)[]): SectionView => {
+  const bs = blocks.map((b): BlockModel => ('cm' in b ? { type: 'row', row: b } : b));
+  return { blocks: bs, rows: bs.flatMap((b) => (b.type === 'row' ? [b.row] : b.group.rows)) };
+};
 
 const DARK = { r: 15, g: 11, b: 31, a: 1 };
 
@@ -39,5 +58,36 @@ describe('round 8', () => {
     expect(parseColor(document.getElementById('black')?.style.color)).toEqual({ r: 0, g: 0, b: 0, a: 1 });
     expect(document.getElementById('edit')?.dataset.kexInk).toBeUndefined();
     expect(ink('edit')).toBeUndefined();
+  });
+
+  it('finds labs and numbered work from titles and activities, never "Theory, Practice", lectures or a lost activity', () => {
+    // IAS0230 "Labs" (captured titles): three plain rows, then Lab 1 ... Lab 12 and Lab Final as subsections; work from Lab 3 on.
+    const labTitles = ['Lab 1 - Simple I/O', 'Lab 2 - Functions in C', 'Lab 3 - Port initialization, Delay, LED control', 'Lab 4 - Loop sequence, subroutines',
+      'Lab 5 - Breadboard circuit building', 'Lab 6 - µC Debugging', 'Lab 7 - Interrupts and buzzer', 'Lab 8 - FSM', 'Lab 9 - UART, OLED display', 'Lab 10 - DAC',
+      'Lab 11 - ADC, slide potentiometer', 'Lab 12 - Low power mode', 'Lab Final - Game'];
+    const labs = view(row('BESLabs', 'book'), row('Labs GitLab', 'url'), row('Lab day choice', 'choicegroup'),
+      ...labTitles.map((t, i) => (i < 2 ? group(t, 'page') : group(t, 'page', 'questionnaire', 'assign'))));
+    const ias = detectTopicSeries(labs, section(153220, 'Labs'));
+    expect([ias?.shape, ias?.confidence, ias?.key, ias?.groups.length, ias?.groups.at(-1)?.title]).toEqual(['groups', 'high', 'lab', 13, 'Lab Final - Game']);
+    // Four subsections that are not a series stay a list, work or not.
+    expect(detectTopicSeries(view(group('Theory', 'page'), group('Practice', 'assign'), group('Homework', 'assign'), group('Extra', 'url')), section(1, 'Week'))).toBeNull();
+    // ITB8833 "Home assignments" (captured): two numbered submissions, so the board is offered, not imposed.
+    const home = view(row('1. National digitalisation strategy (latest submission: 13.09.2026)', 'assign'), row('2. Terms of use (due: 23.10.2026)', 'assign'));
+    const itb = detectTopicSeries(home, section(156991, 'Home assignments'));
+    expect([itb?.shape, itb?.confidence, itb?.groups.length]).toEqual(['rows', 'medium', 2]);
+    // ITB8833 lectures: numbered reading stays a list.
+    expect(detectTopicSeries(view(row('Lecture 1. E-country, concepts and basics', 'resource'), row('Lecture 2. Interoperability', 'resource'), row('Lecture 3. Infra', 'resource')), section(2, 'Topic'))).toBeNull();
+    // Instructions and submission share a number: one card each; the unnumbered row stays a row; every activity exactly once.
+    const mixed = view(row('Course rules', 'page'), ...[1, 2, 3].flatMap((n) => [row(`Lab ${n} instructions`, 'page'), row(`Lab ${n} submission`, 'assign')]));
+    const m = detectTopicSeries(mixed, section(3, 'Practicals'));
+    expect([m?.shape, m?.confidence, m?.groups.map((g) => g.rows.length), m?.groups[0]?.title]).toEqual(['rows', 'high', [2, 2, 2], 'Lab 1']);
+    expect(m?.view.blocks.map((b) => b.type)).toEqual(['row', 'group', 'group', 'group']);
+    expect(m && sameCms(mixed, m.view)).toBe(true);
+    expect(m?.groups.every((g) => g.section.id < 0)).toBe(true);
+    // Course level: numbered topics count only with work in them; a weeks-format course with work is a series by definition.
+    const ias0230 = ['1. Introduction to Embedded Systems', '2. Input/Output', '3. Introduction to ARM Cortex-M Processors', '4. Timers', 'MIDTERM EXAM 21.10.2026'];
+    expect(detectCourseSeries(ias0230.map((title, i) => ({ number: i + 3, title, work: false })))).toBeNull();
+    expect(detectCourseSeries(['1. LEADING SELF', '2. LEADING TEAMS', '3. LEADING ORGANIZATIONS', 'Independent digital exam'].map((title, i) => ({ number: i + 1, title, work: true })))).toEqual([1, 2, 3]);
+    expect(detectCourseSeries(['7 September - 13 September', '14 September - 20 September', '21 September - 27 September'].map((title, i) => ({ number: i + 1, title, work: true })))).toEqual([1, 2, 3]);
   });
 });

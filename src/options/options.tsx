@@ -192,6 +192,9 @@ function Options() {
         <Row label={t('ext.colourSchool')} hint={t('ext.colourSchoolHint')} htmlFor="o-school">
           <Switch id="o-school" label={t('ext.colourSchool')} checked={s.colourBySchool} onChange={(colourBySchool) => update({ colourBySchool })} />
         </Row>
+        <Row label={t('ext.labsView')} hint={t('ext.labsViewHint')} htmlFor="o-labs">
+          <Switch id="o-labs" label={t('ext.labsView')} checked={s.labsView === 'auto'} onChange={(on) => update({ labsView: on ? 'auto' : 'off' })} />
+        </Row>
         <Row label={t('settings.motion')} hint={t('ext.motionHint')}>
           <Segmented
             label={t('settings.motion')}

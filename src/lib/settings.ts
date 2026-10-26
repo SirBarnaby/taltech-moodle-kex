@@ -41,6 +41,10 @@ export interface Settings {
   reader: ReaderPrefs;
   /** Moodle site notices the user hid, by a hash of their text (a changed notice shows again). */
   hiddenNotices: string[];
+  /** Labs, home assignments and weekly work shown as a board when KEX is sure ('auto'), or always as Moodle's list ('off'). */
+  labsView: 'auto' | 'off';
+  /** The reader's own Labs or List choice per topic, by `courseId:sectionId`. */
+  seriesChoice: Record<string, 'labs' | 'list'>;
   debug: { freezeTime?: number; selectorReport?: boolean; logLevel?: 'warn' | 'debug' };
 }
 
@@ -64,6 +68,8 @@ export const DEFAULT_SETTINGS: Settings = {
   density: 'comfortable',
   reader: DEFAULT_READER,
   hiddenNotices: [],
+  labsView: 'auto',
+  seriesChoice: {},
   debug: {},
 };
 
@@ -82,6 +88,14 @@ function normalizeReader(raw: unknown): ReaderPrefs {
     mode: pick(r.mode, ['side', 'center', 'full'], d.mode),
     side: num(r.side, 0.36, 0.8, d.side),
   };
+}
+
+/** `courseId:sectionId` -> 'labs' | 'list', the newest 200. */
+function seriesChoices(raw: unknown): Settings['seriesChoice'] {
+  const out: Settings['seriesChoice'] = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const [k, v] of Object.entries(raw).slice(-200)) if (/^\d+:\d+$/.test(k) && (v === 'labs' || v === 'list')) out[k] = v;
+  return out;
 }
 
 /** Merge a stored (possibly old or hand-edited) value over the defaults, dropping invalid fields. */
@@ -114,6 +128,8 @@ export function normalizeSettings(raw: unknown): Settings {
     density: pick(r.density, ['comfortable', 'compact'], d.density),
     reader: normalizeReader(r.reader),
     hiddenNotices: Array.isArray(r.hiddenNotices) ? r.hiddenNotices.filter((x): x is string => typeof x === 'string').slice(-50) : [],
+    labsView: pick(r.labsView, ['auto', 'off'], d.labsView),
+    seriesChoice: seriesChoices(r.seriesChoice),
     debug: r.debug && typeof r.debug === 'object' ? (r.debug as Settings['debug']) : {},
   };
 }

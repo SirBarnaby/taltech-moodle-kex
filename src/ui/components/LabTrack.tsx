@@ -5,6 +5,8 @@ import { t, type MessageKey } from '../../i18n';
 interface LabTrackProps {
   items: readonly LabTrackItem[];
   open: ReadonlySet<number>;
+  /** The board's heading: "Labs", or the topic's own title for other series ("Home assignments"). */
+  label?: string;
   onShow: (id: number) => void;
 }
 
@@ -15,7 +17,7 @@ export const STATE_LABEL: Record<LabState, MessageKey> = { done: 'track.done', o
  * A narrow column shows it as a strip of short chips over the folded lab cards; a wide one (track.css, `.kex-labs`) as a list
  * beside the open lab, with each lab's full title, deadline and progress. Both come from the same buttons.
  */
-export function LabTrack({ items, open, onShow }: LabTrackProps) {
+export function LabTrack({ items, open, label = t('track.nav'), onShow }: LabTrackProps) {
   // The roving stop is the first open lab, so Tab lands where the reader is.
   const stop = Math.max(0, items.findIndex((i) => open.has(i.group.section.id)));
   const onKey = (e: KeyboardEvent): void => {
@@ -32,9 +34,9 @@ export function LabTrack({ items, open, onShow }: LabTrackProps) {
   };
   const done = items.filter((i) => i.state === 'done').length;
   return (
-    <nav class="kex-track" aria-label={t('track.nav')} data-kex-test="lab-track">
+    <nav class="kex-track" aria-label={label} data-kex-test="lab-track">
       <p class="kex-track__head kex-mono" aria-hidden="true">
-        <span class="kex-track__label">{t('track.nav')}</span>
+        <span class="kex-track__label">{label}</span>
         <span class="kex-track__count">{done}/{items.length}</span>
       </p>
       <ol class="kex-track__chips" onKeyDown={onKey}>

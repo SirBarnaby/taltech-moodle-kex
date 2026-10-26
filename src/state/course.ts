@@ -7,9 +7,11 @@ import { cmsOfSection, type CourseState } from '../data/repo/coursestate';
 import { modTypeNames } from '../data/repo/modnames';
 import { pinsStore, rowPins } from '../data/repo/pins';
 import type { NavTab } from '../data/scrape/secondarynav';
-import { buildSectionView, buildTopics, type GroupModel, type RowModel, type SectionView, type TopicModel } from '../data/topics';
-import { buildTrack, defaultOpen, isTrack, type LabTrackItem } from '../data/labtrack';
-import { activeCourseId } from './index';
+import { buildSectionView, buildTopics, type RowModel, type SectionView, type TopicModel } from '../data/topics';
+import { buildTrack, defaultOpen, type LabTrackItem } from '../data/labtrack';
+import { detectCourseSeries, detectTopicSeries, WORK_MODS, type TopicSeries } from '../data/series';
+import { recordError } from '../lib/log';
+import { activeCourseId, settings } from './index';
 
 /** State of the course view (page-designs §5). Written by src/actions/course.ts, read by src/ui/views/Course.tsx. */
 
@@ -52,8 +54,8 @@ export const mergedSummaries = computed<ReadonlyMap<number, string>>(() => new M
 
 const EMPTY_VIEW: SectionView = { blocks: [], rows: [] };
 
-/** The detail pane of the selected topic: rows and subsection group cards in order. */
-export const sectionView = computed<SectionView>(() => {
+/** The selected topic as Moodle has it: rows and subsection group cards in order. */
+const baseView = computed<SectionView>(() => {
   const st = courseState.value;
   const section = currentTopic.value?.section;
   if (!st || !section) return EMPTY_VIEW;
@@ -64,15 +66,85 @@ export const sectionView = computed<SectionView>(() => {
   );
 });
 
+/** `courseId:sectionId`, the key of the reader's Labs or List choice. */
+export const seriesKey = computed<string | undefined>(() => {
+  const id = activeCourseId.value;
+  const section = currentTopic.value?.section;
+  return id && section ? `${id}:${section.id}` : undefined;
+});
+
+/** Topics whose board crashed in this page: they show the list (the error is in Details). */
+export const boardFailed = signal<ReadonlySet<string>>(new Set());
+
+/** The series of the selected topic (labs, numbered home assignments), when the detector is sure enough; never with labs off. */
+export const topicSeries = computed<TopicSeries | null>(() => {
+  const section = currentTopic.value?.section;
+  if (!section || settings.value.labsView === 'off') return null;
+  try {
+    return detectTopicSeries(baseView.value, section);
+  } catch (e) {
+    recordError('series', e);
+    return null;
+  }
+});
+
+/** The board is on: the reader chose Labs for this topic, or did not choose and the detector is sure. */
+export const seriesOn = computed<boolean>(() => {
+  const s = topicSeries.value;
+  const key = seriesKey.value;
+  if (!s || !key || boardFailed.value.has(key)) return false;
+  const choice = settings.value.seriesChoice[key];
+  return choice ? choice === 'labs' : s.confidence === 'high';
+});
+
+/** The detail pane of the selected topic: Moodle's order, or numbered activities gathered into lab cards while the board is on. */
+export const sectionView = computed<SectionView>(() => (seriesOn.value && topicSeries.value ? topicSeries.value.view : baseView.value));
+
 /** Every row of the detail pane, subsection rows included (notes too). */
 export const rows = computed<RowModel[]>(() => sectionView.value.rows);
 
-/** The lab track of the selected topic (four or more subsections), or undefined for an ordinary topic. */
+/** The lab track of the selected topic while its board is on, else undefined (an ordinary topic). */
 export const labTrack = computed<LabTrackItem[] | undefined>(() => {
-  const blocks = sectionView.value.blocks;
-  if (!isTrack(blocks)) return undefined;
-  const groups = blocks.flatMap((b): GroupModel[] => (b.type === 'group' ? [b.group] : []));
-  return buildTrack(groups, Math.floor(Date.now() / 1000));
+  const s = topicSeries.value;
+  if (!s || !seriesOn.value) return undefined;
+  return buildTrack(s.groups, Math.floor(Date.now() / 1000));
+});
+
+/**
+ * Courses whose topics are the series (one topic per lab, or a weeks-format course with work every week): done, overdue and next
+ * marks for the topic chips, by section number. Empty for every other course.
+ */
+export const topicMarks = computed<ReadonlyMap<number, LabTrackItem['state']>>(() => {
+  const st = courseState.value;
+  const tps = topics.value;
+  if (!st || !tps.length || settings.value.labsView === 'off') return new Map();
+  try {
+    const events = courseEvents.value;
+    const info = tps.map((tp) => {
+      const cms = cmsOfSection(st, tp.section);
+      const tracked = cms.filter((c) => c.tracked);
+      return {
+        number: tp.section.number,
+        title: tp.section.title,
+        work: cms.some((c) => WORK_MODS.has(c.modname) || events.has(c.id)),
+        done: tracked.length > 0 && tracked.every((c) => c.completion !== 0),
+        overdue: cms.some((c) => events.get(c.id)?.overdue && (!c.tracked || c.completion === 0)),
+      };
+    });
+    const members = detectCourseSeries(info);
+    if (!members) return new Map();
+    const marks = new Map<number, LabTrackItem['state']>();
+    for (const n of members) {
+      const t = info.find((i) => i.number === n);
+      if (t) marks.set(n, t.done ? 'done' : t.overdue ? 'overdue' : 'todo');
+    }
+    const next = members.find((n) => marks.get(n) === 'todo');
+    if (next !== undefined) marks.set(next, 'next');
+    return marks;
+  } catch (e) {
+    recordError('series.course', e);
+    return new Map();
+  }
 });
 
 /** Labs the user opened or folded in this topic; until then the next lab (and anything overdue) is open. */

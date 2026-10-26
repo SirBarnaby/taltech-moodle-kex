@@ -237,6 +237,10 @@ export const et: Record<MessageKey, string> = {
   'track.expand': 'Näita: {title}',
   'track.progress': '{done}/{total} tehtud',
   'track.pick': 'Vali loendist labor.',
+  'series.label': 'Näita teemat kui',
+  'series.board': 'Laborid',
+  'series.list': 'Loend',
+  'series.boardOther': 'Tahvel',
   'help.course.labs': 'Eelmine / järgmine labor',
   'settings.compact': 'Kompaktsed read',
   'ext.compactHint': 'Lühemad materjaliread kõigil kursuse lehtedel. Neli või enam laborit sisaldavad teemad kasutavad neid alati.',
@@ -547,4 +551,6 @@ export const et: Record<MessageKey, string> = {
   'ext.langHint': "Järgi Moodle'it kasutab keelt, milles Moodle ise kuvatakse. Moodle'i enda sõnastust kasutatakse kõikjal, kus see on olemas.",
   'ext.colourSchool': 'Värvi kursused kooli järgi',
   'ext.colourSchoolHint': 'Kursuse lehed ja pealkirjapiirkonnad saavad paleti aine koodi esimese tähe järgi (IT, inseneeria, reaal, ärindus, merendus).',
+  'ext.labsView': 'Laborite vaade',
+  'ext.labsViewHint': 'Laborid, kodutööd ja iganädalased ülesanded on tahvlil (tehtud, hilinenud, järgmine), kui KEX on pealkirjade ja tegevuste järgi kindel. Väljas jätab iga teema Moodle\'i loendiks.',
 };

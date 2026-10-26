@@ -504,3 +504,51 @@
   #kex-root .kex-group--lab .kex-groupcard__progress { display: none; }
   #kex-root .kex-rows--compact .kex-row__actions { display: none; }
 }
+
+/* ---- series (round 8): the Labs | List switch of a topic, and done / overdue / next badges on topic chips when the course's
+   topics are themselves the series. The badge sits on the chip's corner, so it never moves the number or the title. ---- */
+#kex-root {
+  .kex-detail__series {
+    flex: none;
+    margin-top: 8px;
+    .kex-segmented {
+      height: 30px;
+      font-size: 13px;
+    }
+    .kex-segmented__opt {
+      padding: 0 12px;
+      font-size: 13px;
+    }
+  }
+  .kex-topic__mark {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    display: grid;
+    place-items: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1.5px solid var(--kex-bg);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    pointer-events: none;
+  }
+  .kex-topic__mark--done {
+    background: var(--kex-success);
+  }
+  .kex-topic__mark--overdue {
+    background: var(--kex-magenta);
+  }
+  .kex-topic__mark--next {
+    background: radial-gradient(circle, var(--kex-violet) 0 3px, var(--kex-bg) 3.5px);
+    box-shadow: 0 0 0 1.5px var(--kex-violet);
+  }
+  .kex-cbar__chip .kex-topic__mark {
+    top: -4px;
+    right: -4px;
+  }
+}
+

@@ -1,7 +1,9 @@
-import { Lock } from 'lucide-preact';
+import { Check, Lock } from 'lucide-preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import type { LabState } from '../../data/labtrack';
 import type { TopicModel } from '../../data/topics';
 import { t } from '../../i18n';
+import { STATE_LABEL } from './LabTrack';
 
 interface TopicListProps {
   topics: TopicModel[];
@@ -9,6 +11,18 @@ interface TopicListProps {
   active?: number;
   onSelect: (n: number) => void;
   onKeyDown?: (e: KeyboardEvent) => void;
+  /** Courses whose topics are a series (one topic per lab, weekly work): done, overdue and next per topic number. */
+  marks?: ReadonlyMap<number, LabState>;
+}
+
+/** A topic's place in its series, as a small badge on the chip's corner (it never moves the title). */
+export function TopicMark({ state }: { state?: LabState }) {
+  if (!state || state === 'todo') return null;
+  return (
+    <span class={`kex-topic__mark kex-topic__mark--${state}`} role="img" aria-label={t(STATE_LABEL[state])} title={t(STATE_LABEL[state])}>
+      {state === 'done' ? <Check size={10} strokeWidth={3.2} aria-hidden="true" /> : state === 'overdue' ? '!' : null}
+    </span>
+  );
 }
 
 export const topicDisplayTitle = (tp: Pick<TopicModel, 'isRange' | 'title' | 'section'>): string =>
@@ -23,7 +37,7 @@ const CLIPPED_ROWS = 4;
  * every row; the sticky course bar takes over once it scrolls away. Never scrolls inside itself and never changes height on its
  * own, so nothing below it moves.
  */
-export function TopicList({ topics, active, onSelect, onKeyDown }: TopicListProps) {
+export function TopicList({ topics, active, onSelect, onKeyDown, marks }: TopicListProps) {
   const strip = useRef<HTMLOListElement>(null);
   const [cols, setCols] = useState(0);
   const [expanded, setExpanded] = useState(false);
@@ -86,6 +100,7 @@ export function TopicList({ topics, active, onSelect, onKeyDown }: TopicListProp
                 )}
                 <span class="kex-topic__title">{title}</span>
                 {tp.restricted && <Lock class="kex-topic__lock" size={13} strokeWidth={1.75} aria-label={t('course.restricted')} />}
+                <TopicMark state={marks?.get(tp.section.number)} />
               </a>
             </li>
           );
