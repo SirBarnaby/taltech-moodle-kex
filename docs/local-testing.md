@@ -4,7 +4,7 @@ The local production extension is available from either `manifest.json` in the r
 
 ## Repeatable release check
 
-Run `npm run verify:release`. It runs ESLint, TypeScript, unit and provenance tests, builds and synchronizes the production extension, validates its manifest, and runs headless Edge against the captured TalTech theme. Each run reserves its own local port and checks the server run ID and the page's `data-kex-build` marker. It never attaches to your real browser or account.
+Run `npm run verify:release`. It runs ESLint, TypeScript, unit and provenance tests, builds and synchronizes the production extension, validates its manifest, and runs headless Edge against the captured TalTech theme. Each run reserves its own local port and checks the server run ID and the page's `data-kex-build` marker. It never attaches to your real browser or account. Elsewhere than Windows it uses Playwright's Chromium; to use another Chromium build, set `KEX_CHROMIUM` to its executable.
 
 Evidence is saved together under `artifacts/releases/<run>/`: `report.json`, build hashes, check logs, test results, screenshots and failure traces. A failed or interrupted run is not a release pass. The final check verifies that source and both extension copies still match the tested build. `npm run verify:build` checks the current production artifact separately.
 

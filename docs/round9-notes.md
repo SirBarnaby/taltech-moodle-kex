@@ -46,3 +46,12 @@ It now runs once per sheet, from the end (the rule sits near the end), and skips
 off the critical path (parallel compile, idle fallback). Bundle: content.js 575 KB (177 KB gzip), mostly our own views; kex.css
 443 KB. Firefox compiles an add-on's content scripts and sheets once and reuses them across pages, so neither size is paid on
 every page load.
+
+## Release gate
+
+`npm run verify:release` passes again (all 17 browser checks). It had been red since rounds 6 to 8 for reasons outside the
+add-on: `pngjs` was used by the checks but never listed as a dependency; the checks still expected the announcement inside
+the Moodle info disclosure (it is a notice card since round 6), a page that scrolls while a topic changes (since round 7 the
+page moves only under the old panel's held copy, so nothing on screen moves), the old IT palette (round 8 turns it per course
+prefix) and a single hero canvas (round 8 lays the old look's last frame over the new one while it fades). The shader-hold
+checks relied on KHR_parallel_shader_compile, which software GL lacks; they now supply a stand-in. Version 1.0.0.

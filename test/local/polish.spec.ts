@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { DEFAULT_RIBBONS, ribbonsFor } from '../../src/lib/school';
 
 const { PNG } = createRequire(import.meta.url)('pngjs');
 
@@ -33,6 +34,27 @@ test.beforeEach(async ({ page, baseURL }) => {
     });
   }, Date.parse('2026-10-20T09:00:00Z'));
 });
+/**
+ * Hold the shader's compile until `release.at` (ms after navigation) or until the page sets `window[release.flag]`. The renderer
+ * polls KHR_parallel_shader_compile; a browser without it (software GL, as in headless runs) gets a stand-in, so the CSS
+ * fallback stays up there too.
+ */
+async function holdShaderCompile(page: Page, release: { at?: number; flag?: string }) {
+  await page.addInitScript(({ at, flag }) => {
+    const done = () => (at !== undefined && performance.now() >= at) || (!!flag && !!(window as unknown as Record<string, unknown>)[flag]);
+    const COMPLETION_STATUS_KHR = 0x91B1;
+    const proto = WebGL2RenderingContext.prototype;
+    const extension = proto.getExtension;
+    const parameter = proto.getProgramParameter;
+    proto.getExtension = function (this: WebGL2RenderingContext, name: string) {
+      return extension.call(this, name) ?? (name === 'KHR_parallel_shader_compile' ? { COMPLETION_STATUS_KHR } : null);
+    } as typeof proto.getExtension;
+    proto.getProgramParameter = function (this: WebGL2RenderingContext, program: WebGLProgram, pname: number) {
+      return pname === COMPLETION_STATUS_KHR ? done() : parameter.call(this, program, pname);
+    };
+  }, release);
+}
+
 async function ready(page: Page) {
   await expect(page.locator('html')).toHaveAttribute('data-kex', 'app');
   await expect(page.locator('html')).toHaveAttribute('data-kex-build', buildId);
@@ -44,7 +66,8 @@ test('default arrival, home controls, editorial parity and explicit Dossier rout
   await expect(page).toHaveURL(/\/my\/courses\.php/);
   await ready(page);
   await expect(page.locator('[data-kex-test="mc-row-1"]')).toBeVisible();
-  await expect(page.locator('[data-kex-test="moodle-info"]')).toContainText('Korduma Kippuvad');
+  // Moodle's announcements are notice cards; the reference blocks stay behind the disclosure.
+  await expect(page.locator('[data-kex-test="site-notices"]')).toContainText('Korduma Kippuvad');
   await page.getByText('Ülikooli teated ja kasulikud lingid', { exact: true }).click();
   await expect(page.locator('.kex-moodle-info__grid')).toContainText('tehisintellekti');
   await page.getByText('Ülikooli teated ja kasulikud lingid', { exact: true }).click();
@@ -78,13 +101,7 @@ for (const [width, height] of [[1440, 900], [960, 800], [390, 844]] as const) {
 }
 
 test('delayed shader compilation keeps geometry and fades in a painted canvas', async ({ page }) => {
-  await page.addInitScript(() => {
-    const native = WebGL2RenderingContext.prototype.getProgramParameter;
-    WebGL2RenderingContext.prototype.getProgramParameter = function (program, pname) {
-      if (pname === 0x91B1 && performance.now() < 1800) return false;
-      return native.call(this, program, pname);
-    };
-  });
+  await holdShaderCompile(page, { at: 1800 });
   await page.goto('/login/index.php');
   await ready(page);
   const initial = await page.locator('.kex-login__art').boundingBox();
@@ -127,20 +144,38 @@ test('deep-scroll topic change, rapid switching and Back do not snap or leak tra
   await expect(page.locator('[data-kex-topic]')).not.toHaveCount(0);
   await page.waitForFunction(() => document.querySelectorAll('[data-kex-row]').length > 0);
   await page.evaluate(() => window.scrollTo({ top: 750, behavior: 'instant' }));
+  type Sample = { y: number; at: number; ghost: number; fixed: boolean; top: number };
   await page.evaluate(() => {
-    const values: { y: number; at: number }[] = [];
-    (window as unknown as { scrollSamples: { y: number; at: number }[] }).scrollSamples = values;
+    const values: Sample[] = [];
+    (window as unknown as { scrollSamples: Sample[] }).scrollSamples = values;
     const start = performance.now();
-    const sample = () => { values.push({ y: scrollY, at: performance.now() - start }); if (performance.now() - start < 1100) requestAnimationFrame(sample); };
+    const sample = () => {
+      const ghost = document.querySelector<HTMLElement>('.kex-transition-ghost');
+      const style = ghost && getComputedStyle(ghost);
+      const top = document.querySelector('.kex-detail')?.getBoundingClientRect().top ?? NaN;
+      values.push({ y: scrollY, at: performance.now() - start, ghost: style ? Number(style.opacity) : 0, fixed: style?.position === 'fixed', top });
+      if (performance.now() - start < 1100) requestAnimationFrame(sample);
+    };
     requestAnimationFrame(sample);
   });
-  const next = page.locator('[data-kex-topic]:not([aria-current="true"])').first();
-  await next.click();
+  // Scrolled down, the topics are switched from the course bar (the grid is above, behind the header). A real click: the
+  // pointer does not scroll the page first.
+  const chip = await page.locator('.kex-cbar__chip:not(.kex-cbar__chip--active)').first().boundingBox();
+  expect(chip).not.toBeNull();
+  await page.mouse.click(chip!.x + chip!.width / 2, chip!.y + chip!.height / 2);
   await page.waitForFunction(() => !document.querySelector('.kex-transition-ghost') && !document.getElementById('kex-root')?.style.minHeight);
-  const samples = await page.evaluate(() => (window as unknown as { scrollSamples: { y: number; at: number }[] }).scrollSamples);
+  const samples = await page.evaluate(() => (window as unknown as { scrollSamples: Sample[] }).scrollSamples);
   writeFileSync(`${out}/course-scroll-samples.json`, JSON.stringify(samples));
-  const maxStep = Math.max(0, ...samples.slice(1).map((p, i) => Math.abs(p.y - samples[i]!.y)));
-  expect(maxStep).toBeLessThan(200);
+  // The new topic starts at its top under the bar. The page may move to get there only while the old panel's copy is held in
+  // place over it (fixed, opaque), so nothing on screen moves.
+  const moves = samples.slice(1).filter((p, i) => Math.abs(p.y - samples[i]!.y) > 1);
+  expect(moves.length).toBeGreaterThan(0);
+  for (const move of moves) expect(move.fixed && move.ghost >= 0.9, `scroll moved at ${Math.round(move.at)} ms without the panel's copy over it`).toBe(true);
+  const stuck = await page.evaluate(() => {
+    const root = getComputedStyle(document.getElementById('kex-root')!);
+    return (Number.parseFloat(root.getPropertyValue('--kex-header-h-compact')) || 52) + (Number.parseFloat(root.getPropertyValue('--kex-cbar-h')) || 48);
+  });
+  expect(samples.at(-1)!.top).toBeCloseTo(stuck + 16, 0);
   await page.screenshot({ path: `${out}/course-topic.png` });
   await page.locator('[data-kex-topic]').nth(2).click();
   await page.locator('[data-kex-topic]').nth(3).click();
@@ -311,7 +346,8 @@ test('faculty theme changes repaint a working shader without leaving a lost cont
       await (window as unknown as { browser: { storage: { local: { set(v: unknown): Promise<void> } } } }).browser.storage.local.set({ 'kex:settings': { enabled: true, effects: 'static', motion: 'full', colourBySchool } });
     }, colourBySchool);
   };
-  const canvas = page.locator('#kex-main .kex-hero__canvas');
+  // The old look's last frame is laid over the new canvas while it fades out (.kex-hero__snap).
+  const canvas = page.locator('#kex-main .kex-hero__canvas:not(.kex-hero__snap)');
   for (const themed of [true, false, true]) {
     await setColour(themed);
     if (themed) await expect(page.locator('html')).toHaveAttribute('data-kex-school', 'it');
@@ -323,9 +359,9 @@ test('faculty theme changes repaint a working shader without leaving a lost cont
       const program = gl.getParameter(gl.CURRENT_PROGRAM);
       return [...gl.getUniform(program, gl.getUniformLocation(program, 'uBody')!)];
     });
-    expect(palette[0]).toBeCloseTo(themed ? 0.45 : 0);
-    expect(palette[1]).toBeCloseTo(themed ? 0.06 : 0);
-    expect(palette[2]).toBeCloseTo(themed ? 0.95 : 1);
+    // IAS0230: the IT school's palette, turned a little for its prefix.
+    const body = themed ? ribbonsFor('IAS0230', true).body : DEFAULT_RIBBONS.body;
+    body.forEach((channel, i) => expect(palette[i]).toBeCloseTo(channel));
   }
 });
 
@@ -335,13 +371,7 @@ for (const [name, path, selector] of [
   ['faculty-course', '/course/view.php?id=37582', '.kex-hero'],
 ] as const) {
   test(`static artwork and first shader paint retain the same composition: ${name}`, async ({ page }) => {
-    await page.addInitScript(() => {
-      const native = WebGL2RenderingContext.prototype.getProgramParameter;
-      WebGL2RenderingContext.prototype.getProgramParameter = function (program, parameter) {
-        if (parameter === 0x91B1 && !(window as unknown as { allowShaderPaint?: boolean }).allowShaderPaint) return false;
-        return native.call(this, program, parameter);
-      };
-    });
+    await holdShaderCompile(page, { flag: 'allowShaderPaint' });
     await page.goto(path);
     await ready(page);
     const art = page.locator(selector).first();
