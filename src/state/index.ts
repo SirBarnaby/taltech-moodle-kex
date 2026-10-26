@@ -3,7 +3,7 @@ import type { EffectiveRoute } from '../content/router';
 import type { PageInfo } from '../content/pageinfo';
 import type { Course, UserInfo } from '../data/model';
 import { applyAliases, orderCourses } from '../data/repo/courses';
-import { schoolFor, type SchoolId } from '../lib/school';
+import { ribbonsFor, schoolFor, type RibbonStyle, type SchoolId } from '../lib/school';
 import type { UserMenuItem } from '../data/scrape/usermenu';
 import { DEFAULT_SETTINGS, type Settings } from '../lib/settings';
 import { prefersDark, prefersReducedMotion, resolveMotion, resolveTheme, sidebarModeFor } from '../lib/theme';
@@ -66,6 +66,8 @@ export const activeCourseCode = computed<string | undefined>(() => {
 
 /** The faculty theme of the course page (default look when the option is off or the code has no known school letter). */
 export const activeSchool = computed<SchoolId>(() => schoolFor(activeCourseCode.value, settings.value.colourBySchool));
+/** The hero ribbons of the course page: the school's palette, nudged by the code's three-letter prefix. */
+export const activeRibbons = computed<RibbonStyle>(() => ribbonsFor(activeCourseCode.value, settings.value.colourBySchool));
 
 /**
  * The fetched page behind a soft-navigated view (null on a normal page load: the live document). Anything that reads Moodle's

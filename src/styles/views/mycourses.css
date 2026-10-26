@@ -82,16 +82,18 @@
       outline-offset: 2px;
     }
   }
-  .kex-mc[data-school="it"] { --kex-mc-accent: #0aa0c4; }
-  .kex-mc[data-school="eng"] { --kex-mc-accent: #d9760a; }
-  .kex-mc[data-school="sci"] { --kex-mc-accent: #14a07a; }
-  .kex-mc[data-school="biz"] { --kex-mc-accent: #4a4fd0; }
-  .kex-mc[data-school="sea"] { --kex-mc-accent: #0d78c8; }
-  :root[data-kex-theme="dark"] & .kex-mc[data-school="it"] { --kex-mc-accent: #3cd0ee; }
-  :root[data-kex-theme="dark"] & .kex-mc[data-school="eng"] { --kex-mc-accent: #f5a43c; }
-  :root[data-kex-theme="dark"] & .kex-mc[data-school="sci"] { --kex-mc-accent: #46d8a0; }
-  :root[data-kex-theme="dark"] & .kex-mc[data-school="biz"] { --kex-mc-accent: #8f94ff; }
-  :root[data-kex-theme="dark"] & .kex-mc[data-school="sea"] { --kex-mc-accent: #4cb8f0; }
+  .kex-mc[data-school="it"] { --kex-mc-accent: #1f6fe0; }
+  .kex-mc[data-school="eng"] { --kex-mc-accent: #c27c00; }
+  .kex-mc[data-school="sci"] { --kex-mc-accent: #d0307a; }
+  .kex-mc[data-school="biz"] { --kex-mc-accent: #1f9a4a; }
+  .kex-mc[data-school="sea"] { --kex-mc-accent: #0b8f9a; }
+  .kex-mc[data-school="gen"] { --kex-mc-accent: #5f6b7a; }
+  :root[data-kex-theme="dark"] & .kex-mc[data-school="it"] { --kex-mc-accent: #5aa2ff; }
+  :root[data-kex-theme="dark"] & .kex-mc[data-school="eng"] { --kex-mc-accent: #f5c03c; }
+  :root[data-kex-theme="dark"] & .kex-mc[data-school="sci"] { --kex-mc-accent: #ff7ab8; }
+  :root[data-kex-theme="dark"] & .kex-mc[data-school="biz"] { --kex-mc-accent: #4fd17e; }
+  :root[data-kex-theme="dark"] & .kex-mc[data-school="sea"] { --kex-mc-accent: #3ed2d2; }
+  :root[data-kex-theme="dark"] & .kex-mc[data-school="gen"] { --kex-mc-accent: #aab4c2; }
   .kex-mc--hidden {
     opacity: 0.7;
   }

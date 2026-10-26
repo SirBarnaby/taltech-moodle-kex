@@ -5,8 +5,7 @@ import { formatDate, t } from '../../i18n';
 import { nextByCourse } from '../../data/feed';
 import { eventsStore } from '../../data/repo/events';
 import { contactsStore, teacherLine } from '../../lib/contacts';
-import { SCHOOLS } from '../../lib/school';
-import { activeCourseId, activeSchool, route, sidebarCourses } from '../../state';
+import { activeCourseId, activeRibbons, activeSchool, route, sidebarCourses } from '../../state';
 import { heroEffectMode } from '../../state/effects';
 import { nowSec } from '../../state/workspace';
 import { ArrowNE } from './Glyphs';
@@ -84,11 +83,12 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
   const isCourse = r?.effective === 'app' && (r.key === 'course' || r.key === 'section');
   const courseId = isCourse ? activeCourseId.value : null;
   const school = activeSchool.value;
+  const style = activeRibbons.value;
 
   useLayoutEffect(() => {
     const el = root.current;
     if (!el) return;
-    const detach = heroCanvas.attach(el, { seed, intensity, leftFade: 0.46, style: SCHOOLS[school].ribbons });
+    const detach = heroCanvas.attach(el, { seed, intensity, leftFade: 0.46, style });
     const onMove = (e: PointerEvent): void => {
       const rect = el.getBoundingClientRect();
       heroCanvas.setPointer(((e.clientX - rect.left) / rect.width) * 2 - 1, -(((e.clientY - rect.top) / rect.height) * 2 - 1));
@@ -98,7 +98,7 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
       el.removeEventListener('pointermove', onMove);
       detach();
     };
-  }, [seed, intensity, school]);
+  }, [seed, intensity, style]);
 
   const text = lines[1] ? `${lines[0]}\n${lines[1]}` : lines[0];
   // The title size follows its longest line, so a long course name fits its column instead of running under the ribbons.

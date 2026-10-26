@@ -3,8 +3,7 @@ import { useEffect } from 'preact/hooks';
 import { arrivalWelcome, WELCOME_MS } from '../../fx/handoff';
 import { t } from '../../i18n';
 import { firstName } from '../../lib/contacts';
-import { SCHOOLS } from '../../lib/school';
-import { activeSchool, user } from '../../state';
+import { activeRibbons, user } from '../../state';
 import { useRibbons } from './useRibbons';
 import { Crosshair } from './Hero';
 import { SlideUpText } from './SlideUpText';
@@ -27,8 +26,8 @@ interface BandProps {
  * a slide-up title and optional actions.
  */
 export function Band({ label, title, size = 'page', actions, meta, testId = 'band' }: BandProps) {
-  const school = activeSchool.value;
-  const { canvas, mode } = useRibbons({ seed: 0, intensity: 0.4, leftFade: 0.46, style: SCHOOLS[school].ribbons });
+  const style = activeRibbons.value;
+  const { canvas, mode } = useRibbons({ seed: 0, intensity: 0.4, leftFade: 0.46, style });
   // Just signed in: Moodle's own dashboard greeting stands where the label is, for a few seconds.
   const name = arrivalWelcome.value && size === 'page' ? firstName(user.value?.fullname) : '';
   useEffect(() => {
@@ -38,7 +37,7 @@ export function Band({ label, title, size = 'page', actions, meta, testId = 'ban
   }, [!!name]);
   return (
     <section class={`kex-band kex-band--${size}${title.length > 44 ? ' kex-band--long' : ''}`} data-kex-test={testId} data-mode={mode}>
-      <canvas key={school} class="kex-hero__canvas" ref={canvas} aria-hidden="true" />
+      <canvas key={JSON.stringify(style)} class="kex-hero__canvas" ref={canvas} aria-hidden="true" />
       <Crosshair class="kex-cross--b" />
       <div class="kex-band__inner">
         <div class="kex-band__text">

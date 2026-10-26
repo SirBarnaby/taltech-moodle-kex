@@ -6,7 +6,7 @@ import { filterFeedByCourse, groupDeadlines, startsCourseGroup } from '../../src
 import type { FeedItem } from '../../src/data/feed';
 import type { DueItem } from '../../src/data/model';
 import { contactsStore, mapContacts, teacherLine } from '../../src/lib/contacts';
-import { SCHOOLS, schoolFor, schoolOf } from '../../src/lib/school';
+import { ribbonsFor, SCHOOLS, schoolFor, schoolOf } from '../../src/lib/school';
 import { DEFAULT_SETTINGS, normalizeSettings } from '../../src/lib/settings';
 import { langFromTag, resolveLang } from '../../src/i18n';
 import { gridColumns } from '../../src/actions/wskeys';
@@ -43,13 +43,32 @@ describe('faculty themes', () => {
     expect(schoolOf('YKM0010')).toBe('sci');
     expect(schoolOf('TAF1234')).toBe('biz');
     expect(schoolOf('VMS0001')).toBe('sea');
-    expect(schoolOf('MMO5770')).toBe('sea');
+    // M is Business and Governance; MED/MES/MET/MHK are old mechanical engineering codes.
+    expect(schoolOf('MMO5770')).toBe('biz');
+    expect(schoolOf('MET0010')).toBe('eng');
+    expect(schoolOf('MEF0010')).toBe('biz');
+    expect(schoolOf('LKK0010')).toBe('sci');
+    expect(schoolOf('KMM0010')).toBe('eng');
+    expect(schoolOf('HLX0010')).toBe('biz');
+    expect(schoolOf('UTT0010')).toBe('gen');
     expect(schoolOf('XYZ1')).toBe('default');
     expect(schoolOf(undefined)).toBe('default');
     expect(schoolOf('')).toBe('default');
     expect(schoolFor('ITI8801', false)).toBe('default');
     expect(schoolFor('ITI8801', true)).toBe('it');
     expect(normalizeSettings({}).colourBySchool).toBe(true);
+    // Each prefix nudges its school's ribbons a little, the same way every time; the default look is never nudged.
+    const ias = ribbonsFor('IAS0230', true);
+    expect(ribbonsFor('ias0231', true)).toBe(ias);
+    const itb = ribbonsFor('ITB8833', true);
+    expect(itb).not.toEqual(ias);
+    for (const v of [ias, itb]) {
+      v.shape.forEach((x, i) => expect(Math.abs(x / SCHOOLS.it.ribbons.shape[i]! - 1)).toBeLessThanOrEqual(0.25));
+      // Still blue: the body's blue channel leads.
+      expect(v.body[2]).toBeGreaterThan(Math.max(v.body[0], v.body[1]));
+    }
+    expect(ribbonsFor('ITI8801', false)).toBe(SCHOOLS.default.ribbons);
+    expect(ribbonsFor('XYZ0001', true)).toBe(SCHOOLS.default.ribbons);
     const d = SCHOOLS.default.ribbons;
     expect([d.body, d.accent, d.hi, d.shape, d.sharp, d.seed]).toEqual([[0, 0, 1], [1, 0, 0], [0, 1, 0], [1, 1, 1, 1], 0, 0]);
   });

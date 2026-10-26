@@ -1,104 +1,132 @@
 /* Faculty themes: the school (first letter of the course code) sets the course accent and the hero's palette (src/lib/school.ts).
    `html[data-kex-school]` is set by the content controller on course pages; the default school has no attribute. */
+/* IT: blue. */
 :root[data-kex][data-kex-school="it"] {
-  --kex-accent: #0aa0c4;
-  --kex-accent-bar: linear-gradient(180deg, #4fd6ee, #0a93bd 50%, #5a8ff0);
-  --kex-focus: #0aa0c4;
-  --kex-tint: #e2f4fa;
-  --kex-tint-border: #c8e6f0;
-  --kex-hover: #edf8fc;
-  --kex-hero-bg: linear-gradient(90deg, #121637 0%, #151c44 28%, #1a2658 55%, #12385e 100%);
+  --kex-accent: #1f6fe0;
+  --kex-accent-bar: linear-gradient(180deg, #5aa8ff, #1f6fe0 50%, #3b4fd8);
+  --kex-focus: #1f6fe0;
+  --kex-violet: #1c48a8;
+  --kex-violet-2: #2458c0;
+  --kex-tint: #e3eefc;
+  --kex-tint-border: #c9dcf6;
+  --kex-hover: #eef4fd;
+  --kex-hero-bg: linear-gradient(90deg, #0d1636 0%, #0f1d48 28%, #13265c 55%, #0f3266 100%);
   --kex-hero-fallback: url("assets/hero-it-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
   --kex-band-fallback: url("assets/band-it-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
-  --kex-hero-gradient-text: linear-gradient(90deg, #a7b8ff 0%, #7fd6f7 45%, #5fe6ee 100%);
-  --kex-hero-accent-solid: #7fd6f7;
-  --kex-hero-cross: rgba(90, 190, 230, 0.55);
-  --kex-hero-cross-bright: rgba(150, 225, 245, 0.75);
+  --kex-hero-gradient-text: linear-gradient(90deg, #a9c8ff 0%, #7fb4ff 45%, #6fd8ff 100%);
+  --kex-hero-accent-solid: #8fbaff;
+  --kex-hero-cross: rgba(100, 160, 240, 0.55);
+  --kex-hero-cross-bright: rgba(160, 200, 250, 0.75);
 }
+/* Engineering: yellow and amber. */
 :root[data-kex][data-kex-school="eng"] {
-  --kex-accent: #d9760a;
-  --kex-accent-bar: linear-gradient(180deg, #f5b84a, #d9760a 50%, #b9481a);
-  --kex-focus: #d9760a;
-  --kex-violet: #8a3c0c;
-  --kex-violet-2: #a54a12;
-  --kex-tint: #fbefe0;
-  --kex-tint-border: #f0dcc2;
-  --kex-hover: #fcf4ea;
-  --kex-hero-bg: linear-gradient(90deg, #2a1608 0%, #331a0a 28%, #3e200c 55%, #4a2a0e 100%);
+  --kex-accent: #c27c00;
+  --kex-accent-bar: linear-gradient(180deg, #f7cf4a, #e0a010 50%, #c27c00);
+  --kex-focus: #c27c00;
+  --kex-violet: #7a4a00;
+  --kex-violet-2: #8f5a06;
+  --kex-tint: #fbf3dc;
+  --kex-tint-border: #f1e2b4;
+  --kex-hover: #fdf8ea;
+  --kex-hero-bg: linear-gradient(90deg, #241805 0%, #2c1d06 28%, #352408 55%, #3f2c0a 100%);
   --kex-hero-fallback: url("assets/hero-eng-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
   --kex-band-fallback: url("assets/band-eng-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
-  --kex-hero-gradient-text: linear-gradient(90deg, #ffd48c 0%, #ffb457 50%, #ff9a63 100%);
-  --kex-hero-accent-solid: #ffb457;
-  --kex-hero-cross: rgba(230, 160, 80, 0.55);
-  --kex-hero-cross-bright: rgba(250, 205, 150, 0.75);
+  --kex-hero-gradient-text: linear-gradient(90deg, #ffe7a0 0%, #ffd060 50%, #ffb84d 100%);
+  --kex-hero-accent-solid: #ffd060;
+  --kex-hero-cross: rgba(235, 190, 80, 0.55);
+  --kex-hero-cross-bright: rgba(250, 225, 150, 0.75);
 }
+/* Science: pink. */
 :root[data-kex][data-kex-school="sci"] {
-  --kex-accent: #14a07a;
-  --kex-accent-bar: linear-gradient(180deg, #55d58c, #14a07a 50%, #0e8a8c);
-  --kex-focus: #14a07a;
-  --kex-violet: #0b6a58;
-  --kex-violet-2: #0f7d68;
-  --kex-tint: #e0f4ec;
-  --kex-tint-border: #c6e8da;
-  --kex-hover: #ecf8f3;
-  --kex-hero-bg: linear-gradient(90deg, #0b231f 0%, #0d2b25 28%, #103329 55%, #0e3a38 100%);
+  --kex-accent: #d0307a;
+  --kex-accent-bar: linear-gradient(180deg, #ff7ab8, #d0307a 50%, #a02a8a);
+  --kex-focus: #d0307a;
+  --kex-violet: #8a1a5a;
+  --kex-violet-2: #a3226c;
+  --kex-tint: #fbe6f0;
+  --kex-tint-border: #f3cde0;
+  --kex-hover: #fdf0f6;
+  --kex-hero-bg: linear-gradient(90deg, #2a0d22 0%, #33102a 28%, #3e1433 55%, #48163e 100%);
   --kex-hero-fallback: url("assets/hero-sci-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
   --kex-band-fallback: url("assets/band-sci-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
-  --kex-hero-gradient-text: linear-gradient(90deg, #a9f0cb 0%, #78e2b8 50%, #8ae9e1 100%);
-  --kex-hero-accent-solid: #78e2b8;
-  --kex-hero-cross: rgba(90, 200, 160, 0.55);
-  --kex-hero-cross-bright: rgba(160, 232, 205, 0.75);
+  --kex-hero-gradient-text: linear-gradient(90deg, #ffc0dc 0%, #ff92c4 50%, #f7a6e8 100%);
+  --kex-hero-accent-solid: #ff92c4;
+  --kex-hero-cross: rgba(240, 120, 180, 0.55);
+  --kex-hero-cross-bright: rgba(250, 180, 215, 0.75);
 }
+/* Business and Governance: green. */
 :root[data-kex][data-kex-school="biz"] {
-  --kex-accent: #4a4fd0;
-  --kex-accent-bar: linear-gradient(180deg, #6e73f0, #4247c8 55%, #e0a82a);
-  --kex-focus: #4a4fd0;
-  --kex-violet: #2a2d9a;
-  --kex-violet-2: #3a3eb8;
-  --kex-tint: #e8e9fb;
-  --kex-tint-border: #d3d5f3;
-  --kex-hover: #f1f1fc;
-  --kex-hero-bg: linear-gradient(90deg, #12123a 0%, #161745 28%, #1c1d56 55%, #26226a 100%);
+  --kex-accent: #1f9a4a;
+  --kex-accent-bar: linear-gradient(180deg, #5ad67e, #1f9a4a 50%, #127a5a);
+  --kex-focus: #1f9a4a;
+  --kex-violet: #0e6a34;
+  --kex-violet-2: #137c3e;
+  --kex-tint: #e2f5e8;
+  --kex-tint-border: #c6e9d0;
+  --kex-hover: #eef9f1;
+  --kex-hero-bg: linear-gradient(90deg, #0a2214 0%, #0c2a18 28%, #0f331d 55%, #113c22 100%);
   --kex-hero-fallback: url("assets/hero-biz-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
   --kex-band-fallback: url("assets/band-biz-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
-  --kex-hero-gradient-text: linear-gradient(90deg, #b6bbff 0%, #d4c6ff 45%, #ffd88a 100%);
-  --kex-hero-accent-solid: #d4c6ff;
-  --kex-hero-cross: rgba(150, 150, 235, 0.55);
-  --kex-hero-cross-bright: rgba(235, 215, 150, 0.75);
+  --kex-hero-gradient-text: linear-gradient(90deg, #b4f0c4 0%, #7fe0a0 50%, #c8f08a 100%);
+  --kex-hero-accent-solid: #7fe0a0;
+  --kex-hero-cross: rgba(100, 210, 140, 0.55);
+  --kex-hero-cross-bright: rgba(170, 235, 190, 0.75);
 }
+/* Maritime Academy: teal. */
 :root[data-kex][data-kex-school="sea"] {
-  --kex-accent: #0d78c8;
-  --kex-accent-bar: linear-gradient(180deg, #46c6ec, #0d78c8 50%, #14409a);
-  --kex-focus: #0d78c8;
-  --kex-violet: #0a4f8c;
-  --kex-violet-2: #0d62a8;
-  --kex-tint: #e0eff9;
-  --kex-tint-border: #c6dff0;
-  --kex-hover: #ebf5fb;
-  --kex-hero-bg: linear-gradient(90deg, #08203a 0%, #0a2a4a 28%, #0c3558 55%, #0a4468 100%);
+  --kex-accent: #0b8f9a;
+  --kex-accent-bar: linear-gradient(180deg, #4fd8d8, #0b8f9a 50%, #0d6a8a);
+  --kex-focus: #0b8f9a;
+  --kex-violet: #07606a;
+  --kex-violet-2: #0a727c;
+  --kex-tint: #def3f4;
+  --kex-tint-border: #c2e6e8;
+  --kex-hover: #ebf8f8;
+  --kex-hero-bg: linear-gradient(90deg, #062226 0%, #082a2f 28%, #0a3338 55%, #0b3c44 100%);
   --kex-hero-fallback: url("assets/hero-sea-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
   --kex-band-fallback: url("assets/band-sea-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
-  --kex-hero-gradient-text: linear-gradient(90deg, #a8dcff 0%, #70cdf0 50%, #8febf3 100%);
-  --kex-hero-accent-solid: #70cdf0;
-  --kex-hero-cross: rgba(80, 180, 225, 0.55);
-  --kex-hero-cross-bright: rgba(150, 220, 245, 0.75);
+  --kex-hero-gradient-text: linear-gradient(90deg, #a8f0ec 0%, #6fe0dc 50%, #8fd8f3 100%);
+  --kex-hero-accent-solid: #6fe0dc;
+  --kex-hero-cross: rgba(80, 200, 200, 0.55);
+  --kex-hero-cross-bright: rgba(150, 230, 228, 0.75);
+}
+/* University-wide: graphite. */
+:root[data-kex][data-kex-school="gen"] {
+  --kex-accent: #5f6b7a;
+  --kex-accent-bar: linear-gradient(180deg, #a3adb9, #5f6b7a 50%, #454e5a);
+  --kex-focus: #5f6b7a;
+  --kex-violet: #3e4652;
+  --kex-violet-2: #4b5462;
+  --kex-tint: #eceef1;
+  --kex-tint-border: #d9dde2;
+  --kex-hover: #f4f5f7;
+  --kex-hero-bg: linear-gradient(90deg, #15171c 0%, #191c22 28%, #1e2229 55%, #232831 100%);
+  --kex-hero-fallback: url("assets/hero-gen-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
+  --kex-band-fallback: url("assets/band-gen-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
+  --kex-hero-gradient-text: linear-gradient(90deg, #e2e6ec 0%, #c3cad4 50%, #aab4c2 100%);
+  --kex-hero-accent-solid: #c3cad4;
+  --kex-hero-cross: rgba(170, 180, 195, 0.5);
+  --kex-hero-cross-bright: rgba(210, 215, 225, 0.7);
 }
 
 /* Dark theme: lighter accents. */
 :root[data-kex][data-kex-theme="dark"][data-kex-school="it"] {
-  --kex-accent: #3cd0ee; --kex-focus: #7fe3f5; --kex-tint: rgba(60, 208, 238, 0.13); --kex-tint-border: rgba(60, 208, 238, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
+  --kex-accent: #5aa2ff; --kex-focus: #9cc6ff; --kex-violet: #c4dcff; --kex-violet-2: #aecdff; --kex-tint: rgba(90, 162, 255, 0.13); --kex-tint-border: rgba(90, 162, 255, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
 }
 :root[data-kex][data-kex-theme="dark"][data-kex-school="eng"] {
-  --kex-accent: #f5a43c; --kex-focus: #ffcc88; --kex-violet: #ffd8ae; --kex-violet-2: #ffc994; --kex-tint: rgba(245, 164, 60, 0.13); --kex-tint-border: rgba(245, 164, 60, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
+  --kex-accent: #f5c03c; --kex-focus: #ffe08a; --kex-violet: #ffe6ae; --kex-violet-2: #ffdb94; --kex-tint: rgba(245, 192, 60, 0.13); --kex-tint-border: rgba(245, 192, 60, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
 }
 :root[data-kex][data-kex-theme="dark"][data-kex-school="sci"] {
-  --kex-accent: #46d8a0; --kex-focus: #9cecc8; --kex-violet: #bff3dc; --kex-violet-2: #a6edd0; --kex-tint: rgba(70, 216, 160, 0.13); --kex-tint-border: rgba(70, 216, 160, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
+  --kex-accent: #ff7ab8; --kex-focus: #ffb0d4; --kex-violet: #ffd0e6; --kex-violet-2: #ffbcdc; --kex-tint: rgba(255, 122, 184, 0.13); --kex-tint-border: rgba(255, 122, 184, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
 }
 :root[data-kex][data-kex-theme="dark"][data-kex-school="biz"] {
-  --kex-accent: #8f94ff; --kex-focus: #c4c7ff; --kex-violet: #d4d6ff; --kex-violet-2: #bfc2ff; --kex-tint: rgba(143, 148, 255, 0.13); --kex-tint-border: rgba(143, 148, 255, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
+  --kex-accent: #4fd17e; --kex-focus: #9ce8b6; --kex-violet: #c4f2d4; --kex-violet-2: #aeeac2; --kex-tint: rgba(79, 209, 126, 0.13); --kex-tint-border: rgba(79, 209, 126, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
 }
 :root[data-kex][data-kex-theme="dark"][data-kex-school="sea"] {
-  --kex-accent: #4cb8f0; --kex-focus: #9ad8f8; --kex-violet: #c4e6fb; --kex-violet-2: #aedcf8; --kex-tint: rgba(76, 184, 240, 0.13); --kex-tint-border: rgba(76, 184, 240, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
+  --kex-accent: #3ed2d2; --kex-focus: #93ebe8; --kex-violet: #c0f2f0; --kex-violet-2: #a8ece9; --kex-tint: rgba(62, 210, 210, 0.13); --kex-tint-border: rgba(62, 210, 210, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
+}
+:root[data-kex][data-kex-theme="dark"][data-kex-school="gen"] {
+  --kex-accent: #aab4c2; --kex-focus: #d0d6de; --kex-violet: #dde2e8; --kex-violet-2: #cdd3db; --kex-tint: rgba(170, 180, 194, 0.13); --kex-tint-border: rgba(170, 180, 194, 0.28); --kex-hover: rgba(255, 255, 255, 0.04);
 }
 
 /* Course hero: the meta row (teachers, progress, next deadline) takes the eyebrow's place. */
