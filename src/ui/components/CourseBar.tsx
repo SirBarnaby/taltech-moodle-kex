@@ -32,14 +32,19 @@ function Chips({ topics, active, onSelect, onKeyDown, marks }: Pick<CourseBarPro
     const end = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
     setEdges((cur) => (cur.start === start && cur.end === end ? cur : { start, end }));
   };
+  const placed = useRef(false);
   useLayoutEffect(() => {
     const el = row.current;
     const chip = el?.querySelector<HTMLElement>(`[data-kex-bartopic="${active}"]`)?.parentElement;
     if (el && chip) {
       const pad = 40;
-      if (chip.offsetLeft - pad < el.scrollLeft) el.scrollLeft = Math.max(0, chip.offsetLeft - pad);
-      else if (chip.offsetLeft + chip.offsetWidth + pad > el.scrollLeft + el.clientWidth) el.scrollLeft = chip.offsetLeft + chip.offsetWidth + pad - el.clientWidth;
+      const left = chip.offsetLeft - pad < el.scrollLeft
+        ? Math.max(0, chip.offsetLeft - pad)
+        : chip.offsetLeft + chip.offsetWidth + pad > el.scrollLeft + el.clientWidth ? chip.offsetLeft + chip.offsetWidth + pad - el.clientWidth : el.scrollLeft;
+      // The lit chip follows the topic being read as the page scrolls: it slides into view, it does not jump (first place: at once).
+      if (left !== el.scrollLeft) el.scrollTo({ left, behavior: placed.current && document.documentElement.dataset.kexMotion !== 'reduced' ? 'smooth' : 'instant' });
     }
+    placed.current = true;
     measure();
   }, [active, topics.length]);
   useEffect(() => {

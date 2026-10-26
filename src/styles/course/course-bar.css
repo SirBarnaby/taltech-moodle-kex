@@ -1,5 +1,6 @@
-/* Course bar (round 8): once the TOPICS grid scrolls away, one row of topic chips and the course's pins slide in under the compact
-   header. The anchor is sticky and zero-height, so the bar never takes space; it only fades and slides. */
+/* Topic bar: one row of topic chips and the course's pins under the compact header. Since round 10 it is shown in narrow course
+   columns only, in the page from the first frame and pinned while the page scrolls (book.css places it); a wide column shows the
+   topic outline instead. */
 #kex-root {
   --kex-cbar-h: 48px;
 
