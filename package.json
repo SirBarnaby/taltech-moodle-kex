@@ -1,6 +1,6 @@
 {
   "name": "taltech-moodle-kex",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "A fast, keyboard-first redesign of moodle.taltech.ee (Firefox extension).",
   "type": "module",

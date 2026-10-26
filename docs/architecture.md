@@ -33,7 +33,7 @@ Read with `design-spec.md` (pixels), `page-designs.md` (per page) and `implement
   "manifest_version": 2,
   "name": "TalTech Moodle KEX",
   "short_name": "Moodle KEX",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A fast, keyboard-first redesign of moodle.taltech.ee. Runs entirely in your browser and sends nothing anywhere.",
   "browser_specific_settings": {
     "gecko": {
