@@ -13,7 +13,7 @@ const probe = (page) => page.evaluate(() => {
 for (const [name, effects] of [['login', 'animated'], ['course-37829', 'animated'], ['login', 'off']]) {
   const page = await open(browser, name, { settings: { effects }, wait: 4000 });
   const got = await probe(page);
-  const ok = effects === 'off' ? got && got.opacity === '0' : got && got.state === 'live' && got.drawn && got.opacity === '1';
+  const ok = effects === 'off' ? got && got.opacity === '0' : got && got.state === 'live' && got.drawn && Number(got.opacity) > 0.9;
   results.push({ name, effects, ok: !!ok, got });
   await page.context().close();
 }

@@ -125,7 +125,7 @@ export function Header() {
         label={theme === 'dark' ? t('header.themeToLight') : t('header.themeToDark')}
         testId="theme-toggle"
         class="kex-header__theme"
-        onClick={toggleTheme}
+        onClick={() => toggleTheme()}
       >
         {theme === 'dark' ? <Moon size={24} strokeWidth={1.6} fill="currentColor" aria-hidden="true" /> : <Sun size={26} strokeWidth={1.6} fill="currentColor" aria-hidden="true" />}
       </IconButton>

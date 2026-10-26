@@ -28,6 +28,9 @@
 @import "./components/micro.css";
 @import "./components/moodle-info.css";
 @import "./offpill.css";
+/* Generated dark twin of TalTech's theme first, so every hand-written skin rule after it still wins. */
+@import "./skin/dark-mirror.css";
+@import "./skin/tiny-dark.css";
 @import "./skin/base.css";
 @import "./skin/chrome.css";
 @import "./skin/activity.css";
@@ -38,3 +41,4 @@
 @import "./skin/mod-resource.css";
 @import "./skin/errors.css";
 @import "./skin/pages.css";
+@import "./skin/ink.css";

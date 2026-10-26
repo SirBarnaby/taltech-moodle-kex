@@ -169,3 +169,17 @@
     border: 2px solid ButtonText;
   }
 }
+
+/* Theme switch (round 8): the new theme grows as a circle from the moon button (a root view transition, Firefox 144+); without
+   view transitions, or with reduced motion, colours cross-fade for 180 ms. */
+:root[data-kex-theme-switch]::view-transition-old(root),
+:root[data-kex-theme-switch]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+:root[data-kex-theme-fade],
+:root[data-kex-theme-fade] *,
+:root[data-kex-theme-fade] *::before,
+:root[data-kex-theme-fade] *::after {
+  transition: background-color 180ms linear, color 180ms linear, border-color 180ms linear, fill 180ms linear, stroke 180ms linear !important;
+}

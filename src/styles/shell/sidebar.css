@@ -574,6 +574,24 @@
     margin-left: auto;
   }
 }
+/* Dark: a hairline against the dark page, and the active course takes the dark topic-chip look (soft tint, accent bar) instead of
+   the bright violet fill. */
+:root[data-kex-theme="dark"] #kex-root .kex-sidebar {
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.07);
+}
+:root[data-kex-theme="dark"] #kex-root .kex-sb__glide {
+  background: linear-gradient(90deg, rgba(193, 20, 254, 0.17) 0%, rgba(193, 20, 254, 0.08) 60%, rgba(193, 20, 254, 0.03) 100%);
+  box-shadow: inset 0 1px 0 rgba(193, 20, 254, 0.16), inset 0 -1px 0 rgba(193, 20, 254, 0.1);
+  &::before {
+    background: transparent;
+  }
+  &::after {
+    left: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #c753f0, #b300f5 50%, #c233f5);
+    box-shadow: 0 0 8px rgba(211, 92, 255, 0.45);
+  }
+}
 :root[data-kex-motion="reduced"] #kex-root .kex-sb__glide {
   transition: none;
 }

@@ -1,0 +1,13 @@
+/* Teacher colours under the dark theme (round 8). content/darkink.ts marks inline colours that would not read on the dark page
+   and keeps the teacher's own value: the remapped one is a custom property next to it, used here and only in dark. */
+:root[data-kex-theme="dark"] [data-kex-ink] {
+  color: var(--kex-ink) !important;
+}
+:root[data-kex-theme="dark"] [data-kex-paint] {
+  background-color: var(--kex-paint) !important;
+}
+/* Transparent figures (diagrams drawn in black) sit on paper, as they would in the printed handout. */
+:root[data-kex-theme="dark"] img[data-kex-paper] {
+  background-color: #f4f2fa;
+  border-radius: 4px;
+}

@@ -1,6 +1,6 @@
 import { ChevronDown, Languages, Moon, Sun } from 'lucide-preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { updateSettings } from '../../actions/settings';
+import { switchTheme } from '../../actions/theme';
 import type { GuestModel } from '../../content/skinguestmodel';
 import { t } from '../../i18n';
 import { resolvedTheme } from '../../state';
@@ -71,11 +71,7 @@ function LangMenu({ model }: { model: GuestModel }) {
 
 export function GuestHeader({ model }: { model: GuestModel }) {
   const dark = resolvedTheme.value === 'dark';
-  const flip = (): void => {
-    const next = dark ? 'light' : 'dark';
-    document.documentElement.dataset.kexTheme = next;
-    updateSettings({ theme: next });
-  };
+  const flip = (): void => switchTheme(dark ? 'light' : 'dark');
   return (
     <header class="kex-guest" role="banner" data-kex-test="guest-header">
       <a class="kex-guest__brand" href={model.homeHref}>

@@ -22,6 +22,7 @@ import { setTileList } from '../actions/course';
 import { courseBindings, previewBindings } from '../actions/coursekeys';
 import { activityBindings, attachEditorFrameKeys, focusBindings } from '../actions/skinkeys';
 import { watchSkinPage } from '../actions/skin';
+import { watchInk } from './darkink';
 import { chromeKeys } from '../state/skin';
 import { mycoursesBindings, pinnedBindings, workspaceBindings, workspacePreviewBindings } from '../actions/wskeys';
 import { configureCounts, countsStore } from '../data/repo/counts';
@@ -119,6 +120,7 @@ class Controller {
         routeSig.value = this.route;
       }
       setMode('skin');
+      this.routeStops.push(watchInk());
     };
 
     this.preload = cache.preload().catch((e: unknown) => recordError('cache.preload', e));
@@ -386,6 +388,7 @@ class Controller {
     if (eff.effective === 'skin') {
       setMode('skin');
       if (chromeKeys.has(eff.key) || eff.key === 'quiz-focus') this.routeStops.push(watchSkinPage());
+      this.routeStops.push(watchInk());
     }
     const onHash = (): void => {
       hashSig.value = location.hash;

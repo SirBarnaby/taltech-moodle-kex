@@ -54,7 +54,7 @@
   --kex-warning: #c47a00;
   --kex-scrim: rgba(10, 6, 30, 0.35);
 
-  /* Sidebar (same in both themes) */
+  /* Sidebar (light theme; dark steps it down one notch, below) */
   --kex-sb-bg:
     radial-gradient(120% 38% at 100% 0%, rgba(88, 58, 140, 0.28) 0%, rgba(88, 58, 140, 0) 60%),
     linear-gradient(180deg, #1f1339 0%, #1b1034 9%, #18102f 22%, #160f2c 40%, #150f2b 70%, #140f29 100%);
@@ -128,11 +128,29 @@
   --kex-sb-w: 0px;
 }
 
-/* Dark theme: content area; sidebar and hero are unchanged */
+/* Dark theme: content area, and the sidebar one notch deeper and calmer (round 8: it used to ignore the switch); the hero is unchanged */
 :root[data-kex][data-kex-theme="dark"],
 :root[data-ext][data-kex-theme="dark"] {
   color-scheme: dark;
+  --kex-sb-bg:
+    radial-gradient(120% 38% at 100% 0%, rgba(88, 58, 140, 0.12) 0%, rgba(88, 58, 140, 0) 60%),
+    linear-gradient(180deg, #151029 0%, #120d24 22%, #100b20 55%, #0e0a1c 100%);
+  --kex-sb-text: #ebe9f5;
+  --kex-sb-text-2: #d9d6ea;
+  --kex-sb-mono: #918cb6;
+  --kex-sb-mono-active: #c9a6e6;
+  --kex-sb-label: #8a83aa;
+  --kex-sb-divider: #2a2148;
+  --kex-sb-logo-divider: #3f2f66;
+  --kex-sb-hover: rgba(255, 255, 255, 0.035);
+  --kex-sb-avatar-bg: #3a3658;
+  --kex-pop-bg: #151029;
+  --kex-pop-border: #2a2148;
   --kex-bg: #0f0b1f;
+  /* Raised surfaces, lightest last; the generated dark mirror (skin/dark-mirror.css) maps Moodle's light panels onto these. */
+  --kex-surface-1: #151029;
+  --kex-surface-2: #1b1533;
+  --kex-surface-3: #241d40;
   --kex-header-bg: rgba(15, 11, 31, 0.86);
   --kex-text: #efedfa;
   --kex-text-2: #d9d6ee;
