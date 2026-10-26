@@ -219,6 +219,9 @@ function Options() {
         <Row label={t('settings.compact')} hint={t('ext.compactHint')} htmlFor="o-compact">
           <Switch id="o-compact" label={t('settings.compact')} checked={s.density === 'compact'} onChange={(on) => update({ density: on ? 'compact' : 'comfortable' })} />
         </Row>
+        <Row label={t('settings.wheel')} hint={t('ext.wheelHint')} htmlFor="o-wheel">
+          <Switch id="o-wheel" label={t('settings.wheel')} checked={s.wheel} onChange={(on) => update({ wheel: on })} />
+        </Row>
       </Section>
 
       <Section id="o-sidebar" title={t('ext.sidebar')}>

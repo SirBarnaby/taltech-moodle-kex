@@ -1,0 +1,67 @@
+/* The wheel (round 10): on long lists, rows near the top and bottom of the window turn away on a drum and fade, like the iPhone
+   clock's picker; the middle of the window stays flat and sharp. Each row's turn follows its own place in the window through a
+   scroll-driven animation, which Firefox runs with the scrolling itself: no script per frame, no change to the layout, nothing
+   that could make the page jump. A row with keyboard focus always stays flat.
+   On when the setting is on (data-kex-wheel), the page is long (data-kex-long, content/index.ts), effects are not off and
+   motion is not reduced. */
+#kex-root {
+  --kex-wheel-band: clamp(96px, 15vh, 170px);
+  --kex-wheel-top: var(--kex-header-h-compact);
+}
+@supports (animation-timeline: view()) {
+  :root[data-kex-wheel="on"][data-kex-long]:not([data-kex-effects="off"]):not([data-kex-motion="reduced"]) #kex-root {
+    :is(
+      .kex-tsec__head,
+      .kex-tsec__about,
+      .kex-tsec .kex-rows > .kex-row,
+      .kex-groupcard__head,
+      .kex-groupcard__rows > .kex-row,
+      .kex-feed .kex-rows > li,
+      .kex-prow,
+      .kex-nfrow
+    ):not(:focus-within) {
+      animation-name: kex-wheel-in, kex-wheel-out;
+      animation-duration: auto, auto;
+      animation-timing-function: linear, linear;
+      /* Each holds its turned end only on its own side: the second would otherwise hide the first everywhere. */
+      animation-fill-mode: backwards, forwards;
+      animation-timeline: view(block var(--kex-wheel-top) 0px), view(block var(--kex-wheel-top) 0px);
+      /* In: while the row's top is in the lowest band of the window. Out: from the row's top entering the highest band (under the
+         header) until the row has gone. */
+      animation-range: cover 0px cover var(--kex-wheel-band), exit calc(0% - var(--kex-wheel-band)) exit 100%;
+      transform-origin: 50% 50%;
+      backface-visibility: hidden;
+    }
+    /* The page ends with a band of room, so the last rows can be read flat in the middle of the window. */
+    #kex-main {
+      padding-bottom: var(--kex-wheel-band);
+    }
+  }
+}
+@keyframes kex-wheel-in {
+  from {
+    opacity: 0.18;
+    transform: perspective(700px) rotateX(-58deg) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes kex-wheel-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0.18;
+    transform: perspective(700px) rotateX(58deg) scale(0.92);
+  }
+}
+
+/* A narrow course column pins the topic bar under the header too: the top band starts under both. */
+@container kexcol (max-width: 999px) {
+  #kex-root .kex-course .kex-book {
+    --kex-wheel-top: calc(var(--kex-header-h-compact) + var(--kex-cbar-h));
+  }
+}

@@ -266,9 +266,10 @@
   .kex-tsec--folded .kex-tsec__fold {
     grid-template-rows: 0fr;
   }
+  /* clip, not hidden: a hidden box is a scroll container, and the wheel's rows would turn in it instead of in the window. */
   .kex-tsec__foldin {
     min-height: 0;
-    overflow: hidden;
+    overflow: clip;
     padding-inline: 16px;
   }
   .kex-tsec .kex-rows {

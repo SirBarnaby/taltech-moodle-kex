@@ -29,6 +29,7 @@
 @import "./views/grades.css";
 @import "./views/notifications.css";
 @import "./components/micro.css";
+@import "./components/wheel.css";
 @import "./components/moodle-info.css";
 @import "./offpill.css";
 /* Generated dark twin of TalTech's theme first, so every hand-written skin rule after it still wins. */

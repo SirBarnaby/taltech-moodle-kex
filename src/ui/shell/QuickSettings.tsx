@@ -50,6 +50,10 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
         <Switch id="kex-qs-compact" label={t('settings.compact')} checked={s.density === 'compact'} onChange={(on) => updateSettings({ density: on ? 'compact' : 'comfortable' })} />
       </div>
       <div class="kex-pop__row">
+        <label class="kex-pop__rowlabel" for="kex-qs-wheel">{t('settings.wheel')}</label>
+        <Switch id="kex-qs-wheel" label={t('settings.wheel')} checked={s.wheel} onChange={(on) => updateSettings({ wheel: on })} />
+      </div>
+      <div class="kex-pop__row">
         <label class="kex-pop__rowlabel" for="kex-qs-on">{t('settings.kexOnPage')}</label>
         <Switch
           id="kex-qs-on"

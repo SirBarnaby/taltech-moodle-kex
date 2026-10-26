@@ -15,6 +15,8 @@ const KEY = 'kex-handoff';
 const FRESH_MS = 15 * 60 * 1000;
 const VEIL_ID = 'kex-handoff';
 const WASH_ID = 'kex-leave-wash';
+/** The window eases to white over this long before the browser leaves for the provider (handoff.css, kex-wash-in). */
+const WASH_MS = 240;
 /** The white never outlives a page that does not mount (a failed sign-in, an error page). */
 const VEIL_MAX_MS = 6000;
 /** The white lifts over this long once the shell is there; the shell's own entrance runs underneath. */
@@ -43,21 +45,39 @@ function store(): Storage | null {
   }
 }
 
-let leaving = false;
+let leaving: Promise<void> | null = null;
+
+/** The login is whole again: no white, words back, ribbons calm (Back from the provider, or a press that did not become a click). */
+export function cancelLeave(): void {
+  leaving = null;
+  discardHandoff();
+  delete document.documentElement.dataset.kexLeaving;
+  heroCanvas.rush(0, 300);
+  // The words are back under the white at once; the white itself lifts, so the login never returns in one frame.
+  const wash = document.getElementById(WASH_ID);
+  if (!wash) return;
+  wash.removeAttribute('id');
+  if (typeof wash.animate !== 'function' || reducedMotion()) {
+    wash.remove();
+    return;
+  }
+  const from = getComputedStyle(wash).opacity;
+  void wash.animate([{ opacity: from }, { opacity: 0 }], { duration: 200, easing: 'cubic-bezier(.4, 0, .2, 1)', fill: 'forwards' }).finished.then(() => wash.remove(), () => wash.remove());
+}
 
 /**
- * The reader picked a way to sign in. The navigation is already under way; this only fills the wait: the panel's words lift
- * away, the ribbons speed up, and the window eases to the white the provider's page will show.
+ * The reader picked a way to sign in: the panel's words lift away, the ribbons speed up and the window eases to the white the
+ * provider's page will show. Resolves once the window is white; the caller leaves then (round 10). Leaving at once let a provider
+ * that remembers the reader answer in a third of a second, while the white was only 3 % in: a hard cut from the login to white.
  */
-export function leaveLogin(): void {
-  if (leaving) return;
-  leaving = true;
+export function leaveLogin(): Promise<void> {
+  if (leaving) return leaving;
   try {
     store()?.setItem(KEY, JSON.stringify({ t: Date.now() } satisfies Saved));
   } catch {
     // Storage full or blocked: the next page simply arrives without the hand-off.
   }
-  if (reducedMotion()) return;
+  if (reducedMotion()) return (leaving = Promise.resolve());
   const html = document.documentElement;
   html.dataset.kexLeaving = '';
   heroCanvas.rush(1, 700);
@@ -70,12 +90,11 @@ export function leaveLogin(): void {
   }
   // Back from the identity provider's page with the browser's Back button: the login is whole again.
   window.addEventListener('pageshow', (e) => {
-    if (!e.persisted) return;
-    leaving = false;
-    delete html.dataset.kexLeaving;
-    document.getElementById(WASH_ID)?.remove();
-    heroCanvas.rush(0, 1);
+    if (e.persisted) cancelLeave();
   }, { once: true });
+  const done = new Promise<void>((resolve) => window.setTimeout(resolve, WASH_MS + 16));
+  leaving = done;
+  return done;
 }
 
 /** Forget the hand-off (the login page itself: a sign-in that failed and came back). */

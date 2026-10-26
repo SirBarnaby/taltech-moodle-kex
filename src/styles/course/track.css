@@ -101,7 +101,7 @@
   }
   .kex-groupcard__foldin {
     min-height: 0;
-    overflow: hidden;
+    overflow: clip;
   }
   .kex-group--open .kex-groupcard__foldin {
     padding-bottom: 6px;

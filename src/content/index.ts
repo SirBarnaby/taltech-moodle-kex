@@ -364,6 +364,7 @@ class Controller {
         void resolvedMotion.value;
         void sidebarMode.value;
         this.syncAttrs();
+        this.html.dataset.kexWheel = s2.wheel ? 'on' : 'off';
         this.syncLang(s2);
         if (this.root) this.root.lang = lang.value;
       }),
@@ -415,6 +416,23 @@ class Controller {
       keyManager.onFire((b) => noteShortcut(b.keys)),
     );
     void countsStore().refresh();
+    // Long pages (more than one and a half windows) get the wheel on their lists, when it is on (wheel.css).
+    const markLong = (): void => {
+      const long = document.documentElement.scrollHeight > window.innerHeight * 1.5;
+      if (long !== (this.html.dataset.kexLong !== undefined)) {
+        if (long) this.html.dataset.kexLong = '';
+        else delete this.html.dataset.kexLong;
+      }
+    };
+    if (typeof ResizeObserver === 'function') {
+      const ro = new ResizeObserver(markLong);
+      ro.observe(root);
+      this.stops.push(() => {
+        ro.disconnect();
+        delete this.html.dataset.kexLong;
+      });
+    }
+    markLong();
     // The ribbons' WebGL context is built once the page is idle, not in the middle of the first page change that shows ribbons.
     if (settings.value.effects !== 'off') {
       const prewarm = window.setTimeout(() => {

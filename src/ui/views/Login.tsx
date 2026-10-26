@@ -1,6 +1,6 @@
 import { ArrowRight, ChevronDown, CircleHelp, X } from 'lucide-preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { leaveLogin } from '../../fx/handoff';
+import { cancelLeave, leaveLogin } from '../../fx/handoff';
 import { heroCanvas } from '../../fx/heroCanvas';
 import { MOTION } from '../../fx/navigation';
 import { primaryIdp, type LoginModel } from '../../data/scrape/login';
@@ -111,20 +111,46 @@ export function LoginView({ model, loggedIn, continueHref }: LoginViewProps) {
   const primary = primaryIdp(model.idps, last);
   const hasForm = !!model.form;
 
+  /** Leave for `href` once the window is white (fx/handoff.ts): the provider's page then always meets white. */
+  const leaveTo = (href: string): void => {
+    void leaveLogin().then(() => location.assign(href));
+  };
+
   const follow = (i: number): void => {
     const idp = model.idps[i];
     if (!idp) return;
     saveLast(idp.href);
     setLast(idp.href);
-    leaveLogin();
-    location.assign(idp.href);
+    leaveTo(idp.href);
   };
 
-  // Signing in with Moodle's own form: the hand-off starts once the submit is really going ahead.
+  /** A press on a way to sign in starts the white at once; a press that does not become a click (dragged off) puts the login back. */
+  const pressStart = (e: PointerEvent): void => {
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.pointerType !== 'mouse') return;
+    const link = e.currentTarget as HTMLElement;
+    void leaveLogin();
+    // Released elsewhere, or the press became a drag of the link (the browser then sends no pointerup at all).
+    const end = (ev: Event): void => {
+      window.removeEventListener('pointerup', end, true);
+      window.removeEventListener('pointercancel', end, true);
+      window.removeEventListener('dragstart', end, true);
+      if (ev.type !== 'pointerup' || !(ev.target instanceof Node && link.contains(ev.target))) cancelLeave();
+    };
+    window.addEventListener('pointerup', end, true);
+    window.addEventListener('pointercancel', end, true);
+    window.addEventListener('dragstart', end, true);
+  };
+
+  // Signing in with Moodle's own form: once the submit is really going ahead, the window goes white and then the form is sent.
   useEffect(() => {
     const form = model.form;
     if (!form) return;
-    const onSubmit = (e: Event): void => void window.setTimeout(() => !e.defaultPrevented && leaveLogin());
+    // Moodle's own handlers were added with the page, before this one: if one of them stopped the submit, nothing happens here.
+    const onSubmit = (e: Event): void => {
+      if (e.defaultPrevented) return;
+      e.preventDefault();
+      void leaveLogin().then(() => HTMLFormElement.prototype.submit.call(form));
+    };
     form.addEventListener('submit', onSubmit);
     return () => form.removeEventListener('submit', onSubmit);
   }, [model.form]);
@@ -146,10 +172,7 @@ export function LoginView({ model, loggedIn, continueHref }: LoginViewProps) {
         e.preventDefault();
         setMore((v) => !v);
       } else if (e.key === 'Enter' && !onControl) {
-        if (loggedIn) {
-          leaveLogin();
-          location.assign(continueHref);
-        }
+        if (loggedIn) leaveTo(continueHref);
         else if (model.idps.length) {
           e.preventDefault();
           follow(primary);
@@ -196,7 +219,11 @@ export function LoginView({ model, loggedIn, continueHref }: LoginViewProps) {
           {loggedIn ? (
             <div class="kex-login__signed">
               <p>{t('login.loggedIn')}</p>
-              <a class="kex-login__btn kex-login__btn--primary" href={continueHref} data-kex-test="login-continue" onClick={(e) => plainClick(e) && leaveLogin()}>
+              <a class="kex-login__btn kex-login__btn--primary" href={continueHref} data-kex-test="login-continue" onPointerDown={pressStart} onClick={(e) => {
+                if (!plainClick(e)) return;
+                e.preventDefault();
+                leaveTo(continueHref);
+              }}>
                 {t('login.continue')}
                 <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
               </a>
@@ -213,9 +240,12 @@ export function LoginView({ model, loggedIn, continueHref }: LoginViewProps) {
                       title={idp.title}
                       data-kex-test="login-idp"
                       data-primary={i === primary}
+                      onPointerDown={pressStart}
                       onClick={(e) => {
                         saveLast(idp.href);
-                        if (plainClick(e)) leaveLogin();
+                        if (!plainClick(e)) return;
+                        e.preventDefault();
+                        leaveTo(idp.href);
                       }}
                     >
                       <span>{idp.title}</span>
