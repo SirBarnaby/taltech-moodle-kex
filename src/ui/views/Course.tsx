@@ -14,6 +14,7 @@ import {
   courseError, courseState, courseStatus, focusZone, labTrack, labTrackSettled, mergedSummaries, openGroups, pinnedRow, previewCmId, rows, sectionView, secondaryNav, selectedCmId, topicNumber, topics, currentTopic,
 } from '../../state/course';
 import { Button } from '../components/Button';
+import { CourseBar } from '../components/CourseBar';
 import { CourseNav } from '../components/CourseNav';
 import { useEffectsConfig, useQuietFocus } from '../components/hooks';
 import { Hero } from '../components/Hero';
@@ -131,7 +132,7 @@ export function CourseView() {
     const onIn = (e: FocusEvent): void => {
       const target = e.target as Element | null;
       if (target?.closest('.kex-rows')) focusZone.value = 'rows';
-      else if (target?.closest('.kex-topics')) focusZone.value = 'topics';
+      else if (target?.closest('.kex-topics, .kex-cbar__topics')) focusZone.value = 'topics';
     };
     el.addEventListener('focusin', onIn);
     return () => el.removeEventListener('focusin', onIn);
@@ -208,6 +209,9 @@ export function CourseView() {
         links={[]}
       />
       <div class="kex-content">
+        {id && !loading && !failed && tps.length > 0 && (
+          <CourseBar topics={tps} active={topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} pins={pinnedRow.value} courseId={id} />
+        )}
         <PinnedRow pins={pinnedRow.value} courseId={id} />
         <div class="kex-matheader">
           <SlideUpText as="h2" class="kex-matheader__title" text={t('course.materials')} split="words" stagger={0.06} duration={MOTION.title / 1000} still={softEntered.value} inView />

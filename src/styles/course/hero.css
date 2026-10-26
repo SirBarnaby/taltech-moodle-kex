@@ -33,8 +33,10 @@
   .kex-hero__canvas[data-drawn] {
     opacity: 1;
   }
-  .kex-hero[data-mode="fallback"] .kex-hero__canvas {
-    display: none;
+  /* Hidden by opacity, never display:none: the effects runtime starts only canvases its IntersectionObserver can see. */
+  .kex-hero[data-mode="fallback"] .kex-hero__canvas,
+  .kex-hero__canvas[data-fx-state="fallback"] {
+    opacity: 0;
   }
 
   .kex-cross {

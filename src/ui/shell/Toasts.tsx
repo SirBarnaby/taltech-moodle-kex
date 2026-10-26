@@ -1,10 +1,12 @@
 import { dismissToast } from '../../actions/toasts';
 import { toasts } from '../../state';
+import { PinReplaceCard } from './PinReplace';
 
 /** Bottom-centre toasts in an aria-live region. */
 export function Toasts() {
   return (
     <div class="kex-toasts" role="status" aria-live="polite">
+      <PinReplaceCard />
       {toasts.value.map((t) => (
         <div key={t.id} class="kex-toast">
           <span>{t.message}</span>

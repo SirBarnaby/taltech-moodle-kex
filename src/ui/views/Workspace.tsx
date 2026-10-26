@@ -359,7 +359,7 @@ export function WorkspaceView() {
       <div class="kex-content">
         <MoodleInfo />
         <SiteNotices />
-        <PinnedRow pins={rowPins(pins, null, 3)} courseId={null} />
+        <PinnedRow pins={rowPins(pins, null)} courseId={null} />
         <div class="kex-matheader">
           <SlideUpText as="h2" class="kex-matheader__title" text={t('ws.thisWeek')} split="words" stagger={0.08} duration={0.6} inView />
           <Tabs<FeedTab> value={tab} onChange={setFeedTab} items={FEED_TABS} label={t('ws.tabs')} idPrefix="kex-ws-tab" panelId="kex-ws-panel" />

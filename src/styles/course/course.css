@@ -25,9 +25,11 @@
     letter-spacing: 0.13em;
     color: var(--kex-mono-strong);
   }
+  /* Three equal columns: a cell never grows with its title (long ones end in an ellipsis; the full title is the tooltip). */
   .kex-pinned__box {
     grid-area: box;
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     height: 74px;
     border: 1px solid var(--kex-border-card);
     border-radius: var(--kex-r-xs);
@@ -55,7 +57,6 @@
     position: relative;
     display: flex;
     align-items: center;
-    flex: 1 1 auto;
     min-width: 0;
     height: 100%;
     padding: 0 26px 0 20px;
@@ -87,6 +88,16 @@
       display: block;
       margin: -2px -1px;
     }
+    .kex-pin__icon {
+      margin: 2px 0 0;
+      color: var(--kex-text);
+    }
+  }
+  .kex-glyph__label {
+    font-family: var(--kex-font-mono);
+    font-size: 6.4px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
   }
   .kex-pin__tack {
     position: absolute;
@@ -141,7 +152,6 @@
     transition: transform 160ms var(--kex-ease);
   }
   .kex-pin--empty {
-    flex: 1 1 0;
     padding: 10px;
     cursor: default;
   }
@@ -660,6 +670,16 @@
 #kex-root[data-quiet] :focus-visible {
   outline: none;
 }
+@keyframes kex-replace-ask {
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--kex-accent) 10%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #kex-root .kex-pinned__box--replace {
+    animation: none;
+  }
+}
 @keyframes kex-draw {
   from {
     stroke-dashoffset: 24;
@@ -678,9 +698,10 @@
       outline-offset: -3px;
     }
   }
+  /* Bottom right, beside the short course code: the title keeps its full line. */
   .kex-pin__tools {
     position: absolute;
-    top: 4px;
+    bottom: 4px;
     right: 6px;
     display: flex;
     gap: 2px;
@@ -725,6 +746,105 @@
   .kex-pinned__box--edit {
     outline: 1px dashed var(--kex-accent);
     outline-offset: 3px;
+  }
+  .kex-pinned__edit:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* A fourth pin for this course: the cells become numbered targets (1 to 3, or click) until one is picked or Esc. */
+  .kex-pinned__box--replace {
+    border-color: var(--kex-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--kex-accent) 22%, transparent);
+    animation: kex-replace-ask 1.6s var(--kex-ease) infinite;
+  }
+  .kex-pin--target {
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    &:hover,
+    &:focus-visible {
+      background: var(--kex-tint);
+    }
+    &:hover .kex-pin__slot,
+    &:focus-visible .kex-pin__slot {
+      background: var(--kex-magenta);
+      color: #fff;
+    }
+  }
+  .kex-pin__slot {
+    position: absolute;
+    left: 66px;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin-top: -12px;
+    border-radius: 50%;
+    background: var(--kex-accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 120ms var(--kex-ease);
+  }
+  .kex-pinned--asking .kex-pin__arrow {
+    display: none;
+  }
+
+  /* Edit mode: a course's pins beyond the row's three (stored before the limit), kept until moved up or removed. */
+  .kex-pinned__extra {
+    grid-column: 1 / -1;
+    margin-top: 14px;
+  }
+  .kex-pinned__extralabel {
+    margin: 0 0 8px 1px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--kex-mono-strong);
+  }
+  .kex-pinned__extralist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .kex-pinned__chip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 360px;
+    height: 40px;
+    padding: 0 116px 0 12px;
+    border: 1px solid var(--kex-border-card);
+    border-radius: var(--kex-r-xs);
+    .kex-pin__tools {
+      bottom: 7px;
+    }
+    &:focus-visible {
+      outline-offset: -3px;
+    }
+  }
+  .kex-pinned__chipmark svg {
+    display: block;
+    width: 16px;
+    height: 20px;
+  }
+  .kex-pinned__chiptitle {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .kex-pinned__extrahint {
+    margin: 8px 0 0 1px;
+    font-size: 13px;
+    color: var(--kex-text-3);
   }
 
   /* ---- subsection group cards (Moodle 4.5 mod_subsection) ---- */
@@ -827,6 +947,5 @@
   #kex-root .kex-row__note { margin-left: 0; }
   #kex-root .kex-detail__summary { font-size: 16px; line-height: 1.6; }
   #kex-root .kex-detail__title { font-size: 32px; line-height: 1.2; }
-  #kex-root .kex-course .kex-pinned__box { overflow-x: auto; }
-  #kex-root .kex-course .kex-pin { min-width: 220px; }
+  #kex-root .kex-course .kex-pinned__box { overflow-x: auto; grid-template-columns: repeat(3, minmax(220px, 1fr)); }
 }

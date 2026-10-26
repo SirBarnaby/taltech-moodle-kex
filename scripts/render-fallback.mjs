@@ -1,6 +1,6 @@
 // Render matching high-resolution hero and portrait login fallbacks at t=7.3.
 // Every shader uniform is set explicitly, including palette and shape.
-// Usage: node scripts/render-fallback.mjs
+// Usage: node scripts/render-fallback.mjs [name ...]   (names such as login-fallback or hero-it-fallback; default: all)
 import { chromium } from 'playwright';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -16,11 +16,12 @@ const surfaces = Object.values(SCHOOLS).flatMap(({ id, ribbons }) => [
   { name: id === 'default' ? 'hero-fallback' : `hero-${id}-fallback`, W: 2560, H: 480, intensity: 1, leftFade: 0.46, seed: 0, style: ribbons },
   { name: id === 'default' ? 'band-fallback' : `band-${id}-fallback`, W: 2560, H: 264, intensity: 0.4, leftFade: 0.46, seed: 0, style: ribbons },
 ]);
-surfaces.push({ name: 'login-fallback', W: 1440, H: 1600, intensity: 0.85, leftFade: 0, seed: 11, style: DEFAULT_RIBBONS });
+surfaces.push({ name: 'login-fallback', W: 1440, H: 1600, intensity: 1.15, leftFade: 0, seed: 11, style: DEFAULT_RIBBONS });
 
-const browser = await chromium.launch({ channel: process.env.KEX_BROWSER_CHANNEL || (process.platform === 'win32' ? 'msedge' : undefined), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const only = process.argv.slice(2);
+const browser = await chromium.launch({ executablePath: process.env.KEX_CHROMIUM || undefined, channel: process.env.KEX_BROWSER_CHANNEL || (process.platform === 'win32' ? 'msedge' : undefined), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage();
-for (const { name, W, H, intensity, leftFade, seed, style } of surfaces) {
+for (const { name, W, H, intensity, leftFade, seed, style } of surfaces.filter((x) => !only.length || only.includes(x.name))) {
 const out = path.join(root, `assets/${name}.webp`);
 await page.setContent(`<canvas id="c" width="${W}" height="${H}"></canvas>`);
 const b64 = await page.evaluate(async ({ glsl, W, H, T, intensity, leftFade, seed, style }) => {

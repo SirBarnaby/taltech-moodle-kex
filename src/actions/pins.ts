@@ -1,6 +1,6 @@
 import { signal } from '@preact/signals';
 import type { Pin } from '../data/model';
-import { addPin, isPinned, MAX_PINS, movedTo, movePin, parsePinsJson, pinsToJson, readPins, removePin, renamePin, replacePins, restorePin, rowPins } from '../data/repo/pins';
+import { addPin, coursePins, isPinned, MAX_PINS, movedTo, movePin, parsePinsJson, pinsToJson, readPins, recentPins, removePin, renamePin, replacePins, restorePin, rowPins, swapPin, touchPin } from '../data/repo/pins';
 import { t } from '../i18n';
 import { activeCourseId } from '../state';
 import { pushToast } from './toasts';
@@ -18,11 +18,39 @@ const withUndo = (message: string, run: () => void): void => {
   pushToast(`${message} · ${t('toast.undo')} (z)`, { actionLabel: t('toast.undo'), onAction: run });
 };
 
+/** A fourth pin for a course waits here while the user picks which of the three it replaces (1 to 3, click, Esc). */
+export const pinReplace = signal<Pin | null>(null);
+
 export async function pinItem(pin: Pin): Promise<void> {
   if (isPinned(pin.cmid)) return unpinItem(pin.cmid);
-  const ok = await addPin(pin);
-  if (!ok) return void pushToast(t('toast.pinsFull'));
+  const res = await addPin(pin);
+  if (res === 'course-full') {
+    pinReplace.value = pin;
+    return;
+  }
+  pinReplace.value = null;
+  if (res === 'full') return void pushToast(t('toast.pinsFull'));
   withUndo(t('toast.pinned'), () => void removePin(pin.cmid));
+}
+
+/** The waiting pin takes slot `slot` (0 to 2) of its course's row. */
+export async function replacePinAt(slot: number): Promise<void> {
+  const pin = pinReplace.value;
+  if (!pin) return;
+  const target = rowPins(readPins(), pin.courseId)[slot];
+  pinReplace.value = null;
+  if (!target) return;
+  const before = await swapPin(target.cmid, pin);
+  if (before) withUndo(t('toast.pinReplaced', { title: target.title }), () => void replacePins(before));
+}
+
+export function cancelPinReplace(): void {
+  pinReplace.value = null;
+}
+
+/** A pinned material was opened (its page, or the side reader). */
+export function notePinOpened(cmid: number | null | undefined): void {
+  if (cmid && isPinned(cmid)) void touchPin(cmid);
 }
 
 export async function unpinItem(cmid: number): Promise<void> {
@@ -33,8 +61,9 @@ export async function unpinItem(cmid: number): Promise<void> {
   withUndo(t('toast.unpinned'), () => void restorePin(gone, idx));
 }
 
-/** The order the PINNED row shows (this course first). */
-export const displayOrder = (all: readonly Pin[] = readPins()): Pin[] => rowPins(all, activeCourseId.value, all.length);
+/** The order the PINNED row shows: the course's own pins (the row's three, then any older extras), or most recent first. */
+export const displayOrder = (all: readonly Pin[] = readPins(), courseId: number | null = activeCourseId.value): Pin[] =>
+  courseId === null ? recentPins(all, all.length) : coursePins(all, courseId);
 
 export async function reorderPin(cmid: number, delta: -1 | 1, order: readonly Pin[] = displayOrder()): Promise<void> {
   const before = await movePin(cmid, delta, order);

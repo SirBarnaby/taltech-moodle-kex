@@ -89,6 +89,8 @@ export interface Pin {
   format: Format;
   url: string;
   addedAt: number;
+  /** Last time the material was opened (its page or the side reader): the Dossier row shows the most recent three. */
+  openedAt?: number;
 }
 
 export interface DueItem {

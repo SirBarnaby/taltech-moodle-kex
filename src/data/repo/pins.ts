@@ -6,6 +6,8 @@ import type { Pin } from '../model';
  * profile see changes through `storage.onChanged`, which the cache routes into this store (architecture §8.5).
  */
 export const MAX_PINS = 50;
+/** A course shows three pins; pinning a fourth asks which one it replaces. Older stores may hold more (none are dropped). */
+export const PINS_PER_COURSE = 3;
 
 let store: Store<Pin[]> | undefined;
 
@@ -26,12 +28,34 @@ export async function savePins(next: Pin[]): Promise<void> {
 
 export const isPinned = (cmid: number, pins: readonly Pin[] = readPins()): boolean => pins.some((p) => p.cmid === cmid);
 
-export async function addPin(pin: Pin): Promise<boolean> {
+export type AddResult = 'added' | 'course-full' | 'full';
+
+export async function addPin(pin: Pin): Promise<AddResult> {
   const cur = readPins();
-  if (isPinned(pin.cmid, cur)) return true;
-  if (cur.length >= MAX_PINS) return false;
+  if (isPinned(pin.cmid, cur)) return 'added';
+  if (coursePins(cur, pin.courseId).length >= PINS_PER_COURSE) return 'course-full';
+  if (cur.length >= MAX_PINS) return 'full';
   await savePins([...cur, pin]);
-  return true;
+  return 'added';
+}
+
+/** Put `pin` where `oldCmid` was (the course keeps its order). Returns the list before, for Undo. */
+export async function swapPin(oldCmid: number, pin: Pin): Promise<Pin[] | undefined> {
+  const cur = readPins();
+  const at = cur.findIndex((p) => p.cmid === oldCmid);
+  if (at < 0 || isPinned(pin.cmid, cur)) return undefined;
+  const next = [...cur];
+  next[at] = pin;
+  await savePins(next);
+  return cur;
+}
+
+/** Remember when a pinned material was opened. Writes only for a pin, at most once a minute per pin. */
+export async function touchPin(cmid: number, now = Date.now()): Promise<void> {
+  const cur = readPins();
+  const p = cur.find((x) => x.cmid === cmid);
+  if (!p || (p.openedAt && now - p.openedAt < 60_000)) return;
+  await savePins(cur.map((x) => (x.cmid === cmid ? { ...x, openedAt: now } : x)));
 }
 
 export async function removePin(cmid: number): Promise<Pin | undefined> {
@@ -93,11 +117,15 @@ export async function replacePins(list: readonly Pin[]): Promise<void> {
   await savePins(list.slice(0, MAX_PINS));
 }
 
-/** The PINNED row shows 3 cells: pins of the current course first (in pin order), then the others in pin order. */
-export function rowPins(all: readonly Pin[], courseId: number | null, n = 3): Pin[] {
-  const here = all.filter((p) => p.courseId === courseId);
-  const rest = all.filter((p) => p.courseId !== courseId);
-  return [...here, ...rest].slice(0, n);
+export const coursePins = (all: readonly Pin[], courseId: number | null): Pin[] => all.filter((p) => p.courseId === courseId);
+
+/** Most recently opened first (a pin never opened counts from when it was pinned). */
+export const recentPins = (all: readonly Pin[], n = PINS_PER_COURSE): Pin[] =>
+  [...all].sort((a, b) => (b.openedAt ?? b.addedAt) - (a.openedAt ?? a.addedAt)).slice(0, n);
+
+/** The PINNED row: on a course, that course's own first three pins in pin order; elsewhere the three opened most recently. */
+export function rowPins(all: readonly Pin[], courseId: number | null, n = PINS_PER_COURSE): Pin[] {
+  return courseId === null ? recentPins(all, n) : coursePins(all, courseId).slice(0, n);
 }
 
 // ---------------------------------------------------------------------- export / import
@@ -131,6 +159,7 @@ export function parsePinsJson(text: string, wwwroot = ''): { pins: Pin[]; droppe
       format: (typeof p.format === 'string' ? p.format : 'FILE') as Pin['format'],
       url: p.url as string,
       addedAt: typeof p.addedAt === 'number' ? p.addedAt : Date.now(),
+      ...(typeof p.openedAt === 'number' ? { openedAt: p.openedAt } : {}),
     });
   }
   return { pins: pins.slice(0, MAX_PINS), dropped };

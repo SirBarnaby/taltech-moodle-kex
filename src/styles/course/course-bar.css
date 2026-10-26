@@ -1,0 +1,303 @@
+/* Course bar (round 8): once the TOPICS grid scrolls away, one row of topic chips and the course's pins slide in under the compact
+   header. The anchor is sticky and zero-height, so the bar never takes space; it only fades and slides. */
+#kex-root {
+  --kex-cbar-h: 48px;
+
+  .kex-cbar-anchor {
+    position: sticky;
+    top: var(--kex-header-h-compact);
+    z-index: calc(var(--kex-z-header) - 1);
+    height: 0;
+  }
+  .kex-cbar {
+    position: absolute;
+    top: 0;
+    left: calc(-1 * var(--kex-pad));
+    right: calc(-1 * var(--kex-pad));
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: var(--kex-cbar-h);
+    padding: 0 var(--kex-pad);
+    background: color-mix(in srgb, var(--kex-header-bg) 86%, transparent);
+    -webkit-backdrop-filter: saturate(140%) blur(14px);
+    backdrop-filter: saturate(140%) blur(14px);
+    border-bottom: 1px solid var(--kex-border);
+    box-shadow: var(--kex-shadow-compact);
+    opacity: 0;
+    transform: translateY(-10px);
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 160ms var(--kex-ease), transform 220ms var(--kex-ease), visibility 0s linear 220ms;
+  }
+  .kex-cbar[data-shown] {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 180ms var(--kex-ease), transform 260ms var(--kex-ease);
+  }
+
+  /* ---- topic chips ---- */
+  .kex-cbar__topics {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .kex-cbar__chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    > li {
+      flex: none;
+    }
+  }
+  /* The edges fade where more chips wait. */
+  .kex-cbar__topics--start .kex-cbar__chips {
+    mask-image: linear-gradient(90deg, transparent 0, #000 56px);
+  }
+  .kex-cbar__topics--end .kex-cbar__chips {
+    mask-image: linear-gradient(90deg, #000 calc(100% - 56px), transparent 100%);
+  }
+  .kex-cbar__topics--start.kex-cbar__topics--end .kex-cbar__chips {
+    mask-image: linear-gradient(90deg, transparent 0, #000 56px, #000 calc(100% - 56px), transparent 100%);
+  }
+  .kex-cbar__chip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 260px;
+    height: 32px;
+    padding: 0 12px 0 10px;
+    border: 1px solid var(--kex-border);
+    border-radius: var(--kex-r-s);
+    font-size: 13px;
+    line-height: 16px;
+    color: var(--kex-text-2);
+    white-space: nowrap;
+    transition: background 140ms var(--kex-ease), color 140ms var(--kex-ease);
+    &:hover:not(.kex-cbar__chip--active) {
+      background: var(--kex-hover);
+    }
+    &:focus-visible {
+      outline-offset: -3px;
+    }
+  }
+  .kex-cbar__num {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+  }
+  .kex-cbar__title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .kex-cbar__chip--locked .kex-cbar__title {
+    opacity: 0.6;
+  }
+  .kex-cbar__chip--active {
+    background: linear-gradient(90deg, #f1e8fd 0%, #efe6fd 60%, #fbeffd 80%, #ece2fc 100%);
+    border-color: var(--kex-tint-border);
+    color: var(--kex-violet);
+    font-weight: 600;
+    &::before {
+      content: "";
+      position: absolute;
+      left: -1px;
+      top: -1px;
+      bottom: -1px;
+      width: 3px;
+      border-radius: var(--kex-r-s) 0 0 var(--kex-r-s);
+      background: var(--kex-accent-bar);
+    }
+  }
+  :root[data-kex-theme="dark"] & .kex-cbar__chip--active {
+    background: var(--kex-tint);
+  }
+  /* Arrows appear on hover, only on a side with more chips. */
+  .kex-cbar__arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    margin-top: -14px;
+    border: 1px solid var(--kex-border);
+    border-radius: 50%;
+    background: var(--kex-bg);
+    color: var(--kex-text-2);
+    box-shadow: 0 2px 8px rgba(20, 10, 60, 0.12);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 120ms var(--kex-ease), visibility 0s linear 120ms;
+    &:hover {
+      color: var(--kex-violet);
+    }
+  }
+  .kex-cbar__arrow--prev {
+    left: -6px;
+  }
+  .kex-cbar__arrow--next {
+    right: -6px;
+  }
+  .kex-cbar__topics--start:hover .kex-cbar__arrow--prev,
+  .kex-cbar__topics--end:hover .kex-cbar__arrow--next {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 120ms var(--kex-ease);
+  }
+
+  /* ---- pins ---- */
+  /* The pins keep their width (up to ~40%); the topic row takes the rest and scrolls. */
+  .kex-cbar__pins {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    max-width: min(40%, 620px);
+    padding-left: 20px;
+    border-left: 1px solid var(--kex-border);
+  }
+  .kex-cbar__pinrow {
+    display: flex;
+    gap: 6px;
+    min-width: 0;
+  }
+  .kex-cbar__pin {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 1 auto;
+    min-width: 72px;
+    max-width: 196px;
+    height: 32px;
+    padding: 0 12px 0 8px;
+    border: 1px solid var(--kex-border-card);
+    border-radius: var(--kex-r-s);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--kex-text);
+    text-align: left;
+    transition: background 140ms var(--kex-ease);
+    &:hover,
+    &:focus-visible {
+      background: var(--kex-hover);
+    }
+  }
+  .kex-cbar__mark {
+    flex: none;
+    svg {
+      display: block;
+      width: 14px;
+      height: 18px;
+    }
+  }
+  .kex-cbar__pintitle {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .kex-cbar__slot {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--kex-accent);
+    color: #fff;
+    font-size: 12px;
+  }
+  .kex-cbar--asking .kex-cbar__pin {
+    border-color: var(--kex-accent);
+    cursor: pointer;
+  }
+  .kex-cbar__pin--target:hover .kex-cbar__slot {
+    background: var(--kex-magenta);
+  }
+  .kex-cbar__pinmenu {
+    position: relative;
+    display: none;
+  }
+  .kex-cbar__pinbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--kex-border-card);
+    border-radius: var(--kex-r-s);
+    font-size: 13px;
+    color: var(--kex-text);
+    &:hover,
+    &[aria-expanded="true"] {
+      background: var(--kex-hover);
+    }
+  }
+  .kex-cbar__drop {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    display: grid;
+    gap: 4px;
+    width: min(320px, calc(100vw - 32px));
+    padding: 6px;
+    border: 1px solid var(--kex-border);
+    border-radius: var(--kex-r-m);
+    background: var(--kex-bg);
+    box-shadow: 0 12px 32px rgba(20, 10, 60, 0.18);
+    animation: kex-pop-in 140ms var(--kex-ease);
+    .kex-cbar__pin {
+      max-width: none;
+      height: 40px;
+    }
+  }
+}
+
+/* Narrow course column: topics only, plus a pin button with the count that opens the three pins. */
+@container kexcol (max-width: 900px) {
+  #kex-root .kex-cbar__pinrow {
+    display: none;
+  }
+  #kex-root .kex-cbar__pinmenu {
+    display: block;
+  }
+  #kex-root .kex-cbar__pins {
+    max-width: none;
+    padding-left: 12px;
+  }
+  #kex-root .kex-cbar {
+    gap: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #kex-root .kex-cbar,
+  #kex-root .kex-cbar[data-shown] {
+    transform: none;
+    transition: opacity 120ms linear, visibility 0s linear 120ms;
+  }
+}
+/* Anchor jumps and keyboard focus stop below the compact header and the bar. */
+:root[data-kex="app"]:is([data-kex-view="course"], [data-kex-view="section"]) {
+  scroll-padding-top: calc(var(--kex-header-h-compact) + 48px + 12px);
+}

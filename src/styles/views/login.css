@@ -27,12 +27,12 @@
     color: var(--kex-hero-text);
     isolation: isolate;
   }
-  /* The pre-rendered picture is framed for the wide course hero: on this tall panel the live shader would jump against it. */
+  /* Its own portrait picture, rendered from the same uniforms as the live canvas (scripts/render-fallback.mjs), so the
+     shader's first frame lands on it without a jump. The canvas must stay laid out while it compiles: the effects runtime
+     only starts a canvas its IntersectionObserver can see, and a hidden one never would. */
+  .kex-login__art,
   .kex-login__art[data-mode="fallback"] {
-    background: var(--kex-hero-bg);
-  }
-  .kex-login__art[data-mode="fallback"] .kex-hero__canvas {
-    display: none;
+    background: var(--kex-login-fallback);
   }
   .kex-login__art .kex-cross--a {
     left: calc(46.75% - 12.5px);

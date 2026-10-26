@@ -72,12 +72,15 @@ describe('notifications', () => {
 
 describe('pins', () => {
   const pin = (cmid: number, courseId = 2) => ({ cmid, courseId, courseCode: 'ITI8801', title: `P${cmid}`, modname: 'resource', kind: 'lecture' as const, format: 'PDF' as const, url: `https://m/mod/resource/view.php?id=${cmid}`, addedAt: 1 });
-  it('moves a pin, shows the current course first in the row, and groups by course in order of first pin', () => {
+  it('moves a pin; a course row shows only its own first three, the Dossier row the three opened last; groups by course', () => {
     const { next, from } = movedTo([pin(1), pin(2), pin(3)], 1, 2);
     expect(next.map((p) => p.cmid)).toEqual([2, 3, 1]);
     expect(from).toBe(0);
     expect(movedTo([pin(1)], 1, 0).from).toBe(-1);
-    expect(rowPins([pin(1, 9), pin(2, 2), pin(3, 9), pin(4, 2)], 2).map((p) => p.cmid)).toEqual([2, 4, 1]);
+    // Round 8: another course's pins never fill this course's row; a fourth (older store) waits outside the row.
+    expect(rowPins([pin(1, 9), pin(2, 2), pin(3, 9), pin(4, 2)], 2).map((p) => p.cmid)).toEqual([2, 4]);
+    expect(rowPins([pin(2), pin(4), pin(5), pin(6)], 2).map((p) => p.cmid)).toEqual([2, 4, 5]);
+    expect(rowPins([{ ...pin(1, 9), openedAt: 50 }, pin(2), { ...pin(3, 7), addedAt: 40 }, pin(4)], null).map((p) => p.cmid)).toEqual([1, 3, 2]);
     const g = groupPins([pin(1, 5), pin(2, 2), pin(3, 5)], new Map([[5, 'Five'], [2, 'Two']]));
     expect(g.map((x) => [x.courseId, x.pins.length])).toEqual([[5, 2], [2, 1]]);
     expect(g[0]?.heading).toBe('ITI8801 / FIVE');

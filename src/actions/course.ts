@@ -182,21 +182,20 @@ function onPop(): void {
 }
 
 /**
- * Switching topic while scrolled down: the new topic starts at its top, right under the sticky strip, instead of wherever
+ * Switching topic while scrolled down: the new topic starts at its top, right under the course bar, instead of wherever
  * the old one happened to be. The jump happens under the copy of the old panel, which is fixed in place and fades out.
- * The panel keeps enough height for that position, so a shorter topic never lets the browser clamp the scroll (which pulled
- * the strip loose and dropped the page by hundreds of pixels).
+ * The panel keeps enough height for that position, so a shorter topic never lets the browser clamp the scroll (which
+ * dropped the page by hundreds of pixels). The TOPICS grid stays behind the header and bar there, so the bar stays shown.
  */
 function revealDetailTop(): void {
   const detail = document.querySelector<HTMLElement>('.kex-detail');
-  const strip = document.querySelector<HTMLElement>('.kex-topics');
-  if (!detail) return;
+  const root = document.getElementById('kex-root');
+  if (!detail || !root) return;
   detail.style.minHeight = '';
-  const stuck = strip ? (Number.parseFloat(getComputedStyle(strip).top) || 0) + strip.getBoundingClientRect().height : 0;
-  const body = detail.parentElement;
-  const gap = Number.parseFloat(body ? getComputedStyle(body).rowGap : '') || 24;
+  const css = getComputedStyle(root);
+  const stuck = (Number.parseFloat(css.getPropertyValue('--kex-header-h-compact')) || 52) + (Number.parseFloat(css.getPropertyValue('--kex-cbar-h')) || 48);
   const top = detail.getBoundingClientRect().top + window.scrollY;
-  const y = Math.max(0, Math.min(window.scrollY, top - stuck - gap));
+  const y = Math.max(0, Math.min(window.scrollY, top - stuck - 16));
   detail.style.minHeight = `${Math.max(0, Math.ceil(y + window.innerHeight - top))}px`;
   if (window.scrollY > y + 1) scrollInstant(y);
 }
@@ -361,7 +360,10 @@ export function moveRow(delta: 1 | -1): void {
 
 export function focusTopic(n: number): void {
   focusZone.value = 'topics';
-  requestAnimationFrame(() => focusWithoutJump(document.querySelector<HTMLElement>(`[data-kex-topic="${n}"]`)));
+  // While the course bar is shown its chip takes focus; the grid's chip is scrolled away under it.
+  requestAnimationFrame(() => focusWithoutJump(
+    document.querySelector<HTMLElement>(`.kex-cbar[data-shown] [data-kex-bartopic="${n}"]`) ?? document.querySelector<HTMLElement>(`[data-kex-topic="${n}"]`),
+  ));
 }
 
 export function focusRow(cmid: number): void {

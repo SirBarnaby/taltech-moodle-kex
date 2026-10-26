@@ -1,29 +1,14 @@
 /* Course topic strip. */
 #kex-root {
   /* ---- TOPICS ----
-     Two-row wrapping grid: chips fill left to right, titles wrap to two lines,
-     two rows are visible and the list scrolls by whole rows. */
+     The full grid, in place: chips fill left to right, titles wrap to two lines, every row shows (beyond five rows, four and
+     "Show more"). It neither sticks nor scrolls; once it scrolls away the course bar (course-bar.css) takes over. */
   .kex-topics {
     --kex-topic-min: 220px;
     --kex-topic-h: 52px;
     --kex-topic-gap: 6px;
-    position: sticky;
-    top: var(--kex-header-h-compact);
-    z-index: 12;
     padding: 12px 0 8px;
-    background: var(--kex-bg);
     min-width: 0;
-    /* Stuck, the strip covers the gutters too: rows and cards reach a few pixels past the column (hover fill, card borders) and
-       would otherwise show beside it as thin slivers. */
-    &::before {
-      content: "";
-      position: absolute;
-      /* The gutter is at least --kex-pad (24 px or more); a row reaches 13 px past the column. */
-      inset: 0 calc(-1 * var(--kex-pad));
-      z-index: -1;
-      background: var(--kex-bg);
-      pointer-events: none;
-    }
     @container kexcol (max-width: 1040px) { --kex-topic-min: 196px; }
     @container kexcol (max-width: 700px) { --kex-topic-min: 160px; }
   }
@@ -33,26 +18,21 @@
     grid-template-columns: repeat(auto-fill, minmax(var(--kex-topic-min), 1fr));
     grid-auto-rows: var(--kex-topic-h);
     gap: var(--kex-topic-gap) 8px;
-    max-height: calc(var(--kex-topic-h) * 2 + var(--kex-topic-gap));
-    overflow: hidden auto;
-    overscroll-behavior: contain;
-    scroll-snap-type: y mandatory;
-    scrollbar-width: thin;
-    scrollbar-color: var(--kex-border-card) transparent;
     padding: 0;
     margin: 0;
-    > li { min-width: 0; scroll-snap-align: start; }
+    > li { min-width: 0; }
   }
-  /* Bottom fade while more rows wait below. */
-  .kex-topics--more::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 8px;
-    height: 14px;
-    pointer-events: none;
-    background: linear-gradient(to bottom, transparent, var(--kex-bg));
+  .kex-topics__more {
+    margin: 10px 0 0 1px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--kex-violet);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+    text-underline-offset: 4px;
+    &:hover {
+      text-decoration-color: currentColor;
+    }
   }
   .kex-topics__label {
     height: 16px;
@@ -62,18 +42,6 @@
     font-weight: 500;
     letter-spacing: 0.13em;
     color: var(--kex-mono-strong);
-  }
-  /* In a narrow column the label stays for screen readers only, so two rows of chips fit. */
-  @container kexcol (max-width: 1040px) {
-    .kex-topics--grid .kex-topics__label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      margin: -1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
-    }
   }
   .kex-topic {
     position: relative;

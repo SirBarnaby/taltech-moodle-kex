@@ -1,15 +1,17 @@
-import { ChevronLeft, ChevronRight, Pencil, X } from 'lucide-preact';
+import { ChevronLeft, ChevronRight, CirclePlay, CircleHelp, CodeXml, Folder, Link as LinkIcon, MessagesSquare, Pencil, Upload, X } from 'lucide-preact';
 import { useEffect, useRef } from 'preact/hooks';
 import { go } from '../../actions/navigate';
-import { displayOrder, pinEdit, pinRenaming, reorderPin, retitlePin, unpinItem } from '../../actions/pins';
-import type { Pin } from '../../data/model';
+import { displayOrder, pinEdit, pinRenaming, pinReplace, reorderPin, replacePinAt, retitlePin, unpinItem } from '../../actions/pins';
+import type { Format, Pin } from '../../data/model';
+import { PINS_PER_COURSE, pinsStore } from '../../data/repo/pins';
 import { t } from '../../i18n';
 import { unavailablePins } from '../../state/pins';
 import { ArrowEast, DocGlyph, PinGlyph } from './Glyphs';
+import { thumbVariant } from './Thumb';
 
 interface PinnedRowProps {
   pins: Pin[];
-  /** Course the page belongs to: pins of this course get the highlighted first cell. */
+  /** Course the page belongs to (its own pins, first cell highlighted), or null for the most recently opened pins. */
   courseId: number | null;
 }
 
@@ -70,18 +72,61 @@ export function editKeys(e: KeyboardEvent, pin: Pin, order: readonly Pin[], hori
   }
 }
 
-/** Three cells: pins of the current course first. Empty cells invite pinning. Edit mode reorders, renames and removes (design-spec §4.4). */
+const FORMAT_LABEL: Partial<Record<Format, string>> = { PDF: 'PDF', SLIDES: 'PPT', DOC: 'DOC', SHEET: 'XLS', ZIP: 'ZIP', TEXT: 'TXT', IMAGE: 'IMG' };
+const MARK = { quiz: CircleHelp, link: LinkIcon, forum: MessagesSquare, folder: Folder, assignment: Upload, video: CirclePlay, code: CodeXml } as const;
+
+/** The pin's type at a glance: a document with its file type, or the activity's icon (quiz, link, forum, ...). */
+export function PinMark({ pin }: { pin: Pin }) {
+  const v = thumbVariant(pin.kind, pin.format);
+  if (v === 'doc') return <DocGlyph label={FORMAT_LABEL[pin.format]} />;
+  const G = MARK[v];
+  return <G class="kex-pin__icon" size={26} strokeWidth={1.5} aria-hidden="true" />;
+}
+
+function EditTools({ pin, order, move }: { pin: Pin; order: readonly Pin[]; move: boolean }) {
+  return (
+    <span class="kex-pin__tools">
+      {move && (
+        <>
+          <button type="button" class="kex-pin__tool" aria-label={t('pinned.moveEarlier')} title={`${t('pinned.moveEarlier')} (Alt+←)`} onClick={() => void reorderPin(pin.cmid, -1, order)}>
+            <ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+          <button type="button" class="kex-pin__tool" aria-label={t('pinned.moveLater')} title={`${t('pinned.moveLater')} (Alt+→)`} onClick={() => void reorderPin(pin.cmid, 1, order)}>
+            <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        </>
+      )}
+      <button type="button" class="kex-pin__tool" aria-label={t('pinned.rename')} title={t('pinned.rename')} onClick={() => (pinRenaming.value = pin.cmid)}>
+        <Pencil size={14} strokeWidth={1.75} aria-hidden="true" />
+      </button>
+      <button type="button" class="kex-pin__tool kex-pin__tool--remove" aria-label={t('pinned.remove', { title: pin.title })} title={t('pinned.remove', { title: pin.title })} onClick={() => void unpinItem(pin.cmid)}>
+        <X size={16} strokeWidth={1.75} aria-hidden="true" />
+      </button>
+    </span>
+  );
+}
+
+/**
+ * Three equal cells. On a course: that course's own pins only (a fourth pin asks which one it replaces, and the cells become
+ * numbered targets); elsewhere: the three pins opened most recently. Empty cells invite pinning. Edit mode reorders, renames and
+ * removes, and lists a course's older extra pins (more than three, from before the limit) so none is lost (design-spec §4.4).
+ */
 export function PinnedRow({ pins, courseId }: PinnedRowProps) {
+  const all = pinsStore().value.value ?? [];
+  const waiting = pinReplace.value;
+  const asking = !!waiting && courseId !== null && waiting.courseId === courseId;
   if (!pins.length) return <p class="kex-pinned-hint"><PinGlyph />{t('course.pinned.empty')}</p>;
   const cells: (Pin | undefined)[] = [pins[0], pins[1], pins[2]];
-  const edit = pinEdit.value;
+  const edit = pinEdit.value && !asking;
   const renaming = pinRenaming.value;
   const gone = unavailablePins.value;
-  const order = displayOrder();
+  const order = displayOrder(all, courseId);
+  const move = courseId !== null;
+  const extras = courseId === null ? [] : order.slice(PINS_PER_COURSE);
   return (
-    <section class="kex-pinned" aria-label={t('course.pinned')}>
-      <h2 class="kex-pinned__label kex-mono">{t('course.pinned')}</h2>
-      <div class={`kex-pinned__box${edit ? ' kex-pinned__box--edit' : ''}`} data-kex-test="pinned">
+    <section class={`kex-pinned${asking ? ' kex-pinned--asking' : ''}`} aria-label={t('course.pinned')}>
+      <h2 class="kex-pinned__label kex-mono">{courseId === null ? t('pinned.recent') : t('course.pinned')}</h2>
+      <div class={`kex-pinned__box${edit ? ' kex-pinned__box--edit' : ''}${asking ? ' kex-pinned__box--replace' : ''}`} data-kex-test="pinned">
         {cells.map((pin, i) => {
           if (!pin) {
             return (
@@ -90,18 +135,34 @@ export function PinnedRow({ pins, courseId }: PinnedRowProps) {
               </div>
             );
           }
-          const hot = i === 0 && pin.courseId === courseId;
+          const hot = i === 0 && courseId !== null;
           const unavailable = gone.has(pin.cmid);
           const body = (
             <>
-              <span class="kex-pin__doc"><DocGlyph /></span>
-              <span class="kex-pin__tack"><PinGlyph /></span>
+              <span class="kex-pin__doc"><PinMark pin={pin} /></span>
+              {asking ? <span class="kex-pin__slot kex-mono" aria-hidden="true">{i + 1}</span> : <span class="kex-pin__tack"><PinGlyph /></span>}
               <span class="kex-pin__text">
                 {renaming === pin.cmid ? <RenameInput pin={pin} /> : <span class="kex-pin__title">{pin.title}</span>}
                 <span class="kex-pin__code">{unavailable ? t('pinned.unavailable') : pin.courseCode}</span>
               </span>
             </>
           );
+          if (asking) {
+            return (
+              <button
+                key={pin.cmid}
+                type="button"
+                class={`kex-pin kex-pin--target${hot ? ' kex-pin--hot' : ''}`}
+                title={pin.title}
+                aria-label={`${t('pinned.replaceSlot', { n: i + 1 })}: ${pin.title}`}
+                data-kex-pin={pin.cmid}
+                data-kex-test={`pin-${i + 1}`}
+                onClick={() => void replacePinAt(i)}
+              >
+                {body}
+              </button>
+            );
+          }
           if (edit) {
             return (
               <div
@@ -109,26 +170,14 @@ export function PinnedRow({ pins, courseId }: PinnedRowProps) {
                 class={`kex-pin kex-pin--editing${hot ? ' kex-pin--hot' : ''}`}
                 role="group"
                 aria-label={pin.title}
+                title={pin.title}
                 tabIndex={i === 0 ? 0 : -1}
                 data-kex-pin={pin.cmid}
                 data-kex-test={`pin-${i + 1}`}
-                onKeyDown={(e) => editKeys(e, pin, order, true)}
+                onKeyDown={(e) => editKeys(e, pin, move ? order : [], true)}
               >
                 {body}
-                <span class="kex-pin__tools">
-                  <button type="button" class="kex-pin__tool" aria-label={t('pinned.moveEarlier')} title={`${t('pinned.moveEarlier')} (Alt+←)`} onClick={() => void reorderPin(pin.cmid, -1, order)}>
-                    <ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />
-                  </button>
-                  <button type="button" class="kex-pin__tool" aria-label={t('pinned.moveLater')} title={`${t('pinned.moveLater')} (Alt+→)`} onClick={() => void reorderPin(pin.cmid, 1, order)}>
-                    <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
-                  </button>
-                  <button type="button" class="kex-pin__tool" aria-label={t('pinned.rename')} title={t('pinned.rename')} onClick={() => (pinRenaming.value = pin.cmid)}>
-                    <Pencil size={14} strokeWidth={1.75} aria-hidden="true" />
-                  </button>
-                  <button type="button" class="kex-pin__tool kex-pin__tool--remove" aria-label={t('pinned.remove', { title: pin.title })} title={t('pinned.remove', { title: pin.title })} onClick={() => void unpinItem(pin.cmid)}>
-                    <X size={16} strokeWidth={1.75} aria-hidden="true" />
-                  </button>
-                </span>
+                <EditTools pin={pin} order={order} move={move} />
               </div>
             );
           }
@@ -137,6 +186,7 @@ export function PinnedRow({ pins, courseId }: PinnedRowProps) {
               key={pin.cmid}
               class={`kex-pin${hot ? ' kex-pin--hot' : ''}${unavailable ? ' kex-pin--gone' : ''}`}
               href={pin.url}
+              title={pin.title}
               data-kex-pin={pin.cmid}
               data-kex-test={`pin-${i + 1}`}
               onClick={(e) => {
@@ -151,13 +201,28 @@ export function PinnedRow({ pins, courseId }: PinnedRowProps) {
           );
         })}
       </div>
-      <button type="button" class="kex-pinned__edit" data-kex-test="pinned-edit" aria-pressed={edit} onClick={() => {
+      <button type="button" class="kex-pinned__edit" data-kex-test="pinned-edit" aria-pressed={edit} disabled={asking} onClick={() => {
         pinEdit.value = !pinEdit.value;
         if (pinEdit.value) requestAnimationFrame(() => document.querySelector<HTMLElement>('.kex-pin--editing')?.focus({ preventScroll: true }));
       }}>
         <Pencil size={15} strokeWidth={1.75} aria-hidden="true" />
         <span>{edit ? t('pinned.done') : t('course.pinned.edit')}</span>
       </button>
+      {edit && extras.length > 0 && (
+        <div class="kex-pinned__extra" data-kex-test="pinned-extra">
+          <p class="kex-pinned__extralabel kex-mono">{t('pinned.extra')}</p>
+          <ul class="kex-pinned__extralist">
+            {extras.map((pin) => (
+              <li key={pin.cmid} class="kex-pinned__chip" tabIndex={0} title={pin.title} data-kex-pin={pin.cmid} onKeyDown={(e) => editKeys(e, pin, order, true)}>
+                <span class="kex-pinned__chipmark"><PinMark pin={pin} /></span>
+                {renaming === pin.cmid ? <RenameInput pin={pin} /> : <span class="kex-pinned__chiptitle">{pin.title}</span>}
+                <EditTools pin={pin} order={order} move />
+              </li>
+            ))}
+          </ul>
+          <p class="kex-pinned__extrahint">{t('pinned.extraHint')}</p>
+        </div>
+      )}
     </section>
   );
 }

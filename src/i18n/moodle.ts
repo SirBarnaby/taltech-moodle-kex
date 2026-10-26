@@ -71,6 +71,8 @@ export const MOODLE_KEYS: Partial<Record<MessageKey, Src>> = {
   'label.quiz': mod('quiz', 'modulename', true),
   'label.forum': mod('forum', 'modulename', true),
   'common.all': core('all'),
+  'course.topicsMore': core('showmore'),
+  'course.topicsLess': core('showless'),
 };
 
 const TTL = 7 * 24 * 60 * 60 * 1000;

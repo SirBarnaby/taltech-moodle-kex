@@ -1,4 +1,5 @@
 import { go, homeUrl, PAGES } from '../actions/navigate';
+import { cancelPinReplace, pinReplace, replacePinAt } from '../actions/pins';
 import { toggleSidebar, toggleTheme } from '../actions/theme';
 import type { MessageKey } from '../i18n';
 import { KeyManager, type Binding } from '../lib/keys';
@@ -54,7 +55,11 @@ export function globalBindings(): Binding[] {
   const nav = (keys: string, desc: MessageKey, path: string): Binding => ({
     keys, scope: 'global', group: 'Navigate', description: desc, run: () => go(homeUrl(path)),
   });
+  // A fourth pin asks which of the course's three it replaces; these come first so they win over every other 1-3 and Esc.
+  const replacing = (): boolean => !!pinReplace.value;
   const bindings: Binding[] = [
+    ...(['1', '2', '3'] as const).map((k, i): Binding => ({ keys: k, scope: 'global', group: 'General', description: d('help.pinReplace'), when: replacing, run: () => void replacePinAt(i) })),
+    { keys: 'escape', scope: 'global', group: 'General', description: d('help.pinReplace'), when: replacing, run: cancelPinReplace },
     { keys: 'ctrl+k', scope: 'global', group: 'General', description: d('help.palette'), allowInInput: true, run: openPalette },
     { keys: 'meta+k', scope: 'global', group: 'General', description: d('help.palette'), allowInInput: true, run: openPalette },
     { keys: '/', scope: 'global', group: 'General', description: d('help.palette'), run: openPalette },

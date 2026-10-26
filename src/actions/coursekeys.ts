@@ -9,7 +9,7 @@ import { focusZone, labTrack, previewCmId, topicNumber, topics } from '../state/
 const d = (k: MessageKey): MessageKey => k;
 
 const interactive = (t: EventTarget | null): boolean => t instanceof Element && !!t.closest('a[href], button, summary, iframe, select, [role="tab"]');
-const inLists = (t: EventTarget | null): boolean => t instanceof Element && !!t.closest('.kex-topics, .kex-rows');
+const inLists = (t: EventTarget | null): boolean => t instanceof Element && !!t.closest('.kex-topics, .kex-cbar__topics, .kex-rows');
 const bodyLike = (t: EventTarget | null): boolean => !(t instanceof Element) || t === document.body || t === document.documentElement || t.id === 'kex-root';
 const idle = (): boolean => previewCmId.value === undefined;
 

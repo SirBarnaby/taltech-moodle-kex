@@ -18,6 +18,7 @@ import { Palette } from './Palette';
 import { SessionBanner } from './SessionBanner';
 import { Sidebar } from './Sidebar';
 import { Toasts } from './Toasts';
+import { usePinEffects } from './PinReplace';
 import { hardNavigating, navigationLoading } from '../../state/navigation';
 import { NavigationSkeleton } from '../components/NavigationSkeleton';
 
@@ -129,6 +130,7 @@ function View() {
 export function Shell() {
   useShellEffects();
   useSidebarSlide();
+  usePinEffects();
   return (
     <>
       <ThrowProbe />

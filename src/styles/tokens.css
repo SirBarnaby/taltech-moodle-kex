@@ -85,6 +85,7 @@
   --kex-hero-cross-bright: rgba(200, 165, 235, 0.75);
   --kex-hero-fallback: url("assets/hero-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
   --kex-band-fallback: url("assets/band-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
+  --kex-login-fallback: url("assets/login-fallback.webp") center / 100% 100% no-repeat, var(--kex-hero-bg);
 
   /* Geometry */
   --kex-sb-w-full: clamp(204px, 13.2vw, 255px);
