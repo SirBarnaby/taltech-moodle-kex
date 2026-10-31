@@ -6,7 +6,7 @@ import { batch, effect, untracked } from '@preact/signals';
 import { seedDetails } from '../data/repo/cmdetails';
 import { parseCmItems } from '../data/scrape/cm';
 import type { NavTab } from '../data/scrape/secondarynav';
-import { beginViewTransition, cancelViewTransitions, focusWithoutJump, restoreScroll, scrollInstant } from '../fx/navigation';
+import { beginViewTransition, cancelViewTransitions, focusWithoutJump, restoreScroll, scrollInstant, scrollViewport, viewMotionAllowed } from '../fx/navigation';
 import { navigation } from '../fx/transactions';
 import { applyMotionTokens } from '../fx/motion';
 import { markBuild } from './build-id';
@@ -776,12 +776,19 @@ class Controller {
         return;
       }
       this.html.dataset.kexNav = 'loading';
-      const enter = beginViewTransition(this.root?.querySelector<HTMLElement>('.kex-main') ?? null, 'page');
-      // Begin the request and mount the destination together. A detached empty document prevents the new course
-      // from scraping the previous course's still-hidden Moodle DOM while its own HTML is in flight.
+      // Begin the request at once. A detached empty document (below) prevents the new course from scraping the previous
+      // course's still-hidden Moodle DOM while its own HTML is in flight.
       const page = this.loader.load(url, abort.signal);
       navigationLoading.value = true;
+      // The entry left keeps its scroll position for Back (written before anything moves).
       if (push) navigation.write(url, 'push');
+      // A new page opens at its top, with its hero (round 10). When the page being left is scrolled down, it first glides up
+      // there, so the reader sees the way to where the next page starts; then the new page crosses over it. Back keeps its place.
+      if (push && restoreY === undefined && window.scrollY > 4 && viewMotionAllowed()) {
+        await scrollViewport(0).finished;
+        if (seq !== this.navSeq) return;
+      }
+      const enter = beginViewTransition(this.root?.querySelector<HTMLElement>('.kex-main') ?? null, 'page');
       // One painted frame first: the press shows (the sidebar highlight starts moving, the old view starts leaving) before
       // the new view is built, which can hold the main thread for a moment on a large course.
       await nextPaint();

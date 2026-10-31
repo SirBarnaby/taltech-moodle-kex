@@ -39,9 +39,12 @@
       transform-origin: 50% 50%;
       backface-visibility: hidden;
     }
-    /* The page ends with a band of room, so the last rows can be read flat. */
+    /* The page ends with a band of room, so the last rows can be read flat. A turned row's near edge is drawn wider than the row
+       (perspective): clipped at the page's sides, so it never makes the page scroll sideways (clip, not hidden, keeps the window the
+       rows turn in). */
     #kex-main {
       padding-bottom: var(--kex-wheel-band);
+      overflow-x: clip;
     }
   }
 }

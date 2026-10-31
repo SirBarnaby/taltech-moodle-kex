@@ -74,7 +74,7 @@ export function startTarget(): { topic: number; offset: number; cm?: number } | 
     const n = cm ? topicNumberOfCm(st, cm) : undefined;
     if (cm && n !== undefined && topics.value.some((t) => t.section.number === n)) return { topic: n, offset: 0, cm: cm.id };
   }
-  return startPlace({ topics: topics.value, fromUrl: urlTopicRequest(st), ui: readCourseUi(courseId) });
+  return startPlace({ topics: topics.value, fromUrl: urlTopicRequest(st) });
 }
 
 export function initCourse(id: number, tiles: readonly Tile[] = []): () => void {
@@ -156,7 +156,6 @@ export function disposeCourse(): void {
   window.removeEventListener('popstate', onPop);
   window.removeEventListener('hashchange', onPop);
   window.clearTimeout(prefetchTimer);
-  window.clearTimeout(placeTimer);
 }
 
 export function retryCourse(): void {
@@ -295,7 +294,6 @@ function idle(fn: () => void): void {
 // -------------------------------------------------------------------- the page and its place
 
 let spyHold = 0;
-let placeTimer: number | undefined;
 
 /** While a glide to a topic runs, the topic stays the one asked for (the topics passed on the way do not light up). */
 export const spyHeld = (): boolean => performance.now() < spyHold;
@@ -336,14 +334,9 @@ export function setTopic(n: number, opts: { focus?: boolean; instant?: boolean }
   if (opts.focus) focusTopic(n);
 }
 
-/** The scroll spy found the topic being read: remember it, and how far into it the reader is, for the next visit. */
-export function notePlace(n: number, offset: number): void {
+/** The scroll spy found the topic being read. */
+export function notePlace(n: number): void {
   if (topicNumber.value !== n) topicNumber.value = n;
-  window.clearTimeout(placeTimer);
-  const id = courseId;
-  placeTimer = window.setTimeout(() => {
-    if (id === courseId) writeCourseUi(id, { topic: n, anchor: { topic: n, offset: Math.max(0, Math.round(offset)) } });
-  }, 400);
 }
 
 export function moveTopic(delta: 1 | -1): void {

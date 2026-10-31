@@ -138,50 +138,53 @@ test('Dossier course filter, activity search and responsive density', async ({ p
   await page.screenshot({ path: `${out}/dossier-mobile.png`, fullPage: true });
 });
 
-test('deep-scroll topic change, rapid switching and Back do not snap or leak transition layers', async ({ page }) => {
-  await page.goto('/course/view.php?id=37582#topic-0');
+test('a topic click deep in the one-page course glides there: no frame jumps, no cover layer, the topic lands under the header', async ({ page }) => {
+  await page.goto('/course/view.php?id=37582');
   await ready(page);
-  await expect(page.locator('[data-kex-topic]')).not.toHaveCount(0);
-  await page.waitForFunction(() => document.querySelectorAll('[data-kex-row]').length > 0);
+  await expect(page.locator('#kex-main')).toHaveAttribute('data-kex-ready', 'true');
+  await expect(page.locator('.kex-outline [data-kex-topic]')).not.toHaveCount(0);
   await page.evaluate(() => window.scrollTo({ top: 750, behavior: 'instant' }));
-  type Sample = { y: number; at: number; ghost: number; fixed: boolean; top: number };
+  type Sample = { y: number; ghost: boolean };
   await page.evaluate(() => {
     const values: Sample[] = [];
     (window as unknown as { scrollSamples: Sample[] }).scrollSamples = values;
     const start = performance.now();
     const sample = () => {
-      const ghost = document.querySelector<HTMLElement>('.kex-transition-ghost');
-      const style = ghost && getComputedStyle(ghost);
-      const top = document.querySelector('.kex-detail')?.getBoundingClientRect().top ?? NaN;
-      values.push({ y: scrollY, at: performance.now() - start, ghost: style ? Number(style.opacity) : 0, fixed: style?.position === 'fixed', top });
-      if (performance.now() - start < 1100) requestAnimationFrame(sample);
+      values.push({ y: scrollY, ghost: !!document.querySelector('.kex-transition-ghost') });
+      if (performance.now() - start < 1200) requestAnimationFrame(sample);
     };
     requestAnimationFrame(sample);
   });
-  // Scrolled down, the topics are switched from the course bar (the grid is above, behind the header). A real click: the
-  // pointer does not scroll the page first.
-  const chip = await page.locator('.kex-cbar__chip:not(.kex-cbar__chip--active)').first().boundingBox();
-  expect(chip).not.toBeNull();
-  await page.mouse.click(chip!.x + chip!.width / 2, chip!.y + chip!.height / 2);
-  await page.waitForFunction(() => !document.querySelector('.kex-transition-ghost') && !document.getElementById('kex-root')?.style.minHeight);
+  // A real click on the outline: the pointer does not scroll the page first.
+  const target = page.locator('.kex-outline [data-kex-topic]').nth(4);
+  const n = await target.getAttribute('data-kex-topic');
+  const box = await target.boundingBox();
+  await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.waitForTimeout(1300);
   const samples = await page.evaluate(() => (window as unknown as { scrollSamples: Sample[] }).scrollSamples);
   writeFileSync(`${out}/course-scroll-samples.json`, JSON.stringify(samples));
-  // The new topic starts at its top under the bar. The page may move to get there only while the old panel's copy is held in
-  // place over it (fixed, opaque), so nothing on screen moves.
-  const moves = samples.slice(1).filter((p, i) => Math.abs(p.y - samples[i]!.y) > 1);
-  expect(moves.length).toBeGreaterThan(0);
-  for (const move of moves) expect(move.fixed && move.ghost >= 0.9, `scroll moved at ${Math.round(move.at)} ms without the panel's copy over it`).toBe(true);
-  const stuck = await page.evaluate(() => {
-    const root = getComputedStyle(document.getElementById('kex-root')!);
-    return (Number.parseFloat(root.getPropertyValue('--kex-header-h-compact')) || 52) + (Number.parseFloat(root.getPropertyValue('--kex-cbar-h')) || 48);
-  });
-  expect(samples.at(-1)!.top).toBeCloseTo(stuck + 16, 0);
-  await page.screenshot({ path: `${out}/course-topic.png` });
-  await page.locator('[data-kex-topic]').nth(2).click();
-  await page.locator('[data-kex-topic]').nth(3).click();
-  await page.goBack();
+  expect(samples.some((p) => p.ghost)).toBe(false);
+  // A glide: it goes one way, in steps no larger than a fifth of the window.
+  const steps = samples.slice(1).map((p, i) => p.y - samples[i]!.y).filter((d) => Math.abs(d) > 0.5);
+  expect(steps.length).toBeGreaterThan(1);
+  expect(steps.every((d) => Math.sign(d) === Math.sign(steps[0]!))).toBe(true);
+  const vh = await page.evaluate(() => innerHeight);
+  expect(Math.max(...steps.map(Math.abs))).toBeLessThanOrEqual(Math.max(80, vh * 0.18) + 1);
+  const landed = await page.evaluate((num) => {
+    const head = document.querySelector('.kex-header')!.getBoundingClientRect().bottom;
+    const top = document.querySelector(`[data-kex-section="${num}"]`)!.getBoundingClientRect().top;
+    const atEnd = scrollY + innerHeight >= document.documentElement.scrollHeight - 2;
+    return { gap: top - head, atEnd };
+  }, n);
+  if (!landed.atEnd) expect(landed.gap).toBeCloseTo(12, -1);
+  await expect(page.locator(`.kex-outline [data-kex-topic="${n}"]`)).toHaveAttribute('aria-current', 'true');
+  // Rapid switching ends on the last topic asked for, with nothing left over.
+  await page.locator('.kex-outline [data-kex-topic]').nth(1).click();
+  await page.locator('.kex-outline [data-kex-topic]').nth(2).click();
+  await page.waitForTimeout(900);
+  await expect(page.locator('.kex-outline [data-kex-topic]').nth(2)).toHaveAttribute('aria-current', 'true');
   await expect(page.locator('.kex-transition-ghost')).toHaveCount(0);
-  await expect(page.locator('[data-kex-test="course"]')).toBeVisible();
+  await page.screenshot({ path: `${out}/course-topic.png` });
 });
 
 test('a large Dossier reveals activity batches without dropping items', async ({ page }) => {
@@ -241,7 +244,8 @@ test('cold Back waits for delayed course content before restoring the viewport',
   await page.goBack();
   await page.waitForFunction(() => !document.documentElement.dataset.kexInteraction && document.querySelector('#kex-main')?.getAttribute('data-kex-course') === '37582');
   expect(await page.evaluate(() => scrollY)).toBeCloseTo(saved, -1);
-  await expect(page.locator('[data-kex-topic="0"]')).toHaveAttribute('aria-current', 'true');
+  // The outline lights up the topic at the top of the window, whichever that is.
+  await expect(page.locator('.kex-outline [data-kex-topic][aria-current="true"]')).toHaveCount(1);
   await expect(page.locator('.kex-transition-ghost')).toHaveCount(0);
   await page.goForward();
   await expect(page.locator('#kex-main')).toHaveAttribute('data-kex-course', '37829');
@@ -305,7 +309,7 @@ test('effects pause during interaction and recover a lost context without changi
   await page.screenshot({ path: `${out}/effects-context-restored.png` });
 });
 
-test('an early topic change preserves the pending destination document and clears loading', async ({ page }) => {
+test('a topic click while the course’s own page is still loading lands on that topic and clears loading', async ({ page }) => {
   await page.goto('/my/courses.php');
   await ready(page);
   await page.route('**/course/view.php?id=37582*', async (route) => {
@@ -314,28 +318,30 @@ test('an early topic change preserves the pending destination document and clear
   });
   await page.locator('[data-kex-test="sidebar-toggle"]').click();
   await page.locator('.kex-sb__course[data-course-id="37582"]').first().click();
-  await expect(page.locator('[data-kex-topic]')).not.toHaveCount(0);
+  await expect(page.locator('.kex-outline [data-kex-topic]')).not.toHaveCount(0);
   await expect(page.locator('html')).toHaveAttribute('data-kex-nav', 'loading');
-  const topic = page.locator('[data-kex-topic]').nth(2);
+  const topic = page.locator('.kex-outline [data-kex-topic]').nth(2);
   const selected = await topic.getAttribute('data-kex-topic');
   await topic.click();
   await expect(page.locator('html')).not.toHaveAttribute('data-kex-nav', 'loading');
-  await expect(page.locator(`[data-kex-topic="${selected}"]`)).toHaveAttribute('aria-current', 'true');
+  await expect(page.locator(`.kex-outline [data-kex-topic="${selected}"]`)).toHaveAttribute('aria-current', 'true');
   await expect(page.locator('.kex-coursenav a')).not.toHaveCount(0);
   await expect(page.locator('.kex-transition-ghost')).toHaveCount(0);
 });
 
-test('Back restores the first implicitly chosen topic from an entry without a hash', async ({ page }) => {
-  await page.goto('/course/view.php?id=37582');
+test('a course opens at its top with the hero, and topic clicks add no Back steps', async ({ page }) => {
+  await page.goto('/my/courses.php');
   await ready(page);
-  const initial = page.locator('[data-kex-topic][aria-current="true"]');
-  await expect(initial).toHaveCount(1);
-  const number = await initial.getAttribute('data-kex-topic');
-  await page.locator('[data-kex-topic]:not([aria-current="true"])').first().click();
+  await page.locator('.kex-sb__course[data-course-id="37582"]').first().click();
+  await expect(page.locator('#kex-main')).toHaveAttribute('data-kex-course', '37582');
   await page.waitForFunction(() => !document.documentElement.dataset.kexInteraction);
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+  await expect(page.locator('.kex-hero')).toBeInViewport();
+  await page.locator('.kex-outline [data-kex-topic]').nth(3).click();
+  await page.locator('.kex-outline [data-kex-topic]').nth(5).click();
+  await expect(page).toHaveURL(/#topic-\d+$/);
   await page.goBack();
-  await expect(page).toHaveURL(/id=37582$/);
-  await expect(page.locator(`[data-kex-topic="${number}"]`)).toHaveAttribute('aria-current', 'true');
+  await expect(page).toHaveURL(/\/my\/courses\.php$/);
 });
 
 test('faculty theme changes repaint a working shader without leaving a lost context', async ({ page }) => {
@@ -391,9 +397,10 @@ for (const [name, path, selector] of [
     expect(after.height).toBe(before.height);
     let difference = 0;
     for (let i = 0; i < before.data.length; i += 4) for (let channel = 0; channel < 3; channel++) difference += Math.abs(before.data[i + channel] - after.data[i + channel]);
-    // Allow antialiasing/resampling and WebP compression, but reject a different crop or palette.
+    // Allow antialiasing/resampling and WebP compression, but reject a different crop or palette (those land at 20 and more).
+    // The hero is 15 px narrower since round 10 keeps room for the scrollbar, which resamples the artwork a little more.
     const meanDifference = difference / (before.width * before.height * 3);
-    expect(meanDifference).toBeLessThan(8);
+    expect(meanDifference).toBeLessThan(9);
     writeFileSync(`${out}/${name}-composition.json`, JSON.stringify({ meanDifference, width: before.width, height: before.height }));
   });
 }

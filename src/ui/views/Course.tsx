@@ -115,7 +115,7 @@ function usePlace(code: string, courseName: string): void {
       label.current = past && tp ? { chip: tp.isIntro ? code : `${t('course.topic')} ${tp.number}`, text: topicDisplayTitle(tp) } : undefined;
       syncTitle();
       if (spyHeld()) return;
-      notePlace(n, stickyTop() + 12 - cur.getBoundingClientRect().top);
+      notePlace(n);
     };
     const onScroll = (): void => {
       if (!frame) frame = requestAnimationFrame(measure);

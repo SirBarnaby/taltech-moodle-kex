@@ -3,7 +3,6 @@ import type { Cm, CmDetails, Format, Kind, Section } from './model';
 import { cmsOfSection, itemsOfSection, topicNumberOfCm, topicSections, type CourseState, type SectionCm } from './repo/coursestate';
 import { humanModname } from './repo/modnames';
 import type { CmEvent } from './repo/courseevents';
-import { isRecentUi, type CourseUi } from './repo/ui';
 import { htmlToText, sanitizeHtml } from '../lib/sanitize';
 
 /** View models for the course page: topics, rows, labels, the initial-topic rule (happy-path §3.3, §6). */
@@ -236,21 +235,15 @@ export interface StartInput {
   topics: readonly Pick<TopicModel, 'section'>[];
   /** `#topic-N`, `section.php?id=` or Moodle's `#section-N`. */
   fromUrl?: number;
-  /** The saved UI memory. */
-  ui?: CourseUi;
-  now?: number;
 }
 
 /**
- * Where the course page opens (round 10, the whole course is one page): the topic the address names, else where the reader left
- * it (within 14 days), else the top of the page (undefined).
+ * Where the course page opens (round 10, the whole course is one page): the topic the address names, else the top of the page with
+ * its hero (undefined). Back, Forward and Reload put their own position back elsewhere (fx/navigation, restoreScroll).
  */
 export function startPlace(i: StartInput): { topic: number; offset: number } | undefined {
   const has = (n: number | undefined): n is number => n !== undefined && i.topics.some((t) => t.section.number === n);
-  if (has(i.fromUrl)) return { topic: i.fromUrl, offset: 0 };
-  const anchor = isRecentUi(i.ui, i.now) ? i.ui?.anchor : undefined;
-  if (anchor && has(anchor.topic) && Number.isFinite(anchor.offset)) return { topic: anchor.topic, offset: Math.max(0, anchor.offset) };
-  return undefined;
+  return has(i.fromUrl) ? { topic: i.fromUrl, offset: 0 } : undefined;
 }
 
 /** (d) the topic of the nearest not-yet-overdue event. */

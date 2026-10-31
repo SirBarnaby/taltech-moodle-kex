@@ -86,7 +86,8 @@ export function scrollViewport(top: number): { finished: Promise<void>; cancel: 
     const p = Math.min(1, elapsed / duration);
     const proposed = from + (top - from) * (1 - (1 - p) ** 3);
     const delta = proposed - position;
-    position += Math.sign(delta) * Math.min(Math.abs(delta), Math.max(80, window.innerHeight * 0.18));
+    // A long way (the top of a long course page) still arrives in about 20 frames.
+    position += Math.sign(delta) * Math.min(Math.abs(delta), Math.max(80, window.innerHeight * 0.18, Math.abs(top - from) / 20));
     scrollInstant(position);
     if (p >= 1 && Math.abs(position - top) < 1) cancel();
     else frame = requestAnimationFrame(tick);

@@ -138,14 +138,10 @@ describe('topic model', () => {
 describe('where the course page opens', () => {
   const topics = buildTopics(state, new Map());
 
-  it('the address wins, then where the reader left it (14 days), else the top', () => {
-    const recent = Date.now();
+  it('a course opens at the topic its address names, else at its top with the hero', () => {
     expect(startPlace({ topics, fromUrl: 7 })).toEqual({ topic: 7, offset: 0 });
     expect(startPlace({ topics, fromUrl: 99 })).toBeUndefined(); // an unknown topic opens at the top
-    expect(startPlace({ topics, ui: { anchor: { topic: 1, offset: 240 }, at: recent } })).toEqual({ topic: 1, offset: 240 });
-    expect(startPlace({ topics, fromUrl: 6, ui: { anchor: { topic: 1, offset: 240 }, at: recent } })).toEqual({ topic: 6, offset: 0 });
-    expect(startPlace({ topics, ui: { anchor: { topic: 1, offset: 240 }, at: recent - 20 * 86_400_000 } })).toBeUndefined();
-    expect(startPlace({ topics, ui: { topic: 1, at: recent } })).toBeUndefined(); // an old memory without a place
+    expect(startPlace({ topics })).toBeUndefined();
     expect(startPlace({ topics: [] })).toBeUndefined();
   });
 

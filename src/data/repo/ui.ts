@@ -1,10 +1,8 @@
 import { cache } from '../cache';
 
-/** Per-course UI memory (`ui:{courseId}`): where the reader was on the course page, and the topics they folded. */
+/** Per-course UI memory (`ui:{courseId}`): the topics the reader folded. */
 export interface CourseUi {
   topic?: number;
-  /** The topic at the top of the window and how far into it the reader was (px from its header), so the page reopens there. */
-  anchor?: { topic: number; offset: number };
   /** Folded topics, by section id. */
   folded?: number[];
   at: number;

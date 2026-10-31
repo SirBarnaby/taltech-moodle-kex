@@ -168,14 +168,25 @@
     transition: none;
   }
 
-  /* ---- topics ---- */
+  /* ---- topics ----
+     Each topic is a panel of its own and every second one carries a faint tint, so while scrolling the eye sees where one topic
+     ends and the next begins without reading. The panel's padding sits outside the column, so the text lines up with the outline. */
   .kex-tsec {
-    padding: 10px 0 26px;
-    border-top: 1px solid var(--kex-border);
-    &:first-of-type {
-      border-top: 0;
-      padding-top: 0;
-    }
+    --kex-tsec-pad: 20px;
+    margin: 0 calc(-1 * var(--kex-tsec-pad)) 12px;
+    padding: 10px var(--kex-tsec-pad) 18px;
+    border-radius: var(--kex-r-xl);
+  }
+  .kex-tsec:nth-of-type(even) {
+    background: color-mix(in srgb, var(--kex-violet) 4%, transparent);
+  }
+  /* Fewer things that say the same: a material's "Open" shows where the pointer or the keyboard is (the title opens it too). The
+     next thing to do keeps its filled button. */
+  .kex-tsec .kex-rows--compact .kex-row > .kex-btn--outlined {
+    transition: opacity 120ms var(--kex-ease);
+  }
+  .kex-tsec .kex-rows--compact .kex-row:not(:hover, :focus-within, .kex-row--selected, .kex-row--reading) > .kex-btn--outlined {
+    opacity: 0;
   }
   .kex-tsec__head {
     display: flex;
