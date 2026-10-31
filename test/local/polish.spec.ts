@@ -231,16 +231,15 @@ test('cold Back waits for delayed course content before restoring the viewport',
   await page.goto('/course/view.php?id=37582#topic-0');
   await ready(page);
   await expect(page.locator('#kex-main')).toHaveAttribute('data-kex-ready', 'true');
-  await page.evaluate(() => window.scrollTo(0, 650));
-  const saved = await page.evaluate(() => scrollY);
-  expect(saved).toBeGreaterThan(300);
-  // What the reader sees: the first material at the top of the window, and where it stands.
+  // The reader is looking at a material a third of the way down the window.
   const seen = await page.evaluate(() => {
+    const rows = [...document.querySelectorAll<HTMLElement>('[data-kex-row]')];
+    const row = rows[Math.min(rows.length - 1, 6)]!;
     const head = document.querySelector('.kex-header')!.getBoundingClientRect().bottom;
-    const row = [...document.querySelectorAll<HTMLElement>('[data-kex-row]')].find((r) => r.getBoundingClientRect().top >= head);
-    return row ? { id: row.dataset.kexRow!, top: row.getBoundingClientRect().top } : null;
+    window.scrollTo({ top: scrollY + row.getBoundingClientRect().top - head - (innerHeight - head) * 0.3, behavior: 'instant' });
+    return { id: row.dataset.kexRow!, top: row.getBoundingClientRect().top };
   });
-  expect(seen).not.toBeNull();
+  expect(await page.evaluate(() => scrollY)).toBeGreaterThan(300);
   await page.locator('[data-kex-test="sidebar-toggle"]').click();
   await page.locator('.kex-sb__course[data-course-id="37829"]').first().click();
   await expect(page.locator('#kex-main')).toHaveAttribute('data-kex-course', '37829');
@@ -253,9 +252,9 @@ test('cold Back waits for delayed course content before restoring the viewport',
   await page.waitForFunction(() => !document.documentElement.dataset.kexInteraction && document.querySelector('#kex-main')?.getAttribute('data-kex-course') === '37582');
   // The same material stands in the same place. (The scroll position itself may differ: what arrived later above it, such as
   // summaries from the course's own page, is kept from pushing it by scroll anchoring.)
-  const back = await page.evaluate((id) => document.querySelector(`[data-kex-row="${id}"]`)?.getBoundingClientRect().top ?? null, seen!.id);
+  const back = await page.evaluate((id) => document.querySelector(`[data-kex-row="${id}"]`)?.getBoundingClientRect().top ?? null, seen.id);
   expect(back).not.toBeNull();
-  expect(back!).toBeCloseTo(seen!.top, -1);
+  expect(back!).toBeCloseTo(seen.top, -1);
   // The outline lights up the topic at the top of the window, whichever that is.
   await expect(page.locator('.kex-outline [data-kex-topic][aria-current="true"]')).toHaveCount(1);
   await expect(page.locator('.kex-transition-ghost')).toHaveCount(0);

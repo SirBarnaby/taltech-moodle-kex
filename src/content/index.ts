@@ -6,7 +6,7 @@ import { batch, effect, untracked } from '@preact/signals';
 import { seedDetails } from '../data/repo/cmdetails';
 import { parseCmItems } from '../data/scrape/cm';
 import type { NavTab } from '../data/scrape/secondarynav';
-import { beginViewTransition, cancelViewTransitions, focusWithoutJump, restoreScroll, scrollInstant, scrollViewport, viewMotionAllowed } from '../fx/navigation';
+import { beginViewTransition, cancelViewTransitions, focusWithoutJump, restoreScroll, scrollInstant, scrollViewport, viewMotionAllowed, type ViewAnchor } from '../fx/navigation';
 import { navigation } from '../fx/transactions';
 import { applyMotionTokens } from '../fx/motion';
 import { markBuild } from './build-id';
@@ -396,9 +396,9 @@ class Controller {
     // A full load reached by Back, Forward or Reload (from an activity, Participants, …): the page goes back to where it was.
     // Scroll restoration is manual for the soft navigations, so the browser no longer does this itself.
     const entry = performance.getEntriesByType?.('navigation')[0] as PerformanceNavigationTiming | undefined;
-    const backY = (history.state as { kexScroll?: number } | null)?.kexScroll;
-    if (eff.effective === 'app' && (entry?.type === 'back_forward' || entry?.type === 'reload') && typeof backY === 'number') {
-      restoreScroll(backY, viewReady);
+    const back = history.state as { kexScroll?: number; kexAnchor?: ViewAnchor } | null;
+    if (eff.effective === 'app' && (entry?.type === 'back_forward' || entry?.type === 'reload') && typeof back?.kexScroll === 'number') {
+      restoreScroll(back.kexScroll, viewReady, back.kexAnchor);
     }
 
     // Everything below runs without blocking the first paint.
@@ -795,7 +795,7 @@ class Controller {
       if (seq !== this.navSeq) return;
       this.swapView(target, document.implementation.createHTMLDocument(''), url);
       enter('.kex-main');
-      if (restoreY !== undefined) restoreScroll(restoreY, () => !navigationLoading.value && viewReady());
+      if (restoreY !== undefined) restoreScroll(restoreY, () => !navigationLoading.value && viewReady(), (history.state as { kexAnchor?: ViewAnchor } | null)?.kexAnchor);
       let timeout: number | undefined;
       try {
         const doc = await Promise.race([

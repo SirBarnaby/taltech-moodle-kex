@@ -1,5 +1,5 @@
 import { effect } from '@preact/signals';
-import { focusWithoutJump, scrollInstant, scrollViewport, stickyTop } from '../fx/navigation';
+import { focusWithoutJump, restorePending, scrollInstant, scrollViewport, stickyTop } from '../fx/navigation';
 import { cache } from '../data/cache';
 import type { Pin } from '../data/model';
 import type { NavTab } from '../data/scrape/secondarynav';
@@ -163,9 +163,12 @@ export function retryCourse(): void {
   void courseStateStore(courseId).refresh(true);
 }
 
-/** A `#topic-N` typed or followed in this page: glide there. (Topic clicks replace the history entry, so Back leaves the course.) */
+/**
+ * A `#topic-N` typed or followed in this page: glide there. (Topic clicks replace the history entry, so Back leaves the course.)
+ * Back or Forward onto a course whose address has a topic also changes the hash: then the place the reader left wins.
+ */
 function onPop(): void {
-  if (!courseState.value) return;
+  if (!courseState.value || restorePending()) return;
   const n = parseTopicHash(location.hash);
   if (n !== undefined && topics.value.some((x) => x.section.number === n) && n !== topicNumber.value) setTopic(n);
 }

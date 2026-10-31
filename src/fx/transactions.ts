@@ -1,7 +1,7 @@
-import { beginViewTransition, cancelViewTransitions, focusWithoutJump } from './navigation';
+import { beginViewTransition, cancelViewTransitions, focusWithoutJump, viewAnchor, type ViewAnchor } from './navigation';
 
 export type NavigationIntent = 'page' | 'topic' | 'filter' | 'history' | 'reader';
-export interface NavigationState { kexScroll?: number; kexTopic?: number; kexFocus?: string }
+export interface NavigationState { kexScroll?: number; kexTopic?: number; kexFocus?: string; kexAnchor?: ViewAnchor }
 interface Options { selector: string; top?: number; scroll?: 'top' | 'anchor' | 'preserve' }
 export interface NavigationTransaction {
   signal: AbortSignal;
@@ -99,12 +99,12 @@ class NavigationCoordinator {
     const selected = document.querySelector<HTMLElement>('[data-kex-topic][aria-current="true"]')?.dataset.kexTopic;
     const topicNumber = topic ? Number(topic[1]) : selected !== undefined ? Number(selected) : undefined;
     const focus = active instanceof HTMLElement && active.id ? `#${CSS.escape(active.id)}` : undefined;
-    history.replaceState({ ...history.state, kexScroll: window.scrollY, kexTopic: topicNumber, kexFocus: focus }, '');
+    history.replaceState({ ...history.state, kexScroll: window.scrollY, kexTopic: topicNumber, kexFocus: focus, kexAnchor: viewAnchor() }, '');
   }
 
   write(url: URL, mode: 'push' | 'replace', state: NavigationState = {}): void {
     this.remember();
-    const next = { ...history.state, kexScroll: 0, kexFocus: undefined, kexTopic: undefined, ...state };
+    const next = { ...history.state, kexScroll: 0, kexFocus: undefined, kexTopic: undefined, kexAnchor: undefined, ...state };
     if (mode === 'push') history.pushState(next, '', url);
     else history.replaceState(next, '', url);
   }

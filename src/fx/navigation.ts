@@ -174,12 +174,58 @@ let restoring = false;
 /** A Back, Forward or Reload position is about to be put back: views leave the scroll to it. */
 export const restorePending = (): boolean => restoring;
 
-export function restoreScroll(y: number, ready: () => boolean): void {
+/** What was at the top of the window when an entry was left: a material or a topic, and where it stood on screen. */
+export interface ViewAnchor {
+  sel: string;
+  top: number;
+}
+
+/**
+ * The material (or else the topic) the reader is looking at, a third of the way down the window under the pinned header, to put
+ * back in the same place later. (Not the very top: a topic whose summary is still arriving there would grow upward under it.)
+ */
+export function viewAnchor(): ViewAnchor | undefined {
+  const main = document.getElementById('kex-main');
+  if (!main) return undefined;
+  const head = stickyTop();
+  const line = head + (window.innerHeight - head) * 0.3;
+  // The material nearest that line, on screen; a page without materials there anchors on its topic.
+  let best: HTMLElement | undefined;
+  let gap = Infinity;
+  for (const row of main.querySelectorAll<HTMLElement>('[data-kex-row]')) {
+    const r = row.getBoundingClientRect();
+    if (!r.height || r.bottom < head || r.top > window.innerHeight) continue;
+    const d = Math.abs(r.top - line);
+    if (d < gap) {
+      gap = d;
+      best = row;
+    }
+  }
+  if (best) return { sel: `[data-kex-row="${best.dataset.kexRow}"]`, top: Math.round(best.getBoundingClientRect().top) };
+  const box = main.getBoundingClientRect();
+  const section = document.elementFromPoint(box.left + box.width * 0.6, line)?.closest<HTMLElement>('[data-kex-section]');
+  if (!section || !main.contains(section)) return undefined;
+  return { sel: `[data-kex-section="${section.dataset.kexSection}"]`, top: Math.round(section.getBoundingClientRect().top) };
+}
+
+export function restoreScroll(y: number, ready: () => boolean, anchor?: ViewAnchor): void {
   if (!(y > 0)) return;
   restoring = true;
   const t0 = performance.now();
   let held: HTMLElement | null = null;
   let placed = false;
+  let settledAt = 0;
+  let touched = false;
+  // The reader taking over (a wheel, a key, a press) ends the hold at once: the page is theirs.
+  const stop = (): void => {
+    touched = true;
+  };
+  const events = ['wheel', 'keydown', 'pointerdown', 'touchstart'] as const;
+  for (const e of events) window.addEventListener(e, stop, { capture: true, passive: true });
+  // While this holds the place, the browser's own scroll anchoring stays out of it: it keeps another element still than the one the
+  // reader was looking at, and the two would pull the page both ways.
+  const html = document.documentElement;
+  if (anchor) html.style.overflowAnchor = 'none';
   const tick = (): void => {
     const main = document.getElementById('kex-main');
     const done = ready() || performance.now() - t0 > 2000;
@@ -196,8 +242,26 @@ export function restoreScroll(y: number, ready: () => boolean): void {
       scrollInstant(y);
       placed = true;
     }
-    if (done) restoring = false;
-    else requestAnimationFrame(tick);
+    // What the reader was looking at stays where it stood while the rest of the page arrives (a summary, the course's own page,
+    // a block that glides open above it) and for a moment after: the position follows it, in every browser and every case.
+    const el = anchor && placed && !touched ? document.querySelector(anchor.sel) : null;
+    if (el) {
+      const off = el.getBoundingClientRect().top - anchor!.top;
+      if (Math.abs(off) > 1) {
+        if (held) held.style.minHeight = `${window.scrollY + off + window.innerHeight}px`;
+        scrollInstant(window.scrollY + off);
+      }
+    }
+    if (done && !settledAt) settledAt = performance.now();
+    const over = touched || (done && performance.now() - settledAt > 700);
+    if (done && !anchor) restoring = false;
+    if (over) {
+      restoring = false;
+      for (const e of events) window.removeEventListener(e, stop, true);
+      if (anchor) html.style.removeProperty('overflow-anchor');
+      return;
+    }
+    requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
 }
