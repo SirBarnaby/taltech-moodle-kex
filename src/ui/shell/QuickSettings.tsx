@@ -4,6 +4,7 @@ import { updateSettings } from '../../actions/settings';
 import { t } from '../../i18n';
 import { hooks, quickSettingsOpen, settings } from '../../state';
 import { Segmented } from '../components/Segmented';
+import { Slider } from '../components/Slider';
 import { Switch } from '../components/Switch';
 import { Popover } from './Popover';
 
@@ -53,6 +54,12 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
         <label class="kex-pop__rowlabel" for="kex-qs-wheel">{t('settings.wheel')}</label>
         <Switch id="kex-qs-wheel" label={t('settings.wheel')} checked={s.wheel} onChange={(on) => updateSettings({ wheel: on })} />
       </div>
+      {s.wheel && (
+        <div class="kex-pop__section">
+          <label class="kex-pop__label" for="kex-qs-wheelk">{t('settings.wheelIntensity')}</label>
+          <Slider id="kex-qs-wheelk" label={t('settings.wheelIntensity')} value={s.wheelIntensity} onChange={(wheelIntensity) => updateSettings({ wheelIntensity })} />
+        </div>
+      )}
       <div class="kex-pop__row">
         <label class="kex-pop__rowlabel" for="kex-qs-on">{t('settings.kexOnPage')}</label>
         <Switch

@@ -40,6 +40,8 @@ export interface Settings {
   density: Density;
   /** The iPhone-clock wheel on long lists: rows near the top and bottom edges turn away on a drum and fade. */
   wheel: boolean;
+  /** How strong the wheel is, 0-100: how far in from the edges rows start to turn, how far they turn and fade at the edge. */
+  wheelIntensity: number;
   reader: ReaderPrefs;
   /** Moodle site notices the user hid, by a hash of their text (a changed notice shows again). */
   hiddenNotices: string[];
@@ -78,6 +80,7 @@ export const DEFAULT_SETTINGS: Settings = {
   openInNewTab: 'external',
   density: 'compact',
   wheel: true,
+  wheelIntensity: 45,
   reader: DEFAULT_READER,
   hiddenNotices: [],
   labsView: 'auto',
@@ -143,6 +146,7 @@ export function normalizeSettings(raw: unknown): Settings {
     openInNewTab: pick(r.openInNewTab, ['never', 'external', 'always'], d.openInNewTab),
     density: (typeof r.rev === 'number' ? r.rev : 0) < SETTINGS_REV ? d.density : pick(r.density, ['comfortable', 'compact'], d.density),
     wheel: typeof r.wheel === 'boolean' ? r.wheel : d.wheel,
+    wheelIntensity: typeof r.wheelIntensity === 'number' && Number.isFinite(r.wheelIntensity) ? Math.round(Math.max(0, Math.min(100, r.wheelIntensity))) : d.wheelIntensity,
     reader: normalizeReader(r.reader),
     hiddenNotices: Array.isArray(r.hiddenNotices) ? r.hiddenNotices.filter((x): x is string => typeof x === 'string').slice(-50) : [],
     labsView: pick(r.labsView, ['auto', 'off'], d.labsView),

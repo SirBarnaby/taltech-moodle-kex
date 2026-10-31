@@ -1,11 +1,18 @@
-/* The wheel (round 10): on long lists, rows near the top and bottom of the window turn away on a drum and fade, like the iPhone
-   clock's picker; the middle of the window stays flat and sharp. Each row's turn follows its own place in the window through a
-   scroll-driven animation, which Firefox runs with the scrolling itself: no script per frame, no change to the layout, nothing
+/* The wheel (round 10): on long lists, rows near the top and bottom edges of the window turn away on a drum and fade, like the
+   iPhone clock's picker; the rest of the window stays flat and sharp. Each row's turn follows its own place in the window through
+   a scroll-driven animation, which Firefox runs with the scrolling itself: no script per frame, no change to the layout, nothing
    that could make the page jump. A row with keyboard focus always stays flat.
-   On when the setting is on (data-kex-wheel), the page is long (data-kex-long, content/index.ts), effects are not off and
-   motion is not reduced. */
+   On when the setting is on (data-kex-wheel), the page is long (data-kex-long, content/index.ts), effects are not off and motion
+   is not reduced. `--kex-wheel-k` (0..1, the intensity slider) sets how far in from the edges the turn starts, how far a row turns
+   at the very edge and how faint it gets there. */
 #kex-root {
-  --kex-wheel-band: clamp(96px, 15vh, 170px);
+  --kex-wheel-k: 0.45;
+  /* How far in from each edge the turn starts. */
+  --kex-wheel-band: calc(3vh + 11vh * var(--kex-wheel-k));
+  /* The turn of a row standing right at the edge: the drum's horizon. */
+  --kex-wheel-angle: calc(58deg + 30deg * var(--kex-wheel-k));
+  /* The opacity of a row right at the edge. */
+  --kex-wheel-fade: calc(0.62 - 0.5 * var(--kex-wheel-k));
   --kex-wheel-top: var(--kex-header-h-compact);
 }
 @supports (animation-timeline: view()) {
@@ -26,36 +33,62 @@
       /* Each holds its turned end only on its own side: the second would otherwise hide the first everywhere. */
       animation-fill-mode: backwards, forwards;
       animation-timeline: view(block var(--kex-wheel-top) 0px), view(block var(--kex-wheel-top) 0px);
-      /* In: while the row's top is in the lowest band of the window. Out: from the row's top entering the highest band (under the
-         header) until the row has gone. */
-      animation-range: cover 0px cover var(--kex-wheel-band), exit calc(0% - var(--kex-wheel-band)) exit 100%;
+      /* In: from the row standing on the bottom edge (fully turned) until it is a band above it (flat). Out: from a band below the
+         top edge (under the header) until the row reaches that edge, fully turned. A row at an edge is at the drum's horizon. */
+      animation-range: contain 0px contain var(--kex-wheel-band), contain calc(100% - var(--kex-wheel-band)) contain 100%;
       transform-origin: 50% 50%;
       backface-visibility: hidden;
     }
-    /* The page ends with a band of room, so the last rows can be read flat in the middle of the window. */
+    /* The page ends with a band of room, so the last rows can be read flat. */
     #kex-main {
       padding-bottom: var(--kex-wheel-band);
     }
   }
 }
+/* A drum's turn grows slowly at first and steeply at its horizon (the angle of a point on a cylinder goes as asin of its height):
+   most of the band is nearly flat, the last part turns fast. */
 @keyframes kex-wheel-in {
-  from {
-    opacity: 0.18;
-    transform: perspective(700px) rotateX(-58deg) scale(0.92);
+  0% {
+    opacity: var(--kex-wheel-fade);
+    transform: perspective(640px) rotateX(calc(-1 * var(--kex-wheel-angle))) scale(0.94);
   }
-  to {
+  12% {
+    opacity: calc(var(--kex-wheel-fade) + (1 - var(--kex-wheel-fade)) * 0.45);
+    transform: perspective(640px) rotateX(calc(-0.58 * var(--kex-wheel-angle))) scale(0.965);
+  }
+  35% {
+    opacity: calc(var(--kex-wheel-fade) + (1 - var(--kex-wheel-fade)) * 0.8);
+    transform: perspective(640px) rotateX(calc(-0.28 * var(--kex-wheel-angle))) scale(0.985);
+  }
+  65% {
+    opacity: 1;
+    transform: perspective(640px) rotateX(calc(-0.09 * var(--kex-wheel-angle)));
+  }
+  100% {
     opacity: 1;
     transform: none;
   }
 }
 @keyframes kex-wheel-out {
-  from {
+  0% {
     opacity: 1;
     transform: none;
   }
-  to {
-    opacity: 0.18;
-    transform: perspective(700px) rotateX(58deg) scale(0.92);
+  35% {
+    opacity: 1;
+    transform: perspective(640px) rotateX(calc(0.09 * var(--kex-wheel-angle)));
+  }
+  65% {
+    opacity: calc(var(--kex-wheel-fade) + (1 - var(--kex-wheel-fade)) * 0.8);
+    transform: perspective(640px) rotateX(calc(0.28 * var(--kex-wheel-angle))) scale(0.985);
+  }
+  88% {
+    opacity: calc(var(--kex-wheel-fade) + (1 - var(--kex-wheel-fade)) * 0.45);
+    transform: perspective(640px) rotateX(calc(0.58 * var(--kex-wheel-angle))) scale(0.965);
+  }
+  100% {
+    opacity: var(--kex-wheel-fade);
+    transform: perspective(640px) rotateX(var(--kex-wheel-angle)) scale(0.94);
   }
 }
 

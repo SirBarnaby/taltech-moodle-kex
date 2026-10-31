@@ -8,6 +8,7 @@ import { SETTINGS_KEY, type RouteMode } from '../lib/settings';
 import { resolveTheme } from '../lib/theme';
 import { useResolvedLang, useSettings } from '../lib/useSettings';
 import { Segmented } from '../ui/components/Segmented';
+import { Slider } from '../ui/components/Slider';
 import { Switch } from '../ui/components/Switch';
 
 const ROUTE_KEYS = ['workspace', 'mycourses', 'course', 'section', 'grades', 'notifications', 'quiz-focus', 'activity', 'grade-user', 'generic'] as const;
@@ -222,6 +223,13 @@ function Options() {
         <Row label={t('settings.wheel')} hint={t('ext.wheelHint')} htmlFor="o-wheel">
           <Switch id="o-wheel" label={t('settings.wheel')} checked={s.wheel} onChange={(on) => update({ wheel: on })} />
         </Row>
+        {s.wheel && (
+          <Row label={t('settings.wheelIntensity')} hint={t('ext.wheelIntensityHint')} htmlFor="o-wheelk">
+            <div class="ext-slider">
+              <Slider id="o-wheelk" label={t('settings.wheelIntensity')} value={s.wheelIntensity} onChange={(wheelIntensity) => update({ wheelIntensity })} />
+            </div>
+          </Row>
+        )}
       </Section>
 
       <Section id="o-sidebar" title={t('ext.sidebar')}>

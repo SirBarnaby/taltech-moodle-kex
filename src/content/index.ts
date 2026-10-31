@@ -365,6 +365,7 @@ class Controller {
         void sidebarMode.value;
         this.syncAttrs();
         this.html.dataset.kexWheel = s2.wheel ? 'on' : 'off';
+        this.root?.style.setProperty('--kex-wheel-k', String(s2.wheelIntensity / 100));
         this.syncLang(s2);
         if (this.root) this.root.lang = lang.value;
       }),
