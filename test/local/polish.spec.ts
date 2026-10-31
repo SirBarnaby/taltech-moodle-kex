@@ -240,6 +240,9 @@ test('cold Back waits for delayed course content before restoring the viewport',
     return { id: row.dataset.kexRow!, top: row.getBoundingClientRect().top };
   });
   expect(await page.evaluate(() => scrollY)).toBeGreaterThan(300);
+  // Where it stands once the page has settled (the replay's fonts and pictures can still be arriving): the place to come back to.
+  await page.waitForTimeout(600);
+  seen.top = await page.evaluate((id) => document.querySelector(`[data-kex-row="${id}"]`)!.getBoundingClientRect().top, seen.id);
   await page.locator('[data-kex-test="sidebar-toggle"]').click();
   await page.locator('.kex-sb__course[data-course-id="37829"]').first().click();
   await expect(page.locator('#kex-main')).toHaveAttribute('data-kex-course', '37829');

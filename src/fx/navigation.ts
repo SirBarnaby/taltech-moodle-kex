@@ -250,10 +250,12 @@ export function restoreScroll(y: number, ready: () => boolean, anchor?: ViewAnch
       if (Math.abs(off) > 1) {
         if (held) held.style.minHeight = `${window.scrollY + off + window.innerHeight}px`;
         scrollInstant(window.scrollY + off);
+        settledAt = 0;
       }
     }
+    // Held until the page has been still for half a second (a block gliding open above counts as moving), at most 3 s.
     if (done && !settledAt) settledAt = performance.now();
-    const over = touched || (done && performance.now() - settledAt > 700);
+    const over = touched || (done && performance.now() - settledAt > 500) || performance.now() - t0 > 3000;
     if (done && !anchor) restoring = false;
     if (over) {
       restoring = false;
