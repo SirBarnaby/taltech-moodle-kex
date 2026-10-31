@@ -53,9 +53,15 @@ export function scrollInstant(top: number): void {
   window.scrollTo({ top, left: 0, behavior: 'instant' as ScrollBehavior });
 }
 
-/** Bound progress per painted frame: delayed hydration must not consume an entire scroll animation offscreen. */
-export function scrollViewport(top: number): { finished: Promise<void>; cancel: () => void } {
+/**
+ * Glide the page to `to` (a position, or a function giving it, read again every frame so the glide follows content that changes
+ * on the way). Bound progress per painted frame: delayed hydration must not consume an entire scroll animation offscreen. When the
+ * page moves under the glide (scroll anchoring keeping content still as something above arrives), the glide moves with it instead
+ * of undoing it.
+ */
+export function scrollViewport(to: number | (() => number)): { finished: Promise<void>; cancel: () => void } {
   activeScroll?.();
+  const target = (): number => (typeof to === 'function' ? to() : to);
   let resolve!: () => void;
   const finished = new Promise<void>((r) => { resolve = r; });
   let frame = 0;
@@ -68,19 +74,27 @@ export function scrollViewport(top: number): { finished: Promise<void>; cancel: 
     for (const event of ['wheel', 'touchstart', 'pointerdown', 'keydown']) window.removeEventListener(event, cancel, true);
     resolve();
   };
-  const from = window.scrollY;
+  let from = window.scrollY;
   let position = from;
+  let set = from;
   activeScroll = cancel;
-  if (!viewMotionAllowed() || Math.abs(top - from) < 1) {
-    scrollInstant(top);
+  const first = target();
+  if (!viewMotionAllowed() || Math.abs(first - from) < 1) {
+    scrollInstant(first);
     cancel();
     return { finished, cancel };
   }
-  const duration = Math.min(420, Math.max(240, Math.abs(top - from) * 0.35));
+  const duration = Math.min(420, Math.max(240, Math.abs(first - from) * 0.35));
   let elapsed = 0;
   let last = performance.now();
   const tick = (now: number): void => {
     if (stopped) return;
+    const drift = window.scrollY - set;
+    if (Math.abs(drift) >= 1) {
+      from += drift;
+      position += drift;
+    }
+    const top = target();
     elapsed += Math.min(34, Math.max(0, now - last));
     last = now;
     const p = Math.min(1, elapsed / duration);
@@ -89,6 +103,7 @@ export function scrollViewport(top: number): { finished: Promise<void>; cancel: 
     // A long way (the top of a long course page) still arrives in about 20 frames.
     position += Math.sign(delta) * Math.min(Math.abs(delta), Math.max(80, window.innerHeight * 0.18, Math.abs(top - from) / 20));
     scrollInstant(position);
+    set = window.scrollY;
     if (p >= 1 && Math.abs(position - top) < 1) cancel();
     else frame = requestAnimationFrame(tick);
   };

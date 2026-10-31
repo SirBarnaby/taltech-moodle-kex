@@ -326,7 +326,8 @@ export function setTopic(n: number, opts: { focus?: boolean; instant?: boolean }
       scrollInstant(y);
     } else {
       spyHold = performance.now() + 1200;
-      void scrollViewport(y).finished.then(() => {
+      // The topic's place is read again every frame: a summary or the page's own document arriving on the way moves it.
+      void scrollViewport(() => topicY(n) ?? y).finished.then(() => {
         spyHold = 0;
       });
     }

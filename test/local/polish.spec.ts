@@ -164,12 +164,13 @@ test('a topic click deep in the one-page course glides there: no frame jumps, no
   const samples = await page.evaluate(() => (window as unknown as { scrollSamples: Sample[] }).scrollSamples);
   writeFileSync(`${out}/course-scroll-samples.json`, JSON.stringify(samples));
   expect(samples.some((p) => p.ghost)).toBe(false);
-  // A glide: it goes one way, in steps no larger than a fifth of the window.
+  // A glide: it goes one way, in many steps (at most a fifth of the window, or a twentieth of a long way).
   const steps = samples.slice(1).map((p, i) => p.y - samples[i]!.y).filter((d) => Math.abs(d) > 0.5);
-  expect(steps.length).toBeGreaterThan(1);
+  expect(steps.length).toBeGreaterThan(3);
   expect(steps.every((d) => Math.sign(d) === Math.sign(steps[0]!))).toBe(true);
   const vh = await page.evaluate(() => innerHeight);
-  expect(Math.max(...steps.map(Math.abs))).toBeLessThanOrEqual(Math.max(80, vh * 0.18) + 1);
+  const way = Math.abs(samples.at(-1)!.y - samples[0]!.y);
+  expect(Math.max(...steps.map(Math.abs))).toBeLessThanOrEqual(Math.max(80, vh * 0.18, way / 20) + 1);
   const landed = await page.evaluate((num) => {
     const head = document.querySelector('.kex-header')!.getBoundingClientRect().bottom;
     const top = document.querySelector(`[data-kex-section="${num}"]`)!.getBoundingClientRect().top;
@@ -233,6 +234,13 @@ test('cold Back waits for delayed course content before restoring the viewport',
   await page.evaluate(() => window.scrollTo(0, 650));
   const saved = await page.evaluate(() => scrollY);
   expect(saved).toBeGreaterThan(300);
+  // What the reader sees: the first material at the top of the window, and where it stands.
+  const seen = await page.evaluate(() => {
+    const head = document.querySelector('.kex-header')!.getBoundingClientRect().bottom;
+    const row = [...document.querySelectorAll<HTMLElement>('[data-kex-row]')].find((r) => r.getBoundingClientRect().top >= head);
+    return row ? { id: row.dataset.kexRow!, top: row.getBoundingClientRect().top } : null;
+  });
+  expect(seen).not.toBeNull();
   await page.locator('[data-kex-test="sidebar-toggle"]').click();
   await page.locator('.kex-sb__course[data-course-id="37829"]').first().click();
   await expect(page.locator('#kex-main')).toHaveAttribute('data-kex-course', '37829');
@@ -243,7 +251,11 @@ test('cold Back waits for delayed course content before restoring the viewport',
   });
   await page.goBack();
   await page.waitForFunction(() => !document.documentElement.dataset.kexInteraction && document.querySelector('#kex-main')?.getAttribute('data-kex-course') === '37582');
-  expect(await page.evaluate(() => scrollY)).toBeCloseTo(saved, -1);
+  // The same material stands in the same place. (The scroll position itself may differ: what arrived later above it, such as
+  // summaries from the course's own page, is kept from pushing it by scroll anchoring.)
+  const back = await page.evaluate((id) => document.querySelector(`[data-kex-row="${id}"]`)?.getBoundingClientRect().top ?? null, seen!.id);
+  expect(back).not.toBeNull();
+  expect(back!).toBeCloseTo(seen!.top, -1);
   // The outline lights up the topic at the top of the window, whichever that is.
   await expect(page.locator('.kex-outline [data-kex-topic][aria-current="true"]')).toHaveCount(1);
   await expect(page.locator('.kex-transition-ghost')).toHaveCount(0);

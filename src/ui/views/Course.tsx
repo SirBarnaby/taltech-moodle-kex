@@ -96,7 +96,8 @@ function usePlace(code: string, courseName: string): void {
       relaxPageEnd();
       const secs = Array.from(document.querySelectorAll<HTMLElement>('#kex-main [data-kex-section]'));
       if (!secs.length) return;
-      const line = stickyTop() + 20;
+      // A topic whose header has come up to just under the header (or the topic bar) is the one being read.
+      const line = stickyTop() + 48;
       let cur = secs[0]!;
       for (const s of secs) {
         if (s.getBoundingClientRect().top <= line) cur = s;
