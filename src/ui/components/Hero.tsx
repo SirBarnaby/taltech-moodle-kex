@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { heroCanvas } from '../../fx/heroCanvas';
 import { MOTION, sinceNavigation } from '../../fx/navigation';
@@ -24,6 +25,8 @@ interface HeroProps {
   /** Title lines (the second one is painted with the gradient). */
   lines: [string, string?];
   links: HeroLink[];
+  /** Shown under the title in place of the links (the course's own tabs). */
+  nav?: ComponentChildren;
   /** Seed for the shader (course id), so each course has its own phase. */
   seed?: number;
   intensity?: number;
@@ -76,7 +79,7 @@ function CourseMeta({ courseId }: { courseId: number }) {
   );
 }
 
-export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls }: HeroProps) {
+export function Hero({ label, lines, links, nav, seed = 0, intensity = 1, class: cls }: HeroProps) {
   const root = useRef<HTMLElement>(null);
   const mode = heroEffectMode.value;
   const r = route.value;
@@ -122,14 +125,16 @@ export function Hero({ label, lines, links, seed = 0, intensity = 1, class: cls 
           lineDelay={lines[1] ? [0, MOTION.accentDelay / 1000] : undefined}
           gradient={lines[1] ? [1] : [0]}
         />
-        <nav class="kex-hero__links" aria-label={aria}>
-          {links.map((l) => (
-            <a key={l.key} class="kex-hero__link" href={l.href ?? '#'} onClick={l.onClick}>
-              <span>{l.label}</span>
-              <ArrowNE size={13} strokeWidth={1.5} />
-            </a>
-          ))}
-        </nav>
+        {nav ?? (
+          <nav class="kex-hero__links" aria-label={aria}>
+            {links.map((l) => (
+              <a key={l.key} class="kex-hero__link" href={l.href ?? '#'} onClick={l.onClick}>
+                <span>{l.label}</span>
+                <ArrowNE size={13} strokeWidth={1.5} />
+              </a>
+            ))}
+          </nav>
+        )}
       </div>
     </section>
   );

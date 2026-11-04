@@ -5,9 +5,9 @@ import { cmDetails } from '../data/repo/cmdetails';
 import type { CmEvent } from '../data/repo/courseevents';
 import { cmsOfSection, type CourseState } from '../data/repo/coursestate';
 import { modTypeNames } from '../data/repo/modnames';
-import { pinsStore, rowPins } from '../data/repo/pins';
+import { isPinned, pinsStore, rowPins } from '../data/repo/pins';
 import type { NavTab } from '../data/scrape/secondarynav';
-import { buildSectionView, buildTopics, type RowModel, type SectionView, type TopicModel } from '../data/topics';
+import { buildSectionView, buildTopics, type BlockModel, type RowModel, type SectionView, type TopicModel } from '../data/topics';
 import { buildTrack, type LabTrackItem } from '../data/labtrack';
 import { detectCourseSeries, detectTopicSeries, WORK_MODS } from '../data/series';
 import { recordError } from '../lib/log';
@@ -95,12 +95,33 @@ export const labChoice = signal<ReadonlyMap<number, boolean>>(new Map());
 export const labOpen = (id: number, item: LabTrackItem | undefined, choice: ReadonlyMap<number, boolean> = labChoice.value): boolean =>
   choice.get(id) ?? item?.state !== 'done';
 
+/** "Pinned" in the Learning materials bar: only the materials pinned in this course, each in its topic. */
+export const pinnedOnly = signal(false);
+
+/**
+ * The topics as the page shows them: every topic, or with "Pinned" on only the topics that hold a pinned material, with just those
+ * materials (out of their subsections, and never folded).
+ */
+export const shownBlocks = computed<TopicBlock[]>(() => {
+  const blocks = courseBlocks.value;
+  if (!pinnedOnly.value) return blocks;
+  const pins = pinsStore().value.value ?? [];
+  const out: TopicBlock[] = [];
+  for (const b of blocks) {
+    const kept = b.view.rows.filter((r) => r.kind !== 'note' && isPinned(r.cm.id, pins));
+    if (!kept.length) continue;
+    const view: SectionView = { blocks: kept.map((row): BlockModel => ({ type: 'row', row })), rows: kept };
+    out.push({ topic: b.topic, view });
+  }
+  return out;
+});
+
 /** Rows the keyboard can reach: rows of folded topics and folded labs are left out. */
 export const visibleRows = computed<RowModel[]>(() => {
-  const folded = foldedTopics.value;
+  const folded = pinnedOnly.value ? new Set<number>() : foldedTopics.value;
   const choice = labChoice.value;
   const out: RowModel[] = [];
-  for (const b of courseBlocks.value) {
+  for (const b of shownBlocks.value) {
     if (folded.has(b.topic.section.id)) continue;
     for (const block of b.view.blocks) {
       if (block.type === 'row') out.push(block.row);

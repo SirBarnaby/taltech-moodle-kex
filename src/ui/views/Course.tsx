@@ -1,8 +1,8 @@
-import { ChevronRight, Lock } from 'lucide-preact';
+import { Check, ChevronRight, Lock, Pin } from 'lucide-preact';
 import type { JSX } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import {
-  closePreview, courseCode, foldAll, initCourse, notePlace, openCm, openCmOriginal, previewCm, relaxPageEnd, retryCourse, setGroupOpen, setTopic, spyHeld, startTarget, stepPreview, toggleDone, togglePin, toggleTopic, topicY,
+  closePreview, courseCode, foldAll, initCourse, notePlace, openCm, openCmOriginal, opensInNewTab, previewCm, relaxPageEnd, retryCourse, setGroupOpen, setPinnedOnly, setTopic, spyHeld, startTarget, stepPreview, toggleDone, togglePin, toggleTopic, topicY,
 } from '../../actions/course';
 import { MOTION, restorePending, revealInScroller, scrollInstant, stickyTop } from '../../fx/navigation';
 import { softEntered } from '../../state/navigation';
@@ -15,7 +15,7 @@ import { t } from '../../i18n';
 import { sanitizeHtml } from '../../lib/sanitize';
 import { activeCourseId, headerTitle, pageInfo, settings, sidebarCourses } from '../../state';
 import {
-  courseBlocks, courseError, courseState, courseStatus, focusZone, foldedTopics, labChoice, labOpen, mergedSummaries, pinnedRow, previewCmId, rows, secondaryNav, selectedCmId, topicMarks, topicNumber, topics,
+  courseError, courseState, courseStatus, focusZone, foldedTopics, labChoice, labOpen, mergedSummaries, pinnedOnly, pinnedRow, previewCmId, rows, secondaryNav, selectedCmId, shownBlocks, topicMarks, topicNumber, topics,
   type TopicBlock,
 } from '../../state/course';
 import { Button } from '../components/Button';
@@ -171,37 +171,40 @@ function TopicSummary({ html, id }: { html: string; id: number }) {
 
 interface SectionProps {
   block: TopicBlock;
-  code: string;
   folded: boolean;
   renderRow: (row: RowModel, topicNumber: string) => JSX.Element;
   summaryHtml: string;
 }
 
-function TopicSection({ block, code, folded, renderRow, summaryHtml }: SectionProps) {
+function TopicSection({ block, folded, renderRow, summaryHtml }: SectionProps) {
   const { topic, view, labs } = block;
   const n = topic.section.number;
   const title = topicDisplayTitle(topic);
   const count = resourceCount(view.rows);
   const { done, total } = progressOf(view.rows);
+  const complete = total > 0 && done === total;
   const choice = labChoice.value;
   const num = pad2(n);
   const headId = `kex-tsec-${topic.section.id}`;
   const bodyId = `kex-tsec-body-${topic.section.id}`;
   return (
-    <section class={`kex-tsec${folded ? ' kex-tsec--folded' : ''}`} data-kex-section={n} aria-labelledby={headId} data-kex-test={`section-${n}`}>
+    <section class={`kex-tsec${folded ? ' kex-tsec--folded' : ''}${complete ? ' kex-tsec--complete' : ''}`} data-kex-section={n} aria-labelledby={headId} data-kex-test={`section-${n}`}>
       <header class="kex-tsec__head">
         <h3 class="kex-tsec__title" id={headId}>
           <button type="button" class="kex-tsec__toggle" aria-expanded={!folded} aria-controls={bodyId} onClick={() => toggleTopic(topic.section.id)}>
-            <ChevronRight class="kex-tsec__chev" size={18} strokeWidth={1.75} aria-hidden="true" />
-            <span class="kex-tsec__num kex-mono" aria-hidden={topic.isIntro ? 'true' : undefined}>{topic.isIntro ? code : num}</span>
+            <ChevronRight class="kex-tsec__chev" size={20} strokeWidth={1.8} aria-hidden="true" />
+            {!topic.isIntro && <span class="kex-tsec__num">{num}</span>}
             <span class="kex-tsec__text">{title}</span>
             {topic.restricted && <Lock class="kex-tsec__lock" size={14} strokeWidth={1.75} aria-label={t('course.restricted')} />}
           </button>
         </h3>
         {topic.isRange && <p class="kex-tsec__range">{topic.title}</p>}
-        <p class="kex-tsec__count kex-mono">
-          {total > 0 ? t('track.progress', { done, total }) : count === 1 ? t('course.resource') : t('course.resources', { n: count })}
-        </p>
+        {(total > 0 || count > 0) && (
+          <p class="kex-tsec__count">
+            {complete && <span class="kex-tsec__check" aria-hidden="true"><Check size={14} strokeWidth={3} /></span>}
+            {total > 0 ? t('track.progress', { done, total }) : count === 1 ? t('course.resource') : t('course.resources', { n: count })}
+          </p>
+        )}
       </header>
       <div class="kex-tsec__fold" id={bodyId} inert={folded}>
         <div class="kex-tsec__foldin">
@@ -302,7 +305,8 @@ export function CourseView() {
   const status = courseStatus.value;
   const st = courseState.value;
   const tps = topics.value;
-  const blocks = courseBlocks.value;
+  const blocks = shownBlocks.value;
+  const pinnedView = pinnedOnly.value;
   const allRows = rows.value;
   const folded = foldedTopics.value;
   const pins = pinsStore().value.value ?? [];
@@ -350,6 +354,8 @@ export function CourseView() {
   if (loading) waited.current = true;
   const arrived = waited.current && !loading && !failed;
   const anyFolded = folded.size > 0;
+  const ready = !loading && !failed && tps.length > 0;
+  const listRows = settings.value.density === 'compact';
 
   const renderRow = (row: RowModel, num: string) => (
     <ResourceRow
@@ -362,6 +368,8 @@ export function CourseView() {
       primary={row.cm.id === primaryId}
       selected={row.cm.id === sel}
       reading={row.cm.id === previewId}
+      list={listRows}
+      external={listRows && opensInNewTab(row)}
       onSelect={(cmid) => (selectedCmId.value = cmid)}
       onOpen={(r, newTab) => openCm(r, newTab)}
       onPreview={(r: RowModel) => previewCm(r)}
@@ -372,15 +380,27 @@ export function CourseView() {
 
   return (
     <main class="kex-main kex-course" id="kex-main" data-kex-test="course" data-kex-course={id ?? ''} data-kex-ready={!loading}>
-      <Hero key={id ?? 0} lines={lines.length ? lines : [rawName]} links={[]} />
+      <Hero key={id ?? 0} lines={lines.length ? lines : [rawName]} links={[]} nav={<CourseNav tabs={secondaryNav.value} />} />
       <div class="kex-content">
         <PinnedRow pins={pinnedRow.value} courseId={id} />
-        <div class="kex-matheader">
+        <div class="kex-matheader kex-matbar">
           <SlideUpText as="h2" class="kex-matheader__title" text={t('course.materials')} split="words" stagger={0.06} duration={MOTION.title / 1000} still={softEntered.value} inView />
-          <CourseNav tabs={secondaryNav.value} />
+          <div class="kex-matbar__tools">
+            {ready && !pinnedView && (
+              <button type="button" class="kex-matbar__btn" data-kex-test="fold-all" onClick={() => foldAll(!anyFolded)}>
+                {anyFolded ? t('course.expandAll') : t('course.collapseAll')}
+              </button>
+            )}
+            {ready && (
+              <button type="button" class="kex-matbar__btn" aria-pressed={pinnedView} data-kex-test="pinned-only" onClick={() => setPinnedOnly(!pinnedView)}>
+                <Pin size={17} strokeWidth={1.75} fill={pinnedView ? 'currentColor' : 'none'} aria-hidden="true" />
+                {t('pinned.title')}
+              </button>
+            )}
+          </div>
         </div>
         {id && !loading && !failed && tps.length > 0 && (
-          <CourseBar topics={tps} active={topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} pins={pinnedRow.value} courseId={id} marks={topicMarks.value} />
+          <CourseBar topics={pinnedView ? blocks.map((b) => b.topic) : tps} active={topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} pins={pinnedRow.value} courseId={id} marks={topicMarks.value} />
         )}
         <div class={`kex-book${arrived ? ' kex-fade-in' : ''}`} data-kex-test="detail">
           {loading ? (
@@ -395,19 +415,22 @@ export function CourseView() {
             </EmptyState>
           ) : st && !tps.length ? (
             <EmptyState kicker={t('course.noRows')} title={t('course.noTopics')} />
+          ) : pinnedView && !blocks.length ? (
+            <div class="kex-book__pages">
+              <div class="kex-tsec kex-tsec--empty" data-kex-test="pinned-empty">
+                <EmptyState kicker={t('pinned.emptyKicker')} title={t('pinned.emptyTitle')} text={t('pinned.emptyText')}>
+                  <Button variant="outlined" arrow={false} onClick={() => setPinnedOnly(false)}>{t('course.showAll')}</Button>
+                </EmptyState>
+              </div>
+            </div>
           ) : (
             <>
               <TopicOutline blocks={blocks} active={topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} />
               <div class="kex-book__pages">
-                <div class="kex-book__tools">
-                  <button type="button" class="kex-book__foldall" data-kex-test="fold-all" onClick={() => foldAll(!anyFolded)}>
-                    {anyFolded ? t('course.expandAll') : t('course.collapseAll')}
-                  </button>
-                </div>
                 {blocks.map((b) => {
                   const sec = b.topic.section;
                   const html = summaries.get(sec.id) ?? (sec.summaryHtml ? sanitizeHtml(sec.summaryHtml) : '');
-                  return <TopicSection key={sec.id} block={b} code={code} folded={folded.has(sec.id)} renderRow={renderRow} summaryHtml={html} />;
+                  return <TopicSection key={sec.id} block={b} folded={!pinnedView && folded.has(sec.id)} renderRow={renderRow} summaryHtml={pinnedView ? '' : html} />;
                 })}
               </div>
             </>

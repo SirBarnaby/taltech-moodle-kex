@@ -52,9 +52,13 @@
   :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc):active {
     transform: scale(0.97);
   }
-  /* Full-width rows would visibly shrink at .97: they take a smaller step. */
-  :is(.kex-row, .kex-groupcard):active {
+  /* Full-width rows would visibly shrink at .97: they take a smaller step. A list row in a topic card runs edge to edge in it, so
+     it answers a press with a deeper tint instead. */
+  :is(.kex-row:not(.kex-lrow), .kex-groupcard):active {
     transform: scale(0.99);
+  }
+  .kex-lrow:not(.kex-row--locked):active:not(:has(a:active, button:active)) {
+    background: var(--kex-tint);
   }
 }
 :root:is([data-kex-input="keyboard"]) #kex-root :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc, .kex-row, .kex-groupcard):active {

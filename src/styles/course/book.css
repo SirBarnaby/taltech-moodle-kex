@@ -15,26 +15,9 @@
   }
   .kex-book__pages {
     min-width: 0;
+    /* Always the reading column, also when the outline is not there (nothing pinned yet). */
+    grid-column: -2 / -1;
   }
-  .kex-book__tools {
-    display: flex;
-    justify-content: flex-end;
-    height: 24px;
-    margin-bottom: 2px;
-  }
-  .kex-book__foldall {
-    font-size: 13px;
-    line-height: 24px;
-    font-weight: 500;
-    color: var(--kex-violet);
-    text-decoration: underline;
-    text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
-    text-underline-offset: 4px;
-    &:hover {
-      text-decoration-color: currentColor;
-    }
-  }
-
   /* ---- outline (wide columns) ---- */
   .kex-outline {
     display: none;
@@ -159,7 +142,7 @@
   .kex-course .kex-cbar {
     position: absolute;
     inset: 0;
-    background: var(--kex-bg);
+    background: var(--kex-course-bg);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     padding: 0 var(--kex-gutter, var(--kex-pad));
@@ -168,84 +151,89 @@
     transition: none;
   }
 
-  /* ---- topics ----
-     Each topic is a panel of its own and every second one carries a faint tint, so while scrolling the eye sees where one topic
-     ends and the next begins without reading. The panel's padding sits outside the column, so the text lines up with the outline. */
+  /* ---- topics (round 11): each topic is a card of its own, folding like an accordion ----
+     The header row is the fold's handle; the materials are a quiet list under a hairline, every row edge to edge in the card. */
   .kex-tsec {
-    --kex-tsec-pad: 20px;
-    margin: 0 calc(-1 * var(--kex-tsec-pad)) 12px;
-    padding: 10px var(--kex-tsec-pad) 18px;
-    border-radius: var(--kex-r-xl);
-  }
-  .kex-tsec:nth-of-type(even) {
-    background: color-mix(in srgb, var(--kex-violet) 4%, transparent);
-  }
-  /* Fewer things that say the same: a material's "Open" shows where the pointer or the keyboard is (the title opens it too). The
-     next thing to do keeps its filled button. */
-  .kex-tsec .kex-rows--compact .kex-row > .kex-btn--outlined {
-    transition: opacity 120ms var(--kex-ease);
-  }
-  .kex-tsec .kex-rows--compact .kex-row:not(:hover, :focus-within, .kex-row--selected, .kex-row--reading) > .kex-btn--outlined {
-    opacity: 0;
+    --kex-card-x: 20px;
+    margin: 0 0 14px;
+    background: var(--kex-card-bg);
+    border: 1px solid var(--kex-card-border);
+    border-radius: var(--kex-r-card);
+    box-shadow: var(--kex-card-shadow);
+    /* clip, not hidden: rows keep turning in the window (the wheel), and hover backgrounds keep the card's corners. */
+    overflow: clip;
   }
   .kex-tsec__head {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 16px;
-    min-height: 48px;
+    min-height: 62px;
+    padding: 6px var(--kex-card-x) 6px calc(var(--kex-card-x) - 2px);
+    transition: background 140ms var(--kex-ease);
+    &:hover {
+      background: var(--kex-card-hover);
+    }
   }
   .kex-tsec__title {
     flex: 1 1 auto;
     min-width: 0;
     margin: 0;
     font-family: var(--kex-font-display);
-    font-size: 24px;
-    line-height: 30px;
-    font-weight: 560;
-    letter-spacing: -0.02em;
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 600;
+    letter-spacing: -0.018em;
     color: var(--kex-text);
   }
   .kex-tsec__toggle {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     max-width: 100%;
-    margin-left: -8px;
-    padding: 6px 10px 6px 8px;
-    border-radius: var(--kex-r-l);
+    padding: 0;
     font: inherit;
     letter-spacing: inherit;
     color: inherit;
     text-align: left;
-    &:hover .kex-tsec__text {
-      color: var(--kex-violet);
+    /* The whole header row folds the topic. */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
     }
     &:focus-visible {
-      outline-offset: -2px;
+      outline: none;
+    }
+    &:focus-visible::after {
+      outline: 2px solid var(--kex-focus);
+      outline-offset: -3px;
+      border-radius: calc(var(--kex-r-card) - 1px);
     }
   }
   .kex-tsec__chev {
     flex: none;
-    color: var(--kex-text-4);
+    color: var(--kex-text-2);
     transform: rotate(90deg);
-    transition: transform 200ms var(--kex-ease), color 160ms var(--kex-ease);
+    transition: transform 240ms var(--kex-ease-card), color 160ms var(--kex-ease);
   }
   .kex-tsec--folded .kex-tsec__chev {
     transform: none;
   }
   .kex-tsec__num {
     flex: none;
-    font-family: var(--kex-font-mono);
-    font-size: 13px;
-    line-height: 16px;
+    min-width: 24px;
+    font-size: 18px;
+    line-height: 24px;
     font-weight: 500;
-    letter-spacing: 0.1em;
-    color: var(--kex-mono-strong);
+    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums;
+    color: var(--kex-text-4);
   }
   .kex-tsec__text {
     min-width: 0;
     overflow-wrap: anywhere;
-    transition: color 140ms var(--kex-ease);
   }
   .kex-tsec__lock {
     flex: none;
@@ -259,39 +247,61 @@
   }
   .kex-tsec__count {
     flex: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin: 0;
-    font-size: 11px;
-    line-height: 14px;
-    font-weight: 500;
-    letter-spacing: 0.115em;
-    text-transform: uppercase;
-    color: var(--kex-mono-soft);
+    font-size: 15.5px;
+    line-height: 20px;
+    color: var(--kex-text-3);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
-  /* Folding animates the topic's track from 1fr to 0fr; the side margins give the rows' hover and focus room inside the clip. */
+  .kex-tsec__check {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--kex-success);
+    color: #fff;
+  }
+  /* Folding animates the topic's track from 1fr to 0fr. */
   .kex-tsec__fold {
     display: grid;
+    /* The column is the card's width: a wide picture in a summary must not widen the rows past the card (Firefox sizes an auto
+       column by its content's intrinsic width). */
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: 1fr;
-    margin-inline: -16px;
-    transition: grid-template-rows 220ms var(--kex-ease);
+    transition: grid-template-rows 260ms var(--kex-ease-card);
   }
   .kex-tsec--folded .kex-tsec__fold {
     grid-template-rows: 0fr;
   }
-  /* clip, not hidden: a hidden box is a scroll container, and the wheel's rows would turn in it instead of in the window. */
+  /* clip, not hidden: a hidden box is a scroll container, and the wheel's rows would turn in it instead of in the window. The hairline
+     under the header is an inset shadow, so a folded topic (no height) shows none. */
   .kex-tsec__foldin {
+    min-width: 0;
     min-height: 0;
     overflow: clip;
-    padding-inline: 16px;
+    box-shadow: inset 0 1px 0 var(--kex-card-divider);
   }
   .kex-tsec .kex-rows {
-    margin-top: 6px;
-    padding-top: 2px;
+    margin: 0;
+    padding: 0;
   }
   .kex-tsec__about {
-    max-width: 960px;
+    max-width: calc(960px + 2 * var(--kex-card-x));
+  }
+  /* The room goes inside the held slot (Reveal holds the outer box at the inner one's height). */
+  .kex-tsec__about > .kex-reveal__in {
+    padding: 14px var(--kex-card-x) 12px;
+  }
+  .kex-tsec__about + .kex-rows {
+    box-shadow: inset 0 1px 0 var(--kex-card-divider);
   }
   .kex-tsec__summary {
-    margin-top: 2px;
+    margin-top: 0;
     max-height: 72px;
     overflow: hidden;
   }
@@ -315,21 +325,54 @@
     }
   }
   .kex-tsec__empty {
-    margin: 6px 0 0;
+    margin: 0;
+    padding: 16px var(--kex-card-x) 18px;
     font-size: 15px;
     color: var(--kex-text-3);
   }
+  /* Comfortable rows keep their own layout inside the card, with the card's side room. */
+  .kex-tsec .kex-rows:not(.kex-rows--compact) {
+    padding: 4px calc(var(--kex-card-x) + 12px) 8px;
+  }
+  .kex-tsec--empty {
+    padding: 0 28px 8px;
+  }
   .kex-tsec--skel {
+    padding: 14px var(--kex-card-x) 18px;
     .kex-skel--title {
       display: block;
       width: 40%;
       height: 28px;
-      margin: 8px 0 14px;
+      margin: 4px 0 14px;
     }
   }
-  /* Labs inside a topic sit a little tighter than on their own. */
-  .kex-tsec .kex-group--lab {
-    margin: 8px 0;
+  /* Subsections and labs inside a topic card: an inset card of their own, its rows edge to edge in it like the topic's. */
+  .kex-tsec .kex-group {
+    margin: 10px var(--kex-card-x);
+  }
+  .kex-tsec .kex-group:last-child {
+    margin-bottom: 14px;
+  }
+  .kex-tsec .kex-groupcard {
+    --kex-card-x: 2px;
+    padding: 0;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--kex-course-bg) 40%, var(--kex-card-bg));
+    overflow: clip;
+  }
+  .kex-tsec .kex-groupcard__head {
+    min-height: 54px;
+    padding: 0 16px;
+  }
+  .kex-tsec .kex-groupcard__summary {
+    padding: 0 16px 8px;
+  }
+  .kex-tsec .kex-groupcard__rows {
+    margin: 0;
+    box-shadow: inset 0 1px 0 var(--kex-card-divider);
+  }
+  .kex-tsec .kex-group--open .kex-groupcard__foldin {
+    padding-bottom: 0;
   }
 }
 
@@ -351,20 +394,35 @@
   }
 }
 @container kexcol (max-width: 660px) {
+  #kex-root .kex-tsec {
+    --kex-card-x: 14px;
+  }
   #kex-root .kex-tsec__title {
-    font-size: 20px;
-    line-height: 26px;
+    font-size: 19px;
+    line-height: 25px;
+  }
+  #kex-root .kex-tsec__toggle {
+    gap: 10px;
+  }
+  #kex-root .kex-tsec__num {
+    min-width: 0;
+    font-size: 16px;
   }
   #kex-root .kex-tsec__head {
     flex-wrap: wrap;
-    gap: 4px 12px;
+    gap: 2px 12px;
+  }
+  #kex-root .kex-tsec__count {
+    flex-basis: 100%;
+    margin-left: 32px;
+    font-size: 14px;
   }
 }
-:root[data-kex-motion="reduced"] #kex-root :is(.kex-tsec__fold, .kex-tsec__chev, .kex-outline__item, .kex-outline__item::before) {
+:root[data-kex-motion="reduced"] #kex-root :is(.kex-tsec__fold, .kex-tsec__chev, .kex-tsec__head, .kex-outline__item, .kex-outline__item::before) {
   transition: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  #kex-root :is(.kex-tsec__fold, .kex-tsec__chev, .kex-outline__item, .kex-outline__item::before) {
+  #kex-root :is(.kex-tsec__fold, .kex-tsec__chev, .kex-tsec__head, .kex-outline__item, .kex-outline__item::before) {
     transition: none;
   }
 }

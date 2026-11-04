@@ -177,6 +177,43 @@
   :root[data-kex-theme="dark"] & .kex-matheader {
     border-bottom-color: var(--kex-border);
   }
+  /* The course page's "Learning materials" bar (round 11): a quiet section title with its tools on the right, over the topic cards. */
+  .kex-matbar {
+    align-items: center;
+    min-height: 56px;
+    margin-top: 18px;
+    border-bottom-color: var(--kex-card-divider);
+    .kex-matheader__title {
+      margin: 0;
+      font-size: 22px;
+      line-height: 28px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+    }
+  }
+  .kex-matbar__tools {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 40px;
+  }
+  .kex-matbar__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 9px;
+    font-size: 15px;
+    line-height: 20px;
+    color: var(--kex-text-2);
+    transition: background 140ms var(--kex-ease), color 140ms var(--kex-ease);
+    &:hover,
+    &[aria-pressed="true"] {
+      background: var(--kex-tint);
+      color: var(--kex-violet);
+    }
+  }
   .kex-matheader__title {
     display: block;
     margin: 0 0 1px 1px;
@@ -193,15 +230,6 @@
     align-items: stretch;
     height: 51px;
     gap: 0;
-  }
-  .kex-coursenav {
-    max-width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  a.kex-tab {
-    text-decoration: none;
-    white-space: nowrap;
   }
   .kex-tab {
     position: relative;
@@ -937,10 +965,7 @@
 /* The course column narrows with the window and with the side reader open: these follow the column's own width. */
 #kex-root .kex-course .kex-content { container: kexcol / inline-size; }
 @container kexcol (max-width: 1040px) {
-  #kex-root .kex-course .kex-matheader { flex-wrap: wrap; gap: 8px; }
-  #kex-root .kex-course .kex-matheader__title { font-size: 32px; line-height: 1.15; }
-  #kex-root .kex-course .kex-coursenav { min-width: 0; }
-  #kex-root .kex-row { grid-template-columns: 96px minmax(0, 1fr) auto; column-gap: 20px; }
+  #kex-root .kex-row:not(.kex-lrow) { grid-template-columns: 96px minmax(0, 1fr) auto; column-gap: 20px; }
   #kex-root .kex-row > .kex-thumb { width: 96px; height: 66px; }
   #kex-root .kex-row > .kex-btn { width: 112px; height: 40px; font-size: 16px; }
   #kex-root .kex-row__note { margin-left: 116px; }
@@ -952,7 +977,7 @@
   #kex-root .kex-content { padding-inline: 20px; }
 }
 @container kexcol (max-width: 660px) {
-  #kex-root .kex-row { grid-template-columns: 72px minmax(0, 1fr); gap: 10px 16px; }
+  #kex-root .kex-row:not(.kex-lrow) { grid-template-columns: 72px minmax(0, 1fr); gap: 10px 16px; }
   #kex-root .kex-row > .kex-thumb { width: 72px; height: 50px; }
   #kex-root .kex-row > .kex-btn { grid-column: 2; justify-self: start; width: auto; min-width: 112px; padding-inline: 16px; }
   #kex-root .kex-row__note { margin-left: 0; }

@@ -83,11 +83,13 @@ for (const [kind, id] of Object.entries(COURSES)) {
   await step(`course ${kind}: keys j j j`, async () => { await s.key('j'); await s.key('j'); await s.key('j'); }, { scrollAllowed: true });
   // The side reader narrows the column on purpose; what must not move is the row being read.
   await step(`course ${kind}: preview and close`, async () => {
-    const row = await s.exec(`for (const b of document.querySelectorAll('.kex-row [data-act="preview"]')) { const r = b.getBoundingClientRect(); if (r.top > 120 && r.bottom < innerHeight - 40) return b.closest('.kex-row').dataset.kexRow; } return null;`);
+    // A comfortable row has its own Preview; a list row (compact, the default) opens a file, page or link in the reader when clicked.
+    const PICK = '.kex-row [data-act="preview"], .kex-lrow:is([data-mod="resource"], [data-mod="page"], [data-mod="url"]) .kex-lrow__meta';
+    const row = await s.exec(`for (const b of document.querySelectorAll('${PICK}')) { const r = b.getBoundingClientRect(); if (r.top > 120 && r.bottom < innerHeight - 40) return b.closest('.kex-row').dataset.kexRow; } return null;`);
     if (!row) throw new Error('no material on screen to preview');
     const at = () => s.exec(`return Math.round(document.querySelector('[data-kex-row="${row}"]').getBoundingClientRect().top);`);
     const before = await at();
-    await s.click(`[data-kex-row="${row}"] [data-act="preview"]`);
+    await s.click(`[data-kex-row="${row}"] :is([data-act="preview"], .kex-lrow__meta)`);
     await s.sleep(900);
     const open = await at();
     await s.key('Escape');

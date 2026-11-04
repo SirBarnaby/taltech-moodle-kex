@@ -53,6 +53,13 @@
   --kex-success: #2f8f5b;
   --kex-warning: #c47a00;
   --kex-scrim: rgba(10, 6, 30, 0.35);
+  /* Course page (round 11): topic cards on a soft grey ground, like grouped lists on a phone. */
+  --kex-course-bg: #f1f1f6;
+  --kex-card-bg: #fdfdff;
+  --kex-card-border: rgba(24, 18, 72, 0.08);
+  --kex-card-divider: rgba(24, 18, 72, 0.075);
+  --kex-card-hover: rgba(24, 18, 72, 0.022);
+  --kex-card-shadow: 0 1px 2px rgba(24, 18, 72, 0.04), 0 6px 20px -12px rgba(24, 18, 72, 0.14);
 
   /* Sidebar (light theme; dark steps it down one notch, below) */
   --kex-sb-bg:
@@ -101,8 +108,11 @@
   --kex-r-m: 4px;
   --kex-r-l: 6px;
   --kex-r-xl: 10px;
+  --kex-r-card: 14px;
   --kex-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --kex-ease-slide: cubic-bezier(0.625, 0.05, 0, 1);
+  /* Apple's own curve for folds and sliding segments: quick start, long soft landing, no overshoot. */
+  --kex-ease-card: cubic-bezier(0.32, 0.72, 0, 1);
 
   /* z-index scale */
   --kex-z-header: 40;
@@ -190,6 +200,12 @@
   --kex-focus: #f0a6f8;
   --kex-switch-off: #3a2e62;
   --kex-scrim: rgba(5, 3, 15, 0.55);
+  --kex-course-bg: #0f0b1f;
+  --kex-card-bg: #161130;
+  --kex-card-border: rgba(255, 255, 255, 0.07);
+  --kex-card-divider: rgba(255, 255, 255, 0.06);
+  --kex-card-hover: rgba(255, 255, 255, 0.025);
+  --kex-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px -16px rgba(0, 0, 0, 0.6);
   --kex-shadow-palette: 0 24px 64px -16px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06);
   --kex-shadow-popover: 0 12px 32px -8px rgba(0, 0, 0, 0.55);
   --kex-shadow-compact: 0 6px 24px -12px rgba(0, 0, 0, 0.5);

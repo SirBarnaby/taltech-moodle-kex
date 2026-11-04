@@ -75,6 +75,8 @@ export const MOODLE_KEYS: Partial<Record<MessageKey, Src>> = {
   'course.topicsLess': core('showless'),
   'course.expandAll': core('expandall'),
   'course.collapseAll': core('collapseall'),
+  'row.markDone': mod('course', 'completion_manual:markdone'),
+  'row.isDone': mod('course', 'completion_manual:done'),
   // The dashboard's greeting (Moodle 4.0+), shown in the page band after signing in.
   'handoff.welcome': core('welcomeback'),
 };

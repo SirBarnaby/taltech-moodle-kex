@@ -12,6 +12,9 @@
   .kex-course .kex-hero__inner {
     padding-inline: var(--kex-gutter);
   }
+  .kex-main.kex-course {
+    background: var(--kex-course-bg);
+  }
 
 
   /* ---- folded lab cards ---- */
@@ -93,6 +96,7 @@
   }
   .kex-groupcard__fold {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: 0fr;
     transition: grid-template-rows 220ms var(--kex-ease);
   }
@@ -100,6 +104,7 @@
     grid-template-rows: 1fr;
   }
   .kex-groupcard__foldin {
+    min-width: 0;
     min-height: 0;
     overflow: clip;
   }
@@ -110,88 +115,185 @@
     margin-top: 0;
   }
 
-  /* ---- compact rows: 52 px, one main action; Preview and Pin appear on hover or focus ---- */
+  /* ---- list rows (compact density, round 11): icon tile, title over its meta, then done, pin and open ----
+     Every row runs edge to edge in its card; the whole row opens the material. */
+  .kex-lrow.kex-row {
+    display: grid;
+    /* Fixed places: a row without a completion box keeps its pin and open mark in line with the rows that have one. */
+    grid-template-columns: 44px minmax(0, 1fr) auto 38px 38px;
+    grid-template-areas: "kind text done pin go";
+    column-gap: 16px;
+    align-items: center;
+    min-height: 68px;
+    margin: 0;
+    padding: 10px 14px 10px calc(var(--kex-card-x, 20px) + 14px);
+    cursor: pointer;
+    &::after {
+      left: 0;
+      right: 0;
+      background: var(--kex-card-divider, var(--kex-border));
+    }
+    &:last-child::after {
+      background: transparent;
+    }
+    &:hover {
+      background: var(--kex-hover);
+    }
+    &:focus-visible {
+      outline-offset: -3px;
+      border-radius: 0;
+    }
+    > .kex-kind {
+      grid-area: kind;
+    }
+    > .kex-lrow__text {
+      grid-area: text;
+    }
+    > .kex-done {
+      grid-area: done;
+    }
+    > .kex-lrow__pin {
+      grid-area: pin;
+    }
+    > .kex-lrow__go {
+      grid-area: go;
+    }
+  }
+  .kex-lrow.kex-row--locked {
+    cursor: default;
+  }
+  /* The material open in the side reader: tinted, with the accent edge along the whole row. */
+  .kex-lrow.kex-row--reading::before {
+    top: 0;
+    bottom: 0;
+    border-radius: 0;
+    background: var(--kex-accent);
+  }
+  .kex-kind {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    background: var(--kex-tint);
+    box-shadow: inset 0 0 0 1px var(--kex-tint-border);
+    color: var(--kex-violet);
+  }
+  .kex-lrow__text {
+    min-width: 0;
+  }
+  .kex-lrow__title.kex-row__title {
+    margin: 0;
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .kex-lrow__meta {
+    margin: 2px 0 0;
+    font-size: 14.5px;
+    line-height: 19px;
+    color: var(--kex-text-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .kex-lrow__meta--late {
+    color: var(--kex-magenta);
+  }
+  .kex-lrow__icon {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    color: var(--kex-text-3);
+    transition: background 140ms var(--kex-ease), color 140ms var(--kex-ease);
+    &:hover {
+      background: var(--kex-tint);
+      color: var(--kex-violet);
+    }
+    &:focus-visible {
+      outline-offset: 0;
+    }
+  }
+  .kex-lrow__icon--on {
+    color: var(--kex-violet);
+  }
+  .kex-lrow__go {
+    color: var(--kex-text-2);
+  }
+  span.kex-lrow__go:hover {
+    background: none;
+    color: var(--kex-text-2);
+  }
+  .kex-done {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 36px;
+    margin-right: 8px;
+    padding: 0 10px;
+    border-radius: 9px;
+    font-size: 15px;
+    line-height: 20px;
+    color: var(--kex-text-2);
+    white-space: nowrap;
+    transition: background 140ms var(--kex-ease), color 140ms var(--kex-ease);
+  }
+  button.kex-done:hover {
+    background: var(--kex-tint);
+  }
+  .kex-done__box {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid var(--kex-border-strong);
+    border-radius: 6px;
+    background: var(--kex-card-bg, transparent);
+    color: #fff;
+    transition: background 160ms var(--kex-ease), border-color 160ms var(--kex-ease), transform 160ms var(--kex-ease-card, ease);
+  }
+  .kex-done--on {
+    color: var(--kex-success);
+    .kex-done__box {
+      background: var(--kex-success);
+      border-color: var(--kex-success);
+    }
+    svg path {
+      stroke-dasharray: 24;
+      animation: kex-draw 240ms var(--kex-ease) both;
+    }
+  }
+  button.kex-done:active .kex-done__box {
+    transform: scale(0.9);
+  }
+  .kex-done--auto {
+    padding: 0 9px;
+    color: var(--kex-success);
+  }
+  /* Labels are text between the rows, lined up with the titles. */
   .kex-rows--compact {
-    .kex-row {
-      grid-template-columns: 40px minmax(0, 1fr) auto;
-      column-gap: 16px;
-      min-height: 52px;
-      padding: 6px 12px;
-    }
-    .kex-row--sub {
-      min-height: 52px;
-    }
-    .kex-row > .kex-thumb {
-      align-self: center;
-      width: 40px;
-      height: 30px;
-      border-radius: var(--kex-r-xs);
-      > * { transform: scale(0.42); }
-    }
-    /* The text column dissolves into the row grid: label over title, then the hover actions, then the one button. */
-    .kex-row:not(.kex-row--note) {
-      grid-template-columns: 40px minmax(0, 1fr) auto auto;
-      grid-template-areas: "thumb label acts btn" "thumb title acts btn";
-      row-gap: 2px;
-    }
-    .kex-row > .kex-thumb { grid-area: thumb; }
-    .kex-row__text { display: contents; }
-    .kex-row__label {
-      grid-area: label;
-      align-self: end;
-      font-size: 10.5px;
-      line-height: 13px;
-    }
-    .kex-row__title {
-      grid-area: title;
-      align-self: start;
-      margin-top: 0;
-      font-size: 16px;
-      line-height: 21px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .kex-row__sub,
-    .kex-grade {
-      display: none;
-    }
-    .kex-row__actions {
-      grid-area: acts;
-      align-self: center;
-      margin: 0 8px 0 0;
-      min-height: 0;
-      flex-wrap: nowrap;
-      opacity: 0;
-      transition: opacity 120ms var(--kex-ease);
-    }
-    .kex-row:is(:hover, :focus-within) .kex-row__actions {
-      opacity: 1;
-    }
-    .kex-act + .kex-act {
-      margin-left: 14px;
-      padding-left: 14px;
-    }
-    .kex-act {
-      gap: 8px;
-    }
-    .kex-row > .kex-btn {
-      grid-area: btn;
-      width: auto;
-      min-width: 92px;
-      height: 32px;
-      padding: 0 14px;
-      font-size: 14px;
-      border-radius: var(--kex-r-xs);
+    .kex-row--note {
+      margin: 0;
+      padding: 12px var(--kex-card-x, 20px) 12px calc(var(--kex-card-x, 20px) + 74px);
+      &::after {
+        left: 0;
+        right: 0;
+        background: var(--kex-card-divider, var(--kex-border));
+      }
+      &:hover {
+        background: none;
+      }
     }
     .kex-row__note {
-      margin-left: 56px;
+      margin-left: 0;
       font-size: 15px;
       line-height: 22px;
-    }
-    .kex-row--note {
-      padding-top: 8px;
-      padding-bottom: 8px;
     }
   }
 }
@@ -210,7 +312,13 @@
 }
 @container kexcol (max-width: 660px) {
   #kex-root .kex-group--lab .kex-groupcard__progress { display: none; }
-  #kex-root .kex-rows--compact .kex-row__actions { display: none; }
+  #kex-root .kex-lrow.kex-row { grid-template-columns: 40px minmax(0, 1fr) auto 34px 34px; column-gap: 10px; padding-left: calc(var(--kex-card-x, 14px) + 4px); padding-right: 8px; }
+  #kex-root .kex-kind { width: 40px; height: 40px; border-radius: 10px; }
+  #kex-root .kex-done { margin-right: 0; padding: 0 9px; }
+  /* The box alone; its words stay for screen readers. */
+  #kex-root .kex-done__text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  #kex-root .kex-lrow__icon { width: 34px; height: 34px; }
+  #kex-root .kex-rows--compact .kex-row--note { padding-left: calc(var(--kex-card-x, 14px) + 56px); }
 }
 
 /* ---- series (round 8): done / overdue / next badges on topic chips when the course's

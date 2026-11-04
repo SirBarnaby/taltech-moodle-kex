@@ -21,7 +21,7 @@ import {
   hooks, livePageDoc, pageInfo, settings, sidebarCourses,
 } from '../state';
 import {
-  courseBlocks, courseError, courseEvents, courseEventsReady, courseState, courseStatus, fetchedSummaries, focusZone, foldedTopics, labChoice, previewCmId, rows, secondaryNav, selectedCmId, summaries, tileImages, topicNumber, topics, visibleRows,
+  courseBlocks, courseError, courseEvents, courseEventsReady, courseState, courseStatus, fetchedSummaries, focusZone, foldedTopics, labChoice, pinnedOnly, previewCmId, rows, secondaryNav, selectedCmId, summaries, tileImages, topicNumber, topics, visibleRows,
 } from '../state/course';
 import { go } from './navigate';
 import { pinItem } from './pins';
@@ -89,6 +89,7 @@ export function initCourse(id: number, tiles: readonly Tile[] = []): () => void 
   previewCmId.value = undefined;
   foldedTopics.value = new Set(readCourseUi(id)?.folded ?? []);
   labChoice.value = new Map();
+  pinnedOnly.value = false;
   hydrateDetails(id);
   noteCourseVisit(id);
 
@@ -397,6 +398,13 @@ export function foldAll(fold: boolean): void {
   writeCourseUi(courseId, { folded: [...next] });
 }
 
+/** "Pinned" in the Learning materials bar: the page keeps its length until the reader scrolls up, so nothing on screen moves. */
+export function setPinnedOnly(on: boolean): void {
+  if (on === pinnedOnly.value) return;
+  holdPageEnd();
+  pinnedOnly.value = on;
+}
+
 /** Open or fold one lab. */
 export function setGroupOpen(id: number, open: boolean): void {
   if (!open) holdPageEnd();
@@ -472,6 +480,13 @@ export function openCm(row: RowModel, newTab = false): void {
     return;
   }
   openCmOriginal(row, newTab);
+}
+
+/** Whether a plain click on the material leaves for a new tab (instead of the side reader or this tab). */
+export function opensInNewTab(row: RowModel): boolean {
+  const pref = settings.value.openInNewTab;
+  if (pref !== 'always' && isReadableMaterial(row)) return false;
+  return pref === 'always' || (pref === 'external' && row.cm.modname === 'url');
 }
 
 /** Explicit escape to Moodle's original page; reader controls must not reopen the reader. */
