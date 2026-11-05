@@ -1,3 +1,4 @@
+import { ChevronDown, Info } from 'lucide-preact';
 import { useEffect } from 'preact/hooks';
 import { dashboardStore } from '../../data/repo/dashboard';
 import { homeUrl } from '../../actions/navigate';
@@ -15,7 +16,11 @@ export function MoodleInfo() {
     <section class="kex-moodle-info" aria-label={t('home.info')} data-kex-test="moodle-info">
       {(blocks.some((b) => !b.notice) || references.length > 0) && (
         <details class="kex-moodle-info__details">
-          <summary>{t('home.info')}</summary>
+          <summary>
+            <Info class="kex-moodle-info__icon" size={17} strokeWidth={1.8} aria-hidden="true" />
+            <span>{t('home.info')}</span>
+            <ChevronDown class="kex-moodle-info__chev" size={16} strokeWidth={2} aria-hidden="true" />
+          </summary>
           <div class="kex-moodle-info__grid">
             {blocks.filter((b) => !b.notice).map((b, i) => <article key={i}><h2>{b.title}</h2><div dangerouslySetInnerHTML={{ __html: b.html }} /></article>)}
           </div>

@@ -1,70 +1,102 @@
 /* My courses (page-designs §4). */
 #kex-root {
-  .kex-mcbar {
-    margin-top: 0;
-    align-items: flex-end;
-    gap: 24px;
-    flex-wrap: wrap;
+  /* Round 11 look: the course cards on the same soft grey ground as the course page, the filters as one segmented control. */
+  .kex-main.kex-mycourses {
+    background: var(--kex-course-bg);
   }
-  /* The course filters stay one line each: a row that does not fit scrolls sideways (fading out at the edge) instead of breaking
-     labels like "Vaatest eemaldatud kursused" over two lines. The lit tab keeps the same size as the others. */
+  .kex-mcbar {
+    align-items: center;
+    gap: 12px 16px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+    border-bottom: 0;
+  }
+  /* The tabs keep their natural width; a row that does not fit scrolls sideways instead of breaking labels like
+     "Vaatest eemaldatud kursused" over two lines, and the tools move to the next line. */
   .kex-mcbar .kex-tabs {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
     max-width: 100%;
-    gap: 2px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
-    mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
   }
   .kex-mcbar .kex-tab {
     flex: none;
-    padding: 5px 14px 0;
     white-space: nowrap;
-    &:first-of-type {
-      padding-left: 2px;
-    }
-    &:last-of-type {
-      padding-right: 28px;
-    }
-  }
-  .kex-mcbar .kex-tab--active,
-  .kex-mcbar .kex-tab__ghost {
-    font-size: 16px;
   }
   .kex-mcbar__tools {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 16px;
-    padding-bottom: 8px;
+    gap: 10px 12px;
+    margin-left: auto;
   }
+  /* Sort: the same segmented look as the tabs, a raised pill on the chosen option. */
   .kex-mcbar .kex-segmented {
-    height: 36px;
+    gap: 2px;
+    height: 40px;
+    padding: 3px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--kex-pill-track);
+    box-shadow: inset 0 0 0 1px var(--kex-card-border);
   }
   .kex-mcbar .kex-segmented__opt {
     flex: 0 0 auto;
     padding: 0 14px;
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--kex-text-2);
     white-space: nowrap;
+    & + & {
+      border-left: 0;
+    }
+    &:hover:not([aria-checked="true"]) {
+      background: var(--kex-pill-hover);
+      color: var(--kex-text);
+    }
+    &[aria-checked="true"] {
+      background: var(--kex-pill-thumb);
+      color: var(--kex-violet);
+      font-weight: 600;
+      box-shadow: var(--kex-pill-shadow);
+    }
   }
   .kex-mcfilter {
+    position: relative;
     display: block;
   }
+  .kex-mcfilter__icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--kex-text-3);
+    pointer-events: none;
+  }
   .kex-mcfilter__input {
-    width: 280px;
-    height: 36px;
-    padding: 0 12px;
-    border: 1px solid var(--kex-search-border);
-    border-radius: var(--kex-r-s);
-    background: var(--kex-bg);
+    width: min(340px, 100%);
+    height: 40px;
+    padding: 0 14px 0 38px;
+    border: 1px solid var(--kex-card-border);
+    border-radius: 11px;
+    background: var(--kex-card-bg);
+    box-shadow: var(--kex-card-shadow);
     color: var(--kex-text);
     font-size: 15px;
+    transition: border-color 140ms var(--kex-ease), box-shadow 140ms var(--kex-ease);
     &::placeholder {
       color: var(--kex-text-3);
     }
+    &:hover {
+      border-color: var(--kex-tint-border);
+    }
     &:focus-visible {
-      outline: 2px solid var(--kex-focus);
-      outline-offset: 1px;
+      outline: none;
+      border-color: var(--kex-accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--kex-accent) 22%, transparent);
     }
   }
   .kex-mclist {
@@ -86,10 +118,11 @@
     flex-direction: column;
     min-width: 0;
     overflow: hidden;
-    border: 1px solid var(--kex-border-card, var(--kex-border));
-    border-radius: var(--kex-r-l);
-    background: var(--kex-bg);
-    transition: background-color 120ms var(--kex-ease), border-color 120ms var(--kex-ease);
+    border: 1px solid var(--kex-card-border);
+    border-radius: var(--kex-r-card);
+    background: var(--kex-card-bg);
+    box-shadow: var(--kex-card-shadow);
+    transition: border-color 160ms var(--kex-ease), box-shadow 220ms var(--kex-ease), transform 220ms var(--kex-ease-card);
     &::before {
       content: "";
       position: absolute;
@@ -101,8 +134,7 @@
     }
     &:hover,
     &:focus-within {
-      background: var(--kex-hover);
-      border-color: var(--kex-mc-accent);
+      border-color: color-mix(in srgb, var(--kex-mc-accent) 45%, var(--kex-card-border));
     }
     &:focus-visible {
       outline: 2px solid var(--kex-focus);
@@ -130,7 +162,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding-bottom: 14px;
+    padding-bottom: 16px;
     color: var(--kex-text);
     &:hover .kex-mc__name {
       color: var(--kex-violet);
@@ -139,7 +171,7 @@
   .kex-mc__img {
     display: block;
     width: 100%;
-    height: 92px;
+    height: 112px;
     object-fit: cover;
     background: var(--kex-border);
   }
@@ -148,15 +180,16 @@
     place-items: center;
     background: linear-gradient(135deg, hsl(calc(255deg + var(--kex-ph) * 1deg) 62% 30%), hsl(calc(285deg + var(--kex-ph) * 1deg) 72% 40%));
     color: rgba(255, 255, 255, 0.82);
-    font-size: 13px;
-    letter-spacing: 0.08em;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
   }
   .kex-mc__text {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     min-width: 0;
-    padding: 0 16px;
+    padding: 4px 18px 0;
   }
   .kex-mc__code {
     font-size: 11px;
@@ -168,7 +201,8 @@
   .kex-mc__name {
     font-size: 17px;
     line-height: 22px;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -189,17 +223,19 @@
     align-items: center;
     gap: 10px;
     min-height: 14px;
-    padding: 0 16px;
+    margin-top: auto;
+    padding: 0 18px;
   }
   .kex-mc__bar {
     flex: 1 1 auto;
-    height: 3px;
-    border-radius: 3px;
+    height: 6px;
+    border-radius: 6px;
     overflow: hidden;
     background: var(--kex-border);
     i {
       display: block;
       height: 100%;
+      border-radius: inherit;
       background: var(--kex-mc-accent);
     }
   }
@@ -213,15 +249,23 @@
     font-variant-numeric: tabular-nums;
   }
   .kex-mc__access {
-    padding: 0 16px;
-    font-size: 11px;
-    line-height: 14px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    color: var(--kex-mono-soft);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 0 18px;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--kex-text-3);
+    svg {
+      flex: none;
+      opacity: 0.8;
+    }
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
   /* Star and hide sit on the image corner. */
   .kex-mc__tools {
@@ -232,16 +276,19 @@
     display: flex;
     align-items: center;
     gap: 2px;
-    padding: 2px;
-    border-radius: var(--kex-r-l);
-    background: color-mix(in srgb, var(--kex-bg) 88%, transparent);
+    padding: 3px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--kex-card-bg) 72%, transparent);
+    box-shadow: 0 2px 10px -4px rgba(0, 0, 0, 0.25);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    backdrop-filter: blur(12px) saturate(160%);
   }
   .kex-mc__tool {
     display: grid;
     place-items: center;
     width: 32px;
     height: 32px;
-    border-radius: var(--kex-r-s);
+    border-radius: 9px;
     color: var(--kex-iconbtn-fg);
     transition: background-color 120ms var(--kex-ease), color 120ms var(--kex-ease), transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
     &:hover {
@@ -253,14 +300,14 @@
     color: var(--kex-violet);
   }
   .kex-mc--skel {
-    min-height: 210px;
+    min-height: 260px;
     padding: 12px;
   }
   .kex-skel--mc {
     display: block;
     width: 100%;
     height: 100%;
-    min-height: 184px;
+    min-height: 234px;
   }
   .kex-mcrows--skel .kex-mc {
     pointer-events: none;

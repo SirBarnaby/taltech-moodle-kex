@@ -1,4 +1,4 @@
-import { EyeOff, Eye, Star } from 'lucide-preact';
+import { Clock, EyeOff, Eye, Search, Star } from 'lucide-preact';
 import { SiteNotices } from '../components/SiteNotices';
 import { Reveal } from '../components/Reveal';
 import { useEffect, useRef, useState } from 'preact/hooks';
@@ -74,7 +74,10 @@ function CourseRow({ course, selected, index, access, now, bySchool }: { course:
             </>
           )}
         </span>
-        <span class="kex-mc__access kex-mono">{access ? t('mc.accessed', { rel: relTime(access - now).toUpperCase() }) : t('mc.never')}</span>
+        <span class="kex-mc__access">
+          <Clock size={13} strokeWidth={1.8} aria-hidden="true" />
+          <span>{access ? t('mc.accessed', { rel: relTime(access - now) }) : t('mc.never')}</span>
+        </span>
       </a>
       <span class="kex-mc__tools">
         <button
@@ -148,10 +151,11 @@ export function MyCoursesView() {
           <SiteNotices />
         </Reveal>
         <div class="kex-matheader kex-mcbar">
-          <Tabs<CoursesTab> value={tab} onChange={setMcTab} items={tabs} label={t('mc.tabs')} idPrefix="kex-mc-tab" panelId="kex-mc-panel" />
+          <Tabs<CoursesTab> value={tab} onChange={setMcTab} items={tabs} label={t('mc.tabs')} idPrefix="kex-mc-tab" panelId="kex-mc-panel" variant="pill" />
           <div class="kex-mcbar__tools">
             <label class="kex-mcfilter">
               <span class="kex-sr">{t('mc.filter')}</span>
+              <Search class="kex-mcfilter__icon" size={17} strokeWidth={1.8} aria-hidden="true" />
               <input
                 ref={input}
                 type="search"
@@ -173,7 +177,7 @@ export function MyCoursesView() {
                 }}
               />
             </label>
-            <Segmented<McSort> value={sort} options={sortOptions} onChange={setMcSort} label={t('mc.sort')} slide />
+            <Segmented<McSort> value={sort} options={sortOptions} onChange={setMcSort} label={t('mc.sort')} />
           </div>
         </div>
         <section id="kex-mc-panel" role="tabpanel" aria-labelledby={`kex-mc-tab-${tab}`} class="kex-mclist" data-kex-test="mc-panel">

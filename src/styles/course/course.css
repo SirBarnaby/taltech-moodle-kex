@@ -285,6 +285,52 @@
     pointer-events: none;
     transition: transform 220ms var(--kex-ease), opacity 120ms linear;
   }
+  /* Tabs as a segmented control (`variant="pill"`): a sunken track, the lit tab on a raised pill that slides under it. */
+  .kex-tabs--pill {
+    isolation: isolate;
+    height: 44px;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 12px;
+    background: var(--kex-pill-track);
+    box-shadow: inset 0 0 0 1px var(--kex-card-border);
+    .kex-tab {
+      z-index: 1;
+      padding: 0 16px;
+      border-radius: 9px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--kex-text-2);
+      transition: color 160ms var(--kex-ease), background-color 160ms var(--kex-ease);
+      &:last-of-type {
+        padding-right: 16px;
+      }
+      &:hover:not(.kex-tab--active) {
+        background: var(--kex-pill-hover);
+        color: var(--kex-text);
+      }
+      &:focus-visible {
+        outline-offset: -2px;
+      }
+    }
+    .kex-tab--active {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--kex-violet);
+    }
+    .kex-tab__ghost {
+      font-size: 15px;
+    }
+    .kex-tabs__bar {
+      top: 4px;
+      bottom: 4px;
+      height: auto;
+      border-radius: 9px;
+      background: var(--kex-pill-thumb);
+      box-shadow: var(--kex-pill-shadow);
+      transition: transform 340ms var(--kex-ease-card), width 340ms var(--kex-ease-card), opacity 120ms linear;
+    }
+  }
 
   /* Topics remain a single strip, leaving the full reading width to the selected section. */
   .kex-body {

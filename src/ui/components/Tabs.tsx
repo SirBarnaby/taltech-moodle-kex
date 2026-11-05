@@ -24,6 +24,8 @@ interface TabsProps<K extends string = 'all' | 'lectures' | 'labs'> {
   /** `data-tab` ids and `id`s are prefixed with this. */
   idPrefix?: string;
   panelId?: string;
+  /** 'line': a sliding underline under the text (default). 'pill': a segmented control whose lit pill slides under the whole tab. */
+  variant?: 'line' | 'pill';
 }
 
 /** Everything / Lectures / Labs with a sliding underline. ARIA tabs with arrow-key navigation. */
@@ -37,7 +39,8 @@ export function TabLabel({ text }: { text: string }) {
   );
 }
 
-export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, onChange, items, label, idPrefix = 'kex-tab', panelId = 'kex-tabpanel' }: TabsProps<K>) {
+export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, onChange, items, label, idPrefix = 'kex-tab', panelId = 'kex-tabpanel', variant = 'line' }: TabsProps<K>) {
+  const pill = variant === 'pill';
   const TABS = (items ?? COURSE_TABS) as readonly TabDef<K>[];
   const list = useRef<HTMLDivElement>(null);
   const [bar, setBar] = useState({ left: 0, width: 0, ready: false, anim: false });
@@ -47,6 +50,7 @@ export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, on
       const el = list.current?.querySelector<HTMLElement>(`[data-tab="${value}"]`);
       const box = list.current;
       if (!el || !box) return;
+      if (pill) return setBar((b) => ({ left: el.offsetLeft, width: el.offsetWidth, ready: true, anim: b.ready }));
       const text = el.querySelector<HTMLElement>('.kex-tab__label') ?? el;
       const left = text.offsetLeft + el.offsetLeft - 9;
       setBar((b) => ({ left, width: text.offsetWidth + 18, ready: true, anim: b.ready }));
@@ -56,7 +60,7 @@ export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, on
     if (list.current) ro.observe(list.current);
     document.fonts?.ready.then(place).catch(() => undefined);
     return () => ro.disconnect();
-  }, [value]);
+  }, [value, pill]);
 
   const onKey = (e: KeyboardEvent): void => {
     const i = TABS.findIndex((x) => x.key === value);
@@ -70,7 +74,7 @@ export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, on
   };
 
   return (
-    <div class="kex-tabs" role="tablist" aria-label={label ?? t('course.tabs')} ref={list} onKeyDown={onKey}>
+    <div class={`kex-tabs${pill ? ' kex-tabs--pill' : ''}`} role="tablist" aria-label={label ?? t('course.tabs')} ref={list} onKeyDown={onKey}>
       {TABS.map((tb) => (
         <button
           key={tb.key}
@@ -92,7 +96,13 @@ export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, on
         class="kex-tabs__bar"
         data-kex-test="tab-underline"
         aria-hidden="true"
-        style={{ transform: `translateX(${bar.left}px) scaleX(${bar.width})`, opacity: bar.ready ? 1 : 0, transition: bar.anim ? undefined : 'none' }}
+        style={{
+          // The pill keeps its rounded ends, so it takes a width; the underline is a 1 px line scaled (transform only).
+          transform: pill ? `translateX(${bar.left}px)` : `translateX(${bar.left}px) scaleX(${bar.width})`,
+          width: pill ? `${bar.width}px` : undefined,
+          opacity: bar.ready ? 1 : 0,
+          transition: bar.anim ? undefined : 'none',
+        }}
       />
     </div>
   );
