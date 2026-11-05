@@ -6,7 +6,25 @@
   .kex-wssearch { display: block; margin: 10px 0 14px; }
   .kex-wssearch input { width: 100%; min-width: 0; min-height: 40px; padding: 9px 12px; border: 1px solid var(--kex-border); border-radius: var(--kex-r-s); background: var(--kex-bg); color: var(--kex-text); font: 14px/20px var(--kex-font-ui); }
   .kex-wssearch--feed { margin: 0 0 20px; }
-  .kex-feed__more { margin-top: 24px; }
+  /* "Show more" under the feed: a soft card button in the middle, as wide as its words. */
+  .kex-more {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    margin: 28px auto 0;
+    padding: 0 16px 0 18px;
+    border: 1px solid var(--kex-card-border, var(--kex-border));
+    border-radius: 999px;
+    background: var(--kex-card-bg, var(--kex-bg));
+    box-shadow: var(--kex-card-shadow, none);
+    color: var(--kex-text);
+    font: 500 14.5px/1 var(--kex-font-ui);
+    white-space: nowrap;
+    cursor: pointer;
+    svg { color: var(--kex-text-3); }
+    &:hover { background: var(--kex-card-hover, var(--kex-hover)); }
+  }
   .kex-hero--ws .kex-hero__title {
     max-width: 100%;
     font-size: clamp(40px, 3.3vw, 72px);

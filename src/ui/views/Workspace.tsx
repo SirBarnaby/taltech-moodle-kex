@@ -1,4 +1,4 @@
-import { ArrowUpRight, Bell, CircleCheck, Eye, Megaphone, MessagesSquare, Pin as PinIcon, X } from 'lucide-preact';
+import { ArrowUpRight, Bell, ChevronDown, CircleCheck, Eye, Megaphone, MessagesSquare, Pin as PinIcon, X } from 'lucide-preact';
 import { SiteNotices } from '../components/SiteNotices';
 import { Reveal } from '../components/Reveal';
 import { Fragment } from 'preact';
@@ -420,7 +420,12 @@ export function WorkspaceView() {
                 })}
               </ul>
             )}
-            {total > list.length && <Button variant="outlined" arrow={false} class="kex-feed__more" onClick={() => { feedLimit.value += 24; }}>{t('ws.showMore', { n: total - list.length })}</Button>}
+            {total > list.length && (
+              <button type="button" class="kex-more kex-feed__more" onClick={() => { feedLimit.value += 24; }}>
+                <span>{t('ws.showMore', { n: total - list.length })}</span>
+                <ChevronDown size={16} strokeWidth={1.9} aria-hidden="true" />
+              </button>
+            )}
           </section>
         </div>
       </div>

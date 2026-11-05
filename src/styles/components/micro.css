@@ -43,13 +43,13 @@
 
 /* ---- press feedback ---- */
 :root:not([data-kex-effects="off"]):not([data-kex-motion="reduced"]) #kex-root {
-  :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt) {
+  :is(.kex-btn, .kex-more, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt) {
     transition: transform var(--kex-motion-press, 120ms) var(--kex-ease-out), background-color var(--kex-motion-press, 120ms) var(--kex-ease-out), color var(--kex-motion-press, 120ms) var(--kex-ease-out), border-color var(--kex-motion-press, 120ms) var(--kex-ease-out);
   }
   :is(.kex-mc, .kex-wc, .kex-row, .kex-groupcard) {
     transition: transform var(--kex-motion-press, 120ms) var(--kex-ease-out), box-shadow var(--kex-motion-focus, 160ms) var(--kex-ease-out), background-color var(--kex-motion-press, 120ms) var(--kex-ease-out), border-color var(--kex-motion-press, 120ms) var(--kex-ease-out);
   }
-  :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc):active {
+  :is(.kex-btn, .kex-more, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc):active {
     transform: scale(0.97);
   }
   /* Full-width rows would visibly shrink at .97: they take a smaller step. A list row in a topic card runs edge to edge in it, so
@@ -61,7 +61,7 @@
     background: var(--kex-tint);
   }
 }
-:root:is([data-kex-input="keyboard"]) #kex-root :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc, .kex-row, .kex-groupcard):active {
+:root:is([data-kex-input="keyboard"]) #kex-root :is(.kex-btn, .kex-more, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc, .kex-row, .kex-groupcard):active {
   transform: none;
 }
 
@@ -73,6 +73,13 @@
   }
   :root[data-kex-effects="animated"]:not([data-kex-motion="reduced"]) #kex-root .kex-mc:hover:active {
     transform: translateY(0) scale(0.97);
+  }
+  /* "Show more": its chevron nods down. */
+  :root[data-kex-effects="animated"]:not([data-kex-motion="reduced"]) #kex-root .kex-more svg {
+    transition: transform 200ms var(--kex-ease-out);
+  }
+  :root[data-kex-effects="animated"]:not([data-kex-motion="reduced"]) #kex-root .kex-more:hover svg {
+    transform: translateY(2px);
   }
 }
 
@@ -109,7 +116,7 @@
   #kex-root :is(.kex-grade-meter__fill, .kex-mc__bar > i, .kex-wc__bar > i, .kex-hero__bar > b, .kex-groupcard__bar > span, .kex-act--done svg) {
     animation: none !important;
   }
-  #kex-root :is(.kex-btn, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc, .kex-row, .kex-groupcard):active {
+  #kex-root :is(.kex-btn, .kex-more, .kex-iconbtn, .kex-act, .kex-mc__tool, .kex-segmented__opt, .kex-mc, .kex-wc, .kex-row, .kex-groupcard):active {
     transform: none !important;
   }
 }
