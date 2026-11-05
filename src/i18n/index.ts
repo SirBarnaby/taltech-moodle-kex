@@ -34,6 +34,9 @@ export function t(key: MessageKey, params?: Record<string, string | number>): st
   return s;
 }
 
+/** Moodle's greeting with the first name in it: Moodle 4.5 words it "Hi, {$a->firstname}! 👋", older ones "Welcome back, {$a}! 👋". */
+export const greeting = (name: string): string => t('handoff.welcome').replace(/\{\$a(?:->\w+)?\}/g, name);
+
 /** Dates use the UI language's locale, 24 h, the browser's timezone. */
 export function formatDate(d: Date | number, opts: Intl.DateTimeFormatOptions): string {
   return new Intl.DateTimeFormat(lang.value === 'et' ? 'et-EE' : 'en-GB', { hour12: false, ...opts }).format(d);

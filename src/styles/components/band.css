@@ -84,6 +84,23 @@
     line-height: 20px;
     color: var(--kex-hero-link);
   }
+  /* Participants, Grades, Competencies and the course's other pages: the course's tabs under the title, the same glass control as in
+     the course hero, so moving between the tabs keeps one header. The band grows by the control's height. */
+  .kex-band--nav {
+    height: auto;
+    min-height: 132px;
+    .kex-band__inner {
+      height: auto;
+      padding-bottom: 24px;
+    }
+    /* The title can arrive a moment after the band: its line is held, so the tabs under it never move down. */
+    .kex-band__title {
+      min-height: 1lh;
+    }
+    .kex-coursenav {
+      margin-top: 20px;
+    }
+  }
   .kex-band__meta > * + *::before {
     content: none;
   }

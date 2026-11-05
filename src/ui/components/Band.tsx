@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { arrivalWelcome, WELCOME_MS } from '../../fx/handoff';
 import { heroCanvas } from '../../fx/heroCanvas';
-import { t } from '../../i18n';
+import { greeting } from '../../i18n';
 import { firstName } from '../../lib/contacts';
 import { activeRibbons, user } from '../../state';
 import { heroEffectMode } from '../../state/effects';
@@ -19,6 +19,8 @@ interface BandProps {
   actions?: ComponentChildren;
   /** Line under the title (activity meta: due date, completion). */
   meta?: ComponentChildren;
+  /** Under the title: the course's own tabs on the course pages Moodle draws itself (Participants, Grades, …). */
+  nav?: ComponentChildren;
   testId?: string;
 }
 
@@ -26,7 +28,7 @@ interface BandProps {
  * PageChrome / ActivityChrome band (page-designs §0): the hero treatment at 40% shader intensity, one crosshair, a mono label,
  * a slide-up title and optional actions.
  */
-export function Band({ label, title, size = 'page', actions, meta, testId = 'band' }: BandProps) {
+export function Band({ label, title, size = 'page', actions, meta, nav, testId = 'band' }: BandProps) {
   const style = activeRibbons.value;
   const mode = heroEffectMode.value;
   const root = useRef<HTMLElement>(null);
@@ -45,17 +47,18 @@ export function Band({ label, title, size = 'page', actions, meta, testId = 'ban
     return () => window.clearTimeout(id);
   }, [!!name]);
   return (
-    <section class={`kex-band kex-band--${size}${title.length > 44 ? ' kex-band--long' : ''}`} ref={root} data-kex-test={testId} data-mode={mode}>
+    <section class={`kex-band kex-band--${size}${title.length > 44 ? ' kex-band--long' : ''}${nav ? ' kex-band--nav' : ''}`} ref={root} data-kex-test={testId} data-mode={mode}>
       <Crosshair class="kex-cross--b" />
       <div class="kex-band__inner">
         <div class="kex-band__text">
           {name ? (
-            <p class="kex-band__label kex-band__hello" key="hello" data-kex-test={`${testId}-hello`}>{t('handoff.welcome', { $a: name })}</p>
+            <p class="kex-band__label kex-band__hello" key="hello" data-kex-test={`${testId}-hello`}>{greeting(name)}</p>
           ) : (
             <p class="kex-band__label kex-mono" key="label" data-kex-test={`${testId}-label`}>{label}</p>
           )}
           <SlideUpText as="h1" class="kex-band__title" testId={`${testId}-title`} text={title} split="words" stagger={0.06} duration={0.7} delay={0.05} />
           {meta && <div class="kex-band__meta" data-kex-test={`${testId}-meta`}>{meta}</div>}
+          {nav}
         </div>
         {actions && <div class="kex-band__actions">{actions}</div>}
       </div>

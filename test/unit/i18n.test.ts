@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cache } from '../../src/data/cache';
 import { ws } from '../../src/data/ws';
-import { lang, moodleStrings, t } from '../../src/i18n';
+import { greeting, lang, moodleStrings, t } from '../../src/i18n';
 import { MOODLE_KEYS, stringsCacheName, watchMoodleStrings } from '../../src/i18n/moodle';
 import { en } from '../../src/i18n/en';
 import { et } from '../../src/i18n/et';
@@ -37,7 +37,7 @@ describe('Moodle strings', () => {
       return wire({ 'moodle/myhome': 'Töölaud', 'moodle/mycourses': 'Minu kursused', 'moodle/courses': 'Kursused', 'moodle/calendar': '[[calendar]]' })(url, init);
     });
     lang.value = 'et';
-    const stop = watchMoodleStrings(() => 'et');
+    const stop = watchMoodleStrings();
     await new Promise((r) => setTimeout(r, 30));
     expect(posts).toEqual(['core_get_strings']);
     expect(t('nav.workspace')).toBe(et['nav.workspace']); // the Workspace is KEX's own name, not Moodle's Dashboard
@@ -58,7 +58,7 @@ describe('Moodle strings', () => {
       return new Response('[]');
     });
     lang.value = 'et';
-    const stop = watchMoodleStrings(() => 'et');
+    const stop = watchMoodleStrings();
     await new Promise((r) => setTimeout(r, 20));
     expect(calls).toBe(0);
     expect(t('nav.mycourses')).toBe('Minu kursused');
@@ -67,7 +67,7 @@ describe('Moodle strings', () => {
     expect(t('nav.mycourses')).toBe(en['nav.mycourses']);
   });
 
-  it('asks for a language explicitly only when it is not the page language, and survives a failing service', async () => {
+  it('always names the language it asks for, and survives a failing service', async () => {
     cache.bind('h', 1);
     const seen: (string | undefined)[] = [];
     ws.setHttp(async (_u, init) => {
@@ -76,10 +76,38 @@ describe('Moodle strings', () => {
       return new Response(JSON.stringify([{ error: true, exception: { errorcode: 'invalidparameter', message: 'x' } }]));
     });
     lang.value = 'et';
-    const stop = watchMoodleStrings(() => 'en');
+    const stop = watchMoodleStrings();
     await new Promise((r) => setTimeout(r, 20));
     expect(seen).toEqual(['et']);
     expect(t('nav.mycourses')).toBe(et['nav.mycourses']);
     stop();
+  });
+
+  it('drops words Moodle answers in another language', async () => {
+    cache.bind('h', 1);
+    ws.configure('http://h', 'sk');
+    ws.setHttp(async (_u, init) => {
+      const b = JSON.parse(String(init?.body))[0] as { args: { strings: { stringid: string; component: string }[] } };
+      return new Response(JSON.stringify([{ error: false, data: b.args.strings.map((x) => ({ ...x, lang: x.stringid === 'preferences' ? 'et' : 'en', string: x.stringid === 'preferences' ? 'Eelistused' : x.stringid === 'mycourses' ? 'My courses (Moodle)' : `[[${x.stringid}]]` })) }]));
+    });
+    lang.value = 'en';
+    const stop = watchMoodleStrings();
+    await new Promise((r) => setTimeout(r, 30));
+    expect(t('nav.mycourses')).toBe('My courses (Moodle)');
+    expect(t('nav.preferences')).toBe(en['nav.preferences']);
+    stop();
+  });
+});
+
+describe('Moodle greeting', () => {
+  afterEach(() => {
+    moodleStrings.value = undefined;
+    lang.value = 'en';
+  });
+
+  it('puts the first name in both of Moodle\'s wordings', () => {
+    expect(greeting('Marten')).toBe('Welcome back, Marten! 👋');
+    moodleStrings.value = { forLang: 'en', map: { 'handoff.welcome': 'Hi, {$a->firstname}! 👋' } };
+    expect(greeting('Marten')).toBe('Hi, Marten! 👋');
   });
 });

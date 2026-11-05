@@ -35,6 +35,13 @@
     text-transform: uppercase;
     color: var(--kex-sb-label);
   }
+  /* Segment labels stay on one line ("Mitte kunagi"), the segments equal. */
+  .kex-pop__section .kex-segmented__opt {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 6px;
+    white-space: nowrap;
+  }
   .kex-pop__row {
     display: flex;
     align-items: center;

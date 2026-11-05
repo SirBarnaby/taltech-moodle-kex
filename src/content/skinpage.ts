@@ -1,3 +1,4 @@
+import { scrapeSecondaryNav, type NavTab } from '../data/scrape/secondarynav';
 import { SEL } from '../data/selectors';
 import { cleanText, qs, qsa } from '../lib/dom';
 
@@ -26,6 +27,16 @@ export interface SkinPage {
   error?: { code: string; message: string };
   /** The calendar page: the heading of the current view ("October 2026") and Moodle's own view switch. */
   calendar?: { heading: string; views: { view: string; label: string; active: boolean }[] };
+  /**
+   * The course's own tabs (Course, Participants, Grades, Competencies, …) on the course pages Moodle draws itself, for the band.
+   * Empty elsewhere: an activity's tabs have no "coursehome" entry and stay Moodle's.
+   */
+  courseTabs: NavTab[];
+}
+
+export function parseCourseTabs(doc: Document): NavTab[] {
+  const tabs = scrapeSecondaryNav(doc);
+  return tabs.some((x) => x.key === 'coursehome') ? tabs : [];
 }
 
 export function parseCalendar(doc: Document): SkinPage['calendar'] {
@@ -107,5 +118,6 @@ export function parseSkinPage(doc: Document): SkinPage {
     urlTarget: doc.querySelector<HTMLAnchorElement>('.urlworkaround a[href]')?.href ?? undefined,
     error: parseError(doc),
     calendar: parseCalendar(doc),
+    courseTabs: parseCourseTabs(doc),
   };
 }

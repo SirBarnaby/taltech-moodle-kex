@@ -8,7 +8,10 @@ import { Slider } from '../components/Slider';
 import { Switch } from '../components/Switch';
 import { Popover } from './Popover';
 
-/** Quick settings popover (sidebar Settings): theme, shader effects, motion, "KEX on this page". */
+/**
+ * Quick settings popover (sidebar Settings): the look (theme, school colours, animated headers, animations), course pages (compact
+ * lists, labs board, rolling edges, new tabs), achievement messages and "KEX on this page". Labels are the same as on the All settings page.
+ */
 export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
   const s = settings.value;
   const close = (): void => {
@@ -30,6 +33,10 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
         />
       </div>
       <div class="kex-pop__row">
+        <label class="kex-pop__rowlabel" for="kex-qs-school">{t('ext.colourSchool')}</label>
+        <Switch id="kex-qs-school" label={t('ext.colourSchool')} checked={s.colourBySchool} onChange={(colourBySchool) => updateSettings({ colourBySchool })} />
+      </div>
+      <div class="kex-pop__row">
         <label class="kex-pop__rowlabel" for="kex-qs-effects">{t('settings.effects')}</label>
         <Switch id="kex-qs-effects" label={t('settings.effects')} checked={s.effects !== 'off'} onChange={(on) => updateSettings({ effects: on ? 'animated' : 'off' })} />
       </div>
@@ -46,9 +53,14 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
           ]}
         />
       </div>
+      <div class="kex-pop__divider" />
       <div class="kex-pop__row">
         <label class="kex-pop__rowlabel" for="kex-qs-compact">{t('settings.compact')}</label>
         <Switch id="kex-qs-compact" label={t('settings.compact')} checked={s.density === 'compact'} onChange={(on) => updateSettings({ density: on ? 'compact' : 'comfortable' })} />
+      </div>
+      <div class="kex-pop__row">
+        <label class="kex-pop__rowlabel" for="kex-qs-labs">{t('ext.labsView')}</label>
+        <Switch id="kex-qs-labs" label={t('ext.labsView')} checked={s.labsView === 'auto'} onChange={(on) => updateSettings({ labsView: on ? 'auto' : 'off' })} />
       </div>
       <div class="kex-pop__row">
         <label class="kex-pop__rowlabel" for="kex-qs-wheel">{t('settings.wheel')}</label>
@@ -58,6 +70,26 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
         <div class="kex-pop__section">
           <label class="kex-pop__label" for="kex-qs-wheelk">{t('settings.wheelIntensity')}</label>
           <Slider id="kex-qs-wheelk" label={t('settings.wheelIntensity')} value={s.wheelIntensity} onChange={(wheelIntensity) => updateSettings({ wheelIntensity })} />
+        </div>
+      )}
+      <div class="kex-pop__section">
+        <div class="kex-pop__label">{t('ext.newTab')}</div>
+        <Segmented
+          label={t('ext.newTab')}
+          value={s.openInNewTab}
+          onChange={(openInNewTab) => updateSettings({ openInNewTab })}
+          options={[
+            { value: 'never', label: t('ext.newTab.never') },
+            { value: 'external', label: t('ext.newTab.external') },
+            { value: 'always', label: t('ext.newTab.always') },
+          ]}
+        />
+      </div>
+      <div class="kex-pop__divider" />
+      {s.achievements && (
+        <div class="kex-pop__row">
+          <label class="kex-pop__rowlabel" for="kex-qs-toasts">{t('ext.achievementToasts')}</label>
+          <Switch id="kex-qs-toasts" label={t('ext.achievementToasts')} checked={s.achievementToasts} onChange={(achievementToasts) => updateSettings({ achievementToasts })} />
         </div>
       )}
       <div class="kex-pop__row">
@@ -89,7 +121,7 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
         }}
       >
         <SlidersHorizontal size={15} strokeWidth={1.75} aria-hidden="true" />
-        {t('nav.preferences')}
+        {t('settings.moodlePrefs')}
       </a>
     </Popover>
   );

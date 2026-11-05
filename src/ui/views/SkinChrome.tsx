@@ -12,6 +12,7 @@ import { t, type MessageKey } from '../../i18n';
 import { pageInfo, route, sidebarCourses, user } from '../../state';
 import { isActivity, neighbours, skinPage } from '../../state/skin';
 import { Band } from '../components/Band';
+import { CourseNav } from '../components/CourseNav';
 import { SiteNotices } from '../components/SiteNotices';
 import { useEffectsConfig } from '../components/hooks';
 import { Tabs, type TabDef } from '../components/Tabs';
@@ -279,6 +280,9 @@ export function PrevNextBar() {
   );
 }
 
+/** Course pages Moodle draws itself that always carry the course's tabs: Participants, Grades (user report), Competencies. */
+const COURSE_TAB_PAGES = /\/user\/index\.php|\/grade\/report\/user\/|\/admin\/tool\/lp\/coursecompetencies\.php/;
+
 /** The band above Moodle's own content for Skin+ pages (replaces `#page-header`, which the skin CSS hides). */
 export function SkinChrome() {
   useEffectsConfig();
@@ -294,6 +298,10 @@ export function SkinChrome() {
     return () => root.removeAttribute('data-kex-card');
   }, [card, route.value?.mod]);
   const label = err ? `${t('area.error')} / ${err.code.toUpperCase()}` : chromeLabel();
+  // The course's own tabs sit under the title as on the course page (skin/base.css hides Moodle's row under the band). Until Moodle's
+  // row is read, the pages that always have it hold the room, so the band does not grow under the reader's eyes.
+  const tabs = err || activity ? [] : sp?.courseTabs ?? [];
+  const holdTabs = !sp && !activity && COURSE_TAB_PAGES.test(location.pathname);
   return (
     <>
       <div class="kex-chrome" data-kex-test="chrome" data-activity={activity ? 'true' : 'false'}>
@@ -303,6 +311,7 @@ export function SkinChrome() {
           size={activity ? 'activity' : 'page'}
           actions={err ? <ErrorActions /> : activity ? <ChromeActions /> : undefined}
           meta={activity ? <ChromeMeta /> : undefined}
+          nav={tabs.length || holdTabs ? <CourseNav tabs={tabs} /> : undefined}
           testId="band"
         />
         {!err && !activity && <CalendarTabs />}

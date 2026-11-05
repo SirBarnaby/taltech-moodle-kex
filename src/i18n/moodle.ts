@@ -86,26 +86,31 @@ const TTL = 7 * 24 * 60 * 60 * 1000;
 interface WireString {
   stringid: string;
   component: string;
+  /** The language Moodle answered in. */
+  lang?: string;
   string: string;
 }
 
-/** The cache slot of a language. */
-export const stringsCacheName = (l: Lang): string => `moodlestrings:${l}`;
+/** The cache slot of a language (v2: sets from before every request named its language may hold another language's words). */
+export const stringsCacheName = (l: Lang): string => `moodlestrings2:${l}`;
 
 type Stored = Partial<Record<MessageKey, string>>;
 
-async function fetchStrings(l: Lang, pageLang: Lang): Promise<Stored> {
+async function fetchStrings(l: Lang): Promise<Stored> {
   const keys = Object.keys(MOODLE_KEYS) as MessageKey[];
+  // Every string names its language: without it Moodle answers in the session's language, which is not always the one KEX shows
+  // (another tab switched Moodle's language, or the page was read before Moodle's own language was known), and an Estonian word
+  // ended up in English menus.
   const strings = keys.map((k) => {
     const s = MOODLE_KEYS[k] as Src;
-    // Without `lang` Moodle answers in the language of the page; ask explicitly only when the user chose another one.
-    return l === pageLang ? { stringid: s.id, component: s.component } : { stringid: s.id, component: s.component, lang: l };
+    return { stringid: s.id, component: s.component, lang: l };
   });
   const res = await ws.call<WireString[]>('core_get_strings', { strings });
   const out: Stored = {};
   keys.forEach((k, i) => {
     const row = res[i];
     const src = MOODLE_KEYS[k] as Src;
+    if (row?.lang && row.lang.split('_')[0] !== l) return;
     const v = row?.string?.trim();
     // Moodle echoes "[[id]]" for a string it does not have.
     if (v && !/^\[\[.*\]\]$/.test(v)) out[k] = src.upper ? v.toLocaleUpperCase(l) : v;
@@ -115,9 +120,9 @@ async function fetchStrings(l: Lang, pageLang: Lang): Promise<Stored> {
 
 /**
  * Keep `moodleStrings` current for the language in use: cached strings apply at once, a stale or missing set is fetched in the background.
- * Returns the stop function. `pageLang` is the language Moodle itself speaks. Needs a bound cache (a logged-in page).
+ * Returns the stop function. Needs a bound cache (a logged-in page).
  */
-export function watchMoodleStrings(pageLang: () => Lang): () => void {
+export function watchMoodleStrings(): () => void {
   let seq = 0;
   return effect(() => {
     const l = lang.value;
@@ -127,7 +132,7 @@ export function watchMoodleStrings(pageLang: () => Lang): () => void {
     const cached = cache.peek<Stored>(name);
     moodleStrings.value = cached ? { forLang: l, map: cached.data } : undefined;
     if (cached && Date.now() - cached.at < TTL) return;
-    fetchStrings(l, pageLang())
+    fetchStrings(l)
       .then(async (map) => {
         if (!Object.keys(map).length) return;
         await cache.write(name, map);

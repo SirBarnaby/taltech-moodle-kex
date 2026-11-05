@@ -493,6 +493,12 @@
   padding: 6px;
 }
 
+/* The course's own tabs (Course, Participants, Grades, Competencies) are in the band on these pages (SkinChrome), so Moodle's row
+   under it goes. Activity tabs have no "coursehome" entry and stay. */
+:root[data-kex="skin"][data-kex-chrome] .secondary-navigation:is(:has(li[data-key="coursehome"]), :has([data-react-props*='"coursehome"'])) {
+  display: none !important;
+}
+
 /* Tertiary navigation (the "Enrolled users" / "Gradebook setup" selector, the action bar above tables). */
 :root[data-kex="skin"] .tertiary-navigation {
   padding: 0;

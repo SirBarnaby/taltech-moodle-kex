@@ -119,15 +119,14 @@
   }
 }
 /* Course hero (round 11): the course's own tabs (Moodle's secondary navigation) sit under the title as a glass segmented control.
-   The hero grows with a long title instead of clipping them; a one-line title keeps the hero's usual height. */
+   The hero grows with a long title instead of clipping them; a one-line title keeps the hero's usual height. The same control sits in
+   the band of the course pages Moodle draws itself (Participants, Grades, Competencies; components/band.css). */
 #kex-root {
   .kex-hero--course {
     display: flex;
     flex-direction: column;
     height: auto;
     min-height: var(--kex-hero-h);
-    /* The lit segment's ink: the school's accent taken down to a deep shade of itself. */
-    --kex-hero-tab-ink: color-mix(in oklab, var(--kex-hero-accent-solid, #e3a6f8) 34%, #050314);
   }
   .kex-hero--course .kex-hero__inner {
     flex: 1 1 auto;
@@ -153,6 +152,8 @@
     overscroll-behavior-x: contain;
     scrollbar-width: none;
     animation: kex-fade 160ms var(--kex-ease) both;
+    /* The lit segment's ink: the school's accent taken down to a deep shade of itself. */
+    --kex-hero-tab-ink: color-mix(in oklab, var(--kex-hero-accent-solid, #e3a6f8) 34%, #050314);
   }
   /* Holds the row's height until Moodle's tabs are read. */
   .kex-coursenav--empty {
@@ -270,19 +271,19 @@
     .kex-hero--course .kex-hero__links {
       display: none;
     }
-    .kex-hero--course .kex-coursenav {
+    .kex-coursenav {
       order: 3;
       height: 42px;
       margin-top: 6px;
       padding: 3px;
       border-radius: 12px;
     }
-    .kex-hero--course .kex-coursenav__tab {
+    .kex-coursenav__tab {
       padding: 0 16px;
       border-radius: 9px;
       font-size: 14.5px;
     }
-    .kex-hero--course .kex-coursenav__thumb {
+    .kex-coursenav__thumb {
       top: 3px;
       bottom: 3px;
       border-radius: 9px;

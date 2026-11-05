@@ -377,7 +377,7 @@ class Controller {
       }),
       () => delete this.html.dataset.kexSchool,
       // Moodle's own wording for the labels it has (cached 7 days, applied at once from the cache).
-      watchMoodleStrings(() => langFromTag(document.documentElement.lang)),
+      watchMoodleStrings(),
     );
 
     if (settings.value.effects !== 'off') heroCanvas.warm();
