@@ -41,6 +41,9 @@ any of it anywhere except back to moodle.taltech.ee. Recommended answers:
   > redraws that site's pages and calls Moodle's own web services (/lib/ajax/service.php) on the same site with the user's session.
   > It makes no other network requests, has no analytics and loads no remote code. Build: Node 22, `npm ci --ignore-scripts`, then
   > `node scripts/build.mjs`; the output in dist/firefox matches the uploaded package byte for byte (see store/BUILD.md).
+  > The linter's four "unsafe assignment to innerHTML" warnings are Preact's `dangerouslySetInnerHTML` and one parse into an
+  > inert document (`document.implementation.createHTMLDocument`, which runs no scripts and loads nothing). Every one of them
+  > only receives Moodle's own HTML after it has passed the add-on's allow-list sanitizer (src/lib/sanitize.ts).
 
 - **Privacy policy:** paste the English text of `store/privacy-policy.md` into the listing's privacy policy field.
 - **Firefox for Android:** leave it unticked. The manifest allows Android, but the add-on has only been tested on desktop.
