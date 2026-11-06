@@ -1,18 +1,13 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { useSlidingThumb } from './hooks';
 import type { NavTab } from '../../data/scrape/secondarynav';
 import { TabLabel } from './Tabs';
 import { scrollBehavior } from '../../fx/motion';
+import { isPlainClick } from '../../content/softnav';
 import { t } from '../../i18n';
 
 interface CourseNavProps {
   tabs: readonly NavTab[];
-}
-
-interface Thumb {
-  left: number;
-  width: number;
-  ready: boolean;
-  anim: boolean;
 }
 
 /**
@@ -23,23 +18,11 @@ interface Thumb {
  */
 export function CourseNav({ tabs }: CourseNavProps) {
   const list = useRef<HTMLElement>(null);
-  const [thumb, setThumb] = useState<Thumb>({ left: 0, width: 0, ready: false, anim: false });
   const [pressed, setPressed] = useState<string | undefined>(undefined);
   const activeKey = tabs.find((x) => x.active)?.key;
   const lit = pressed ?? activeKey;
 
-  useLayoutEffect(() => {
-    const place = (): void => {
-      const el = lit ? list.current?.querySelector<HTMLElement>(`[data-key="${CSS.escape(lit)}"]`) : null;
-      if (!el) return setThumb((b) => (b.ready ? { ...b, ready: false, anim: false } : b));
-      setThumb((b) => ({ left: el.offsetLeft, width: el.offsetWidth, ready: true, anim: b.ready }));
-    };
-    place();
-    const ro = new ResizeObserver(place);
-    if (list.current) ro.observe(list.current);
-    document.fonts?.ready.then(place).catch(() => undefined);
-    return () => ro.disconnect();
-  }, [lit, tabs.length]);
+  const thumb = useSlidingThumb(list, lit ? `[data-key="${CSS.escape(lit)}"]` : null, [tabs.length]);
 
   // Back to this page from the back/forward cache: the segment pressed before leaving goes back to the page we are on.
   useLayoutEffect(() => {
@@ -73,7 +56,8 @@ export function CourseNav({ tabs }: CourseNavProps) {
               window.scrollTo({ top: 0, behavior: scrollBehavior() });
               return;
             }
-            if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+            // The same test the content controller uses before it shows the loading skeleton.
+            if (!isPlainClick(e)) return;
             setPressed(tb.key);
           }}
         >

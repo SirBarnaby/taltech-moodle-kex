@@ -4,8 +4,7 @@
   .kex-moodle-info__notice + .kex-moodle-info__notice { margin-top: 8px; }
   .kex-moodle-info__notice p { margin: 0; }
   .kex-moodle-info a { color: var(--kex-violet); text-decoration: underline; text-underline-offset: 3px; }
-  .kex-moodle-info__details { border-bottom: 1px solid var(--kex-border); }
-  .kex-moodle-info summary { padding: 12px 0; cursor: pointer; color: var(--kex-text-2); }
+  .kex-moodle-info__details[open] { border-bottom: 1px solid var(--kex-border); }
   /* The disclosure is a button: an info icon, Moodle's own title and a chevron that turns when it opens. */
   .kex-moodle-info summary {
     display: inline-flex;
@@ -14,25 +13,24 @@
     height: 40px;
     margin: 0 0 12px;
     padding: 0 14px 0 12px;
-    border: 1px solid var(--kex-card-border, var(--kex-border));
+    border: 1px solid var(--kex-card-border);
     border-radius: 11px;
-    background: var(--kex-card-bg, var(--kex-bg));
-    box-shadow: var(--kex-card-shadow, none);
+    background: var(--kex-card-bg);
+    box-shadow: var(--kex-card-shadow);
     list-style: none;
     font-size: 14.5px;
     font-weight: 500;
     color: var(--kex-text);
+    cursor: pointer;
     user-select: none;
     transition: border-color 140ms var(--kex-ease), background-color 140ms var(--kex-ease);
     &::-webkit-details-marker { display: none; }
     &::marker { content: none; }
     &:hover { border-color: var(--kex-tint-border); background: var(--kex-hover); }
-    &:focus-visible { outline: 2px solid var(--kex-focus); outline-offset: 2px; }
   }
   .kex-moodle-info__icon { color: var(--kex-violet); }
-  .kex-moodle-info__chev { color: var(--kex-text-3); transition: transform 220ms var(--kex-ease-card, var(--kex-ease)); }
+  .kex-moodle-info__chev { color: var(--kex-text-3); transition: transform 220ms var(--kex-ease-card); }
   .kex-moodle-info__details[open] .kex-moodle-info__chev { transform: rotate(180deg); }
-  .kex-moodle-info__details:not([open]) { border-bottom: 0; }
   .kex-moodle-info__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 24px; padding: 8px 0 24px; }
   .kex-moodle-info h2 { font: 600 16px/1.4 var(--kex-font-ui); margin: 0 0 12px; }
   .kex-moodle-info article { min-width: 0; }

@@ -34,7 +34,7 @@ export interface SkinPage {
   courseTabs: NavTab[];
 }
 
-export function parseCourseTabs(doc: Document): NavTab[] {
+function parseCourseTabs(doc: Document): NavTab[] {
   const tabs = scrapeSecondaryNav(doc);
   return tabs.some((x) => x.key === 'coursehome') ? tabs : [];
 }
@@ -96,7 +96,8 @@ export function parseError(doc: Document): { code: string; message: string } | u
   return { code: code.slice(0, 48), message };
 }
 
-export function parseSkinPage(doc: Document): SkinPage {
+/** `knownTabs`: course tabs from an earlier read of the same page (they do not change), reused instead of read again. */
+export function parseSkinPage(doc: Document, knownTabs?: NavTab[]): SkinPage {
   const dates = Array.from(new Set(qsa(doc, DATE_SEL).map((el) => cleanText(el)).filter(Boolean)));
   const file = qs<HTMLElement>(doc, FILE_SEL);
   const fileUrl = file?.getAttribute('href') ?? file?.getAttribute('data') ?? file?.getAttribute('src') ?? undefined;
@@ -118,6 +119,6 @@ export function parseSkinPage(doc: Document): SkinPage {
     urlTarget: doc.querySelector<HTMLAnchorElement>('.urlworkaround a[href]')?.href ?? undefined,
     error: parseError(doc),
     calendar: parseCalendar(doc),
-    courseTabs: parseCourseTabs(doc),
+    courseTabs: knownTabs?.length ? knownTabs : parseCourseTabs(doc),
   };
 }

@@ -131,7 +131,7 @@
     &::after {
       left: 0;
       right: 0;
-      background: var(--kex-card-divider, var(--kex-border));
+      background: var(--kex-card-divider);
     }
     &:last-child::after {
       background: transparent;
@@ -254,9 +254,9 @@
     height: 20px;
     border: 1.5px solid var(--kex-border-strong);
     border-radius: 6px;
-    background: var(--kex-card-bg, transparent);
+    background: var(--kex-card-bg);
     color: #fff;
-    transition: background 160ms var(--kex-ease), border-color 160ms var(--kex-ease), transform 160ms var(--kex-ease-card, ease);
+    transition: background 160ms var(--kex-ease), border-color 160ms var(--kex-ease), transform 160ms var(--kex-ease-card);
   }
   .kex-done--on {
     color: var(--kex-success);
@@ -284,7 +284,7 @@
       &::after {
         left: 0;
         right: 0;
-        background: var(--kex-card-divider, var(--kex-border));
+        background: var(--kex-card-divider);
       }
       &:hover {
         background: none;

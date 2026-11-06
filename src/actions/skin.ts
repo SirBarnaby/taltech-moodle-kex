@@ -16,19 +16,21 @@ import { pushToast } from './toasts';
 /** Skin+ chrome actions (page-designs §0): pin, done, open in a new tab, download, previous and next activity. */
 
 /** Re-read the chrome data from the live page. Call after DOMContentLoaded and whenever Moodle's JS changes the content. */
-export function refreshSkinPage(): void {
+export function refreshSkinPage(reuseTabs = true): void {
   decorateSkinPage(document);
-  skinPage.value = parseSkinPage(document);
+  // The course tabs come with the server's page and never change after it: read once, so later re-reads skip them and the band
+  // does not re-render for them.
+  skinPage.value = parseSkinPage(document, reuseTabs ? skinPage.value?.courseTabs : undefined);
 }
 
 /** Watch the main region for changes (completion toggles, validation errors) and keep the band current. */
 export function watchSkinPage(): () => void {
-  refreshSkinPage();
+  refreshSkinPage(false);
   const target = document.querySelector('#page-content, #region-main, #page') ?? document.body;
   let timer = 0;
   const mo = new MutationObserver(() => {
     window.clearTimeout(timer);
-    timer = window.setTimeout(refreshSkinPage, 150);
+    timer = window.setTimeout(() => refreshSkinPage(), 150);
   });
   mo.observe(target, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'data-toggletype', 'aria-pressed'] });
   return () => {

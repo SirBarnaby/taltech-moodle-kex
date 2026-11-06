@@ -2,6 +2,7 @@ import { effect } from '@preact/signals';
 import { cache } from '../data/cache';
 import { ws } from '../data/ws';
 import { log } from '../lib/log';
+import { storageRemove } from '../lib/storage';
 import { lang, moodleStrings, type Lang, type MessageKey } from './index';
 
 /**
@@ -93,6 +94,9 @@ interface WireString {
 
 /** The cache slot of a language (v2: sets from before every request named its language may hold another language's words). */
 export const stringsCacheName = (l: Lang): string => `moodlestrings2:${l}`;
+/** Slots of the first strings cache (before every request named its language). Removed once, so startup stops reading them. */
+const OLD_SLOTS = ['moodlestrings:en', 'moodlestrings:et'];
+let swept = false;
 
 type Stored = Partial<Record<MessageKey, string>>;
 
@@ -128,6 +132,11 @@ export function watchMoodleStrings(): () => void {
     const l = lang.value;
     const mine = ++seq;
     if (!cache.isReady) return;
+    if (!swept) {
+      swept = true;
+      const old = OLD_SLOTS.filter((n) => cache.peek(n));
+      if (old.length) void storageRemove(old.map((n) => cache.key(n))).catch(() => undefined);
+    }
     const name = stringsCacheName(l);
     const cached = cache.peek<Stored>(name);
     moodleStrings.value = cached ? { forLang: l, map: cached.data } : undefined;

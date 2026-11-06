@@ -52,7 +52,6 @@ const BY_FORMAT: Partial<Record<Format, LucideIcon>> = {
 
 const BY_KIND: Partial<Record<Kind, LucideIcon>> = {
   lecture: Presentation,
-  recording: CirclePlay,
   practical: FileCode,
   assignment: FileUp,
   quiz: ListChecks,
@@ -61,7 +60,7 @@ const BY_KIND: Partial<Record<Kind, LucideIcon>> = {
   tool: Plug,
 };
 
-export function kindIcon(modname: string, kind: Kind, format: Format): LucideIcon {
+function kindIcon(modname: string, kind: Kind, format: Format): LucideIcon {
   if (kind === 'recording') return CirclePlay;
   if (modname === 'resource') return BY_FORMAT[format] ?? FileText;
   return BY_MODULE[modname] ?? BY_FORMAT[format] ?? BY_KIND[kind] ?? FileText;

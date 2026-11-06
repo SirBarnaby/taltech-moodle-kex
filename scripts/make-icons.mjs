@@ -1,4 +1,5 @@
-// Renders assets/icon-{16,32,48,96}.png from an inline SVG using Playwright's Chromium. Run: node scripts/make-icons.mjs
+// Renders assets/icon-{16,32,48,96,128}.png from an inline SVG using Playwright's Chromium. Run: node scripts/make-icons.mjs [size ...]
+// (128 is the Chrome Web Store and Chrome toolbar size.)
 import { chromium } from 'playwright';
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -11,9 +12,10 @@ const svg = (s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height=
 <rect x="14" y="12" width="68" height="64" rx="14" fill="#ffffff" fill-opacity=".12"/>
 <path d="M33 26v40M33 47l22-21M39 41l20 25" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="30" y="76" width="36" height="5" rx="2.5" fill="#a10982"/></svg>`;
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: process.env.KEX_CHROMIUM || undefined });
 const page = await browser.newPage({ deviceScaleFactor: 1 });
-for (const s of [16, 32, 48, 96]) {
+const sizes = process.argv.slice(2).map(Number).filter(Boolean);
+for (const s of sizes.length ? sizes : [16, 32, 48, 96, 128]) {
   await page.setViewportSize({ width: s, height: s });
   await page.setContent(`<body style="margin:0;background:transparent">${svg(s)}</body>`);
   const buf = await page.screenshot({ omitBackground: true, clip: { x: 0, y: 0, width: s, height: s } });

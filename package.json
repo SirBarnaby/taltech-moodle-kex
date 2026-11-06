@@ -11,6 +11,8 @@
     "build": "node scripts/build.mjs",
     "build:dev": "node scripts/build.mjs --dev",
     "build:local": "node scripts/sync-local.mjs",
+    "build:chrome": "node scripts/build.mjs --chrome",
+    "build:chrome:dev": "node scripts/build.mjs --chrome --dev",
     "demo": "node scripts/local-demo.mjs",
     "test:local": "playwright test -c playwright.local.config.ts",
     "verify:release": "node scripts/release-gate.mjs",
@@ -29,9 +31,12 @@
     "test:e2e": "playwright test",
     "test:ff": "npm run build:dev && node test/e2e-firefox/smoke.mjs --only quick",
     "test:ff:full": "npm run build:dev && node test/e2e-firefox/smoke.mjs",
+    "test:chrome": "node scripts/build.mjs --chrome && node test/e2e-chrome/smoke.mjs",
     "shots": "node scripts/test-visual.mjs --all",
     "pack": "node scripts/pack.mjs prod",
     "pack:dev": "node scripts/pack.mjs dev",
+    "pack:stores": "node scripts/pack-stores.mjs",
+    "store:shots": "npm run build:dev && node scripts/store-shots.mjs",
     "sign": "web-ext sign --channel=unlisted -s dist/firefox"
   },
   "dependencies": {

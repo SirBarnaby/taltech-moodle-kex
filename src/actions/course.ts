@@ -368,7 +368,7 @@ function holdPageEnd(): void {
 /** The held end shrinks with every scroll up, never below what the window needs. */
 export function relaxPageEnd(): void {
   const pages = document.querySelector<HTMLElement>('.kex-book__pages');
-  const held = pages ? Number.parseFloat(pages.style.minHeight) : NaN;
+  const held = pages ? Number.parseFloat(pages.style.minHeight) : Number.NaN;
   if (!pages || !(held > 0)) return;
   const need = Math.ceil(window.scrollY + window.innerHeight - (pages.getBoundingClientRect().top + window.scrollY));
   if (need < held) pages.style.minHeight = need > 0 ? `${need}px` : '';
@@ -473,9 +473,17 @@ export function currentRow(): RowModel | undefined {
 
 // -------------------------------------------------------------------- row actions
 
+/** A plain open shows the material in the side reader (unless every material should open in a new tab). */
+const opensInReader = (row: RowModel): boolean => settings.value.openInNewTab !== 'always' && isReadableMaterial(row);
+/** Moodle's own page for the material opens in a new tab by the "open links in a new tab" setting. */
+const tabbedByPref = (row: RowModel): boolean => {
+  const pref = settings.value.openInNewTab;
+  return pref === 'always' || (pref === 'external' && row.cm.modname === 'url');
+};
+
 export function openCm(row: RowModel, newTab = false): void {
   if (row.locked || row.kind === 'note') return;
-  if (!newTab && settings.value.openInNewTab !== 'always' && isReadableMaterial(row)) {
+  if (!newTab && opensInReader(row)) {
     previewCm(row);
     return;
   }
@@ -484,17 +492,12 @@ export function openCm(row: RowModel, newTab = false): void {
 
 /** Whether a plain click on the material leaves for a new tab (instead of the side reader or this tab). */
 export function opensInNewTab(row: RowModel): boolean {
-  const pref = settings.value.openInNewTab;
-  if (pref !== 'always' && isReadableMaterial(row)) return false;
-  return pref === 'always' || (pref === 'external' && row.cm.modname === 'url');
+  return !opensInReader(row) && tabbedByPref(row);
 }
 
 /** Explicit escape to Moodle's original page; reader controls must not reopen the reader. */
 export function openCmOriginal(row: RowModel, newTab = false): void {
-  const external = row.cm.modname === 'url';
-  const pref = settings.value.openInNewTab;
-  const tabbed = newTab || pref === 'always' || (pref === 'external' && external);
-  go(row.cm.url, tabbed);
+  go(row.cm.url, newTab || tabbedByPref(row));
 }
 
 export function previewCm(row: RowModel): void {

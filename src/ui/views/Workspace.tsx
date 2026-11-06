@@ -421,7 +421,7 @@ export function WorkspaceView() {
               </ul>
             )}
             {total > list.length && (
-              <button type="button" class="kex-more kex-feed__more" onClick={() => { feedLimit.value += 24; }}>
+              <button type="button" class="kex-more" onClick={() => { feedLimit.value += 24; }}>
                 <span>{t('ws.showMore', { n: total - list.length })}</span>
                 <ChevronDown size={16} strokeWidth={1.9} aria-hidden="true" />
               </button>

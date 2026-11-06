@@ -15,7 +15,7 @@ import { t } from '../../i18n';
 import { sanitizeHtml } from '../../lib/sanitize';
 import { activeCourseId, headerTitle, pageInfo, settings, sidebarCourses } from '../../state';
 import {
-  courseError, courseState, courseStatus, focusZone, foldedTopics, labChoice, labOpen, mergedSummaries, pinnedOnly, pinnedRow, previewCmId, rows, secondaryNav, selectedCmId, shownBlocks, topicMarks, topicNumber, topics,
+  courseError, courseState, courseStatus, focusZone, foldedTopics, labChoice, labOpen, mergedSummaries, pinnedOnly, pinnedRow, previewCmId, rows, secondaryNav, selectedCmId, shownBlocks, shownFolded, topicMarks, topicNumber, topics,
   type TopicBlock,
 } from '../../state/course';
 import { Button } from '../components/Button';
@@ -188,7 +188,7 @@ function TopicSection({ block, folded, renderRow, summaryHtml }: SectionProps) {
   const headId = `kex-tsec-${topic.section.id}`;
   const bodyId = `kex-tsec-body-${topic.section.id}`;
   return (
-    <section class={`kex-tsec${folded ? ' kex-tsec--folded' : ''}${complete ? ' kex-tsec--complete' : ''}`} data-kex-section={n} aria-labelledby={headId} data-kex-test={`section-${n}`}>
+    <section class={`kex-tsec${folded ? ' kex-tsec--folded' : ''}`} data-kex-section={n} aria-labelledby={headId} data-kex-test={`section-${n}`}>
       <header class="kex-tsec__head">
         <h3 class="kex-tsec__title" id={headId}>
           <button type="button" class="kex-tsec__toggle" aria-expanded={!folded} aria-controls={bodyId} onClick={() => toggleTopic(topic.section.id)}>
@@ -399,7 +399,7 @@ export function CourseView() {
             )}
           </div>
         </div>
-        {id && !loading && !failed && tps.length > 0 && (
+        {id && ready && (
           <CourseBar topics={pinnedView ? blocks.map((b) => b.topic) : tps} active={topicNumber.value} onSelect={(num) => setTopic(num, { focus: true })} onKeyDown={onTopicKeys} pins={pinnedRow.value} courseId={id} marks={topicMarks.value} />
         )}
         <div class={`kex-book${arrived ? ' kex-fade-in' : ''}`} data-kex-test="detail">
@@ -429,8 +429,9 @@ export function CourseView() {
               <div class="kex-book__pages">
                 {blocks.map((b) => {
                   const sec = b.topic.section;
-                  const html = summaries.get(sec.id) ?? (sec.summaryHtml ? sanitizeHtml(sec.summaryHtml) : '');
-                  return <TopicSection key={sec.id} block={b} folded={!pinnedView && folded.has(sec.id)} renderRow={renderRow} summaryHtml={pinnedView ? '' : html} />;
+                  // The Pinned view shows materials only, so no summaries are parsed for it.
+                  const html = pinnedView ? '' : (summaries.get(sec.id) ?? (sec.summaryHtml ? sanitizeHtml(sec.summaryHtml) : ''));
+                  return <TopicSection key={sec.id} block={b} folded={shownFolded.value.has(sec.id)} renderRow={renderRow} summaryHtml={html} />;
                 })}
               </div>
             </>

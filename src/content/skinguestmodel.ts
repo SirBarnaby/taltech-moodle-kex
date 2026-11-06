@@ -23,7 +23,7 @@ export interface GuestModel {
 
 const LANG_CODE = /[?&]lang=([a-z]{2}(?:_[a-z]+)?)/i;
 /** Direction marks Moodle puts around "(et)". */
-const BIDI = /[‎‏‪-‮]/g;
+const BIDI = /[\u200E\u200F\u202A-\u202E]/g;
 
 const text = (el: Element | null | undefined): string => cleanText(el).replace(BIDI, '').trim();
 

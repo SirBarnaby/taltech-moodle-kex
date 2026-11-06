@@ -39,15 +39,15 @@ function parseColor(token) {
     let h = m[1];
     if (h.length === 3 || h.length === 4) h = [...h].map((c) => c + c).join('');
     if (h.length !== 6 && h.length !== 8) return null;
-    const n = (i) => parseInt(h.slice(i, i + 2), 16) / 255;
+    const n = (i) => Number.parseInt(h.slice(i, i + 2), 16) / 255;
     return [n(0), n(2), n(4), h.length === 8 ? n(6) : 1];
   }
   m = /^rgba?\(([^)]*)\)$/.exec(t);
   if (m) {
     const parts = m[1].split(/[\s,/]+/).filter(Boolean);
     if (parts.length < 3) return null;
-    const ch = (v) => (v.endsWith('%') ? parseFloat(v) / 100 : parseFloat(v) / 255);
-    const a = parts[3] === undefined ? 1 : parts[3].endsWith('%') ? parseFloat(parts[3]) / 100 : parseFloat(parts[3]);
+    const ch = (v) => (v.endsWith('%') ? Number.parseFloat(v) / 100 : Number.parseFloat(v) / 255);
+    const a = parts[3] === undefined ? 1 : parts[3].endsWith('%') ? Number.parseFloat(parts[3]) / 100 : Number.parseFloat(parts[3]);
     const rgb = parts.slice(0, 3).map(ch);
     return rgb.some(Number.isNaN) || Number.isNaN(a) ? null : [...rgb, a];
   }
@@ -55,8 +55,8 @@ function parseColor(token) {
   if (m) {
     const parts = m[1].split(/[\s,/]+/).filter(Boolean);
     if (parts.length < 3) return null;
-    const a = parts[3] === undefined ? 1 : parts[3].endsWith('%') ? parseFloat(parts[3]) / 100 : parseFloat(parts[3]);
-    return [...hslToRgb(parseFloat(parts[0]) / 360, parseFloat(parts[1]) / 100, parseFloat(parts[2]) / 100), a];
+    const a = parts[3] === undefined ? 1 : parts[3].endsWith('%') ? Number.parseFloat(parts[3]) / 100 : Number.parseFloat(parts[3]);
+    return [...hslToRgb(Number.parseFloat(parts[0]) / 360, Number.parseFloat(parts[1]) / 100, Number.parseFloat(parts[2]) / 100), a];
   }
   return null;
 }

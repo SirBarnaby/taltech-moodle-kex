@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { useRef } from 'preact/hooks';
 import { t, type MessageKey } from '../../i18n';
+import { useSlidingThumb } from './hooks';
 
 export interface TabDef<K extends string = string> {
   key: K;
@@ -43,24 +44,11 @@ export function Tabs<K extends string = 'all' | 'lectures' | 'labs'>({ value, on
   const pill = variant === 'pill';
   const TABS = (items ?? COURSE_TABS) as readonly TabDef<K>[];
   const list = useRef<HTMLDivElement>(null);
-  const [bar, setBar] = useState({ left: 0, width: 0, ready: false, anim: false });
-
-  useLayoutEffect(() => {
-    const place = (): void => {
-      const el = list.current?.querySelector<HTMLElement>(`[data-tab="${value}"]`);
-      const box = list.current;
-      if (!el || !box) return;
-      if (pill) return setBar((b) => ({ left: el.offsetLeft, width: el.offsetWidth, ready: true, anim: b.ready }));
-      const text = el.querySelector<HTMLElement>('.kex-tab__label') ?? el;
-      const left = text.offsetLeft + el.offsetLeft - 9;
-      setBar((b) => ({ left, width: text.offsetWidth + 18, ready: true, anim: b.ready }));
-    };
-    place();
-    const ro = new ResizeObserver(place);
-    if (list.current) ro.observe(list.current);
-    document.fonts?.ready.then(place).catch(() => undefined);
-    return () => ro.disconnect();
-  }, [value, pill]);
+  // The pill lies under the whole tab; the underline under the tab's text, 9 px wider on each side.
+  const bar = useSlidingThumb(list, `[data-tab="${value}"]`, [pill], pill ? undefined : (el) => {
+    const text = el.querySelector<HTMLElement>('.kex-tab__label') ?? el;
+    return { left: text.offsetLeft + el.offsetLeft - 9, width: text.offsetWidth + 18 };
+  });
 
   const onKey = (e: KeyboardEvent): void => {
     const i = TABS.findIndex((x) => x.key === value);

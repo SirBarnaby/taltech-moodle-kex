@@ -15,10 +15,12 @@ export function TopicMark({ state }: { state?: LabState }) {
   );
 }
 
+const OWN_NUMBER = /^\s*0*(\d+)\s*[.):\-–—]\s+(?=\S)/u;
+
 /** "1. LEADING SELF" under the number 01 reads "01 1. LEADING SELF": a title that starts with its own topic number drops it. */
-export function withoutOwnNumber(title: string, n: number): string {
-  const m = new RegExp(`^\\s*0*${n}\\s*[.):\\-–—]\\s+(?=\\S)`, 'u').exec(title);
-  return m ? title.slice(m[0].length) : title;
+function withoutOwnNumber(title: string, n: number): string {
+  const m = OWN_NUMBER.exec(title);
+  return m && Number(m[1]) === n ? title.slice(m[0].length) : title;
 }
 
 export const topicDisplayTitle = (tp: Pick<TopicModel, 'isRange' | 'title' | 'section'>): string =>

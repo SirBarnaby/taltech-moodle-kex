@@ -721,7 +721,7 @@ class Controller {
     const enter = beginViewTransition(this.root?.querySelector<HTMLElement>('.kex-main') ?? null, 'page');
     this.html.dataset.kexNav = 'loading';
     hardNavigating.value = true;
-    enter('.kex-main');
+    void enter('.kex-main');
     // A cancelled load (Escape, a download) leaves the page as it was.
     window.clearTimeout(this.hardTimer);
     this.hardTimer = window.setTimeout(() => this.endHardLoadFeedback(), 7500);
@@ -794,7 +794,7 @@ class Controller {
       await nextPaint();
       if (seq !== this.navSeq) return;
       this.swapView(target, document.implementation.createHTMLDocument(''), url);
-      enter('.kex-main');
+      void enter('.kex-main');
       if (restoreY !== undefined) restoreScroll(restoreY, () => !navigationLoading.value && viewReady(), (history.state as { kexAnchor?: ViewAnchor } | null)?.kexAnchor);
       let timeout: number | undefined;
       try {

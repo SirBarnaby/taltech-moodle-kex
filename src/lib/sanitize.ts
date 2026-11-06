@@ -86,8 +86,8 @@ export function decodeEntities(s: string): string {
   if (typeof DOMParser !== 'undefined') return new DOMParser().parseFromString(s, 'text/html').documentElement.textContent ?? s;
   return s.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi, (m, e: string) => {
     const k = e.toLowerCase();
-    if (k.startsWith('#x')) return String.fromCodePoint(parseInt(k.slice(2), 16));
-    if (k.startsWith('#')) return String.fromCodePoint(parseInt(k.slice(1), 10));
+    if (k.startsWith('#x')) return String.fromCodePoint(Number.parseInt(k.slice(2), 16));
+    if (k.startsWith('#')) return String.fromCodePoint(Number.parseInt(k.slice(1), 10));
     return ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0' } as Record<string, string>)[k] ?? m;
   });
 }

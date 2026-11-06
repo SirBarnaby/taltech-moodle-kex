@@ -8,6 +8,16 @@ import { Slider } from '../components/Slider';
 import { Switch } from '../components/Switch';
 import { Popover } from './Popover';
 
+/** One setting with a switch: its label (which also toggles it) and the switch. */
+function SwitchRow({ id, label, checked, onChange }: { id: string; label: string; checked: boolean; onChange: (on: boolean) => void }) {
+  return (
+    <div class="kex-pop__row">
+      <label class="kex-pop__rowlabel" for={id}>{label}</label>
+      <Switch id={id} label={label} checked={checked} onChange={onChange} />
+    </div>
+  );
+}
+
 /**
  * Quick settings popover (sidebar Settings): the look (theme, school colours, animated headers, animations), course pages (compact
  * lists, labs board, rolling edges, new tabs), achievement messages and "KEX on this page". Labels are the same as on the All settings page.
@@ -32,14 +42,8 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
           ]}
         />
       </div>
-      <div class="kex-pop__row">
-        <label class="kex-pop__rowlabel" for="kex-qs-school">{t('ext.colourSchool')}</label>
-        <Switch id="kex-qs-school" label={t('ext.colourSchool')} checked={s.colourBySchool} onChange={(colourBySchool) => updateSettings({ colourBySchool })} />
-      </div>
-      <div class="kex-pop__row">
-        <label class="kex-pop__rowlabel" for="kex-qs-effects">{t('settings.effects')}</label>
-        <Switch id="kex-qs-effects" label={t('settings.effects')} checked={s.effects !== 'off'} onChange={(on) => updateSettings({ effects: on ? 'animated' : 'off' })} />
-      </div>
+      <SwitchRow id="kex-qs-school" label={t('ext.colourSchool')} checked={s.colourBySchool} onChange={(colourBySchool) => updateSettings({ colourBySchool })} />
+      <SwitchRow id="kex-qs-effects" label={t('settings.effects')} checked={s.effects !== 'off'} onChange={(on) => updateSettings({ effects: on ? 'animated' : 'off' })} />
       <div class="kex-pop__section">
         <div class="kex-pop__label">{t('settings.motion')}</div>
         <Segmented
@@ -54,18 +58,9 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
         />
       </div>
       <div class="kex-pop__divider" />
-      <div class="kex-pop__row">
-        <label class="kex-pop__rowlabel" for="kex-qs-compact">{t('settings.compact')}</label>
-        <Switch id="kex-qs-compact" label={t('settings.compact')} checked={s.density === 'compact'} onChange={(on) => updateSettings({ density: on ? 'compact' : 'comfortable' })} />
-      </div>
-      <div class="kex-pop__row">
-        <label class="kex-pop__rowlabel" for="kex-qs-labs">{t('ext.labsView')}</label>
-        <Switch id="kex-qs-labs" label={t('ext.labsView')} checked={s.labsView === 'auto'} onChange={(on) => updateSettings({ labsView: on ? 'auto' : 'off' })} />
-      </div>
-      <div class="kex-pop__row">
-        <label class="kex-pop__rowlabel" for="kex-qs-wheel">{t('settings.wheel')}</label>
-        <Switch id="kex-qs-wheel" label={t('settings.wheel')} checked={s.wheel} onChange={(on) => updateSettings({ wheel: on })} />
-      </div>
+      <SwitchRow id="kex-qs-compact" label={t('settings.compact')} checked={s.density === 'compact'} onChange={(on) => updateSettings({ density: on ? 'compact' : 'comfortable' })} />
+      <SwitchRow id="kex-qs-labs" label={t('ext.labsView')} checked={s.labsView === 'auto'} onChange={(on) => updateSettings({ labsView: on ? 'auto' : 'off' })} />
+      <SwitchRow id="kex-qs-wheel" label={t('settings.wheel')} checked={s.wheel} onChange={(on) => updateSettings({ wheel: on })} />
       {s.wheel && (
         <div class="kex-pop__section">
           <label class="kex-pop__label" for="kex-qs-wheelk">{t('settings.wheelIntensity')}</label>
@@ -87,10 +82,7 @@ export function QuickSettings({ anchor }: { anchor: HTMLElement | null }) {
       </div>
       <div class="kex-pop__divider" />
       {s.achievements && (
-        <div class="kex-pop__row">
-          <label class="kex-pop__rowlabel" for="kex-qs-toasts">{t('ext.achievementToasts')}</label>
-          <Switch id="kex-qs-toasts" label={t('ext.achievementToasts')} checked={s.achievementToasts} onChange={(achievementToasts) => updateSettings({ achievementToasts })} />
-        </div>
+        <SwitchRow id="kex-qs-toasts" label={t('ext.achievementToasts')} checked={s.achievementToasts} onChange={(achievementToasts) => updateSettings({ achievementToasts })} />
       )}
       <div class="kex-pop__row">
         <label class="kex-pop__rowlabel" for="kex-qs-on">{t('settings.kexOnPage')}</label>

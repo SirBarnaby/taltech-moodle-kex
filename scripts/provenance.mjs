@@ -49,7 +49,7 @@ export async function verifyProvenance(directory, { checkInputs = true, exact = 
   const info = JSON.parse(await readFile(path.join(directory, 'build-info.json'), 'utf8'));
   if (info.schema !== 1 || info.state !== 'verified' || !info.buildId || !info.files || !info.inputs) throw new Error(`Unverified build: ${directory}`);
   if (digest(JSON.stringify(info.inputs)) !== info.sourceHash) throw new Error(`Invalid source fingerprint: ${directory}`);
-  const expectedId = buildIdentity(info.sourceHash, { version: info.version, mode: info.mode, output: info.output, lab: info.lab, mv3: info.mv3, cssOnly: info.cssOnly });
+  const expectedId = buildIdentity(info.sourceHash, { version: info.version, mode: info.mode, output: info.output, lab: info.lab, mv3: info.mv3, cssOnly: info.cssOnly, ...(info.browser ? { browser: info.browser } : {}) });
   if (expectedId !== info.buildId) throw new Error(`Invalid build identity: ${directory}`);
   for (const [name, hash] of Object.entries(info.files)) {
     const file = path.resolve(directory, name);

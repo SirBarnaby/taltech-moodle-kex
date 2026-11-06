@@ -14,16 +14,16 @@
     height: 40px;
     margin: 28px auto 0;
     padding: 0 16px 0 18px;
-    border: 1px solid var(--kex-card-border, var(--kex-border));
+    border: 1px solid var(--kex-card-border);
     border-radius: 999px;
-    background: var(--kex-card-bg, var(--kex-bg));
-    box-shadow: var(--kex-card-shadow, none);
+    background: var(--kex-card-bg);
+    box-shadow: var(--kex-card-shadow);
     color: var(--kex-text);
     font: 500 14.5px/1 var(--kex-font-ui);
     white-space: nowrap;
     cursor: pointer;
     svg { color: var(--kex-text-3); }
-    &:hover { background: var(--kex-card-hover, var(--kex-hover)); }
+    &:hover { background: var(--kex-card-hover); }
   }
   .kex-hero--ws .kex-hero__title {
     max-width: 100%;

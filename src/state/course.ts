@@ -116,9 +116,13 @@ export const shownBlocks = computed<TopicBlock[]>(() => {
   return out;
 });
 
+const NONE_FOLDED: ReadonlySet<number> = new Set();
+/** The folded topics as shown: the Pinned view never folds. */
+export const shownFolded = computed<ReadonlySet<number>>(() => (pinnedOnly.value ? NONE_FOLDED : foldedTopics.value));
+
 /** Rows the keyboard can reach: rows of folded topics and folded labs are left out. */
 export const visibleRows = computed<RowModel[]>(() => {
-  const folded = pinnedOnly.value ? new Set<number>() : foldedTopics.value;
+  const folded = shownFolded.value;
   const choice = labChoice.value;
   const out: RowModel[] = [];
   for (const b of shownBlocks.value) {

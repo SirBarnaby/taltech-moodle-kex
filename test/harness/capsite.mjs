@@ -45,9 +45,15 @@ export const COURSES = [
 const MIME = { '.woff2': 'font/woff2', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.json': 'application/json' };
 const envelope = (data) => ({ v: 1, at: Date.now(), data });
 
+export const GL_ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
+
+/** Playwright's Chromium (the copy that matches the installed browsers). */
+export async function chromiumType() {
+  return (await import(pathToFileURL(PW).href)).chromium;
+}
+
 export async function launch(opts = {}) {
-  const { chromium } = await import(pathToFileURL(PW).href);
-  return chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'], ...opts });
+  return (await chromiumType()).launch({ args: GL_ARGS, ...opts });
 }
 
 function stripScripts(html) {
@@ -154,12 +160,13 @@ function inventedState(courseId, code) {
 /**
  * Open a capture page with the add-on.
  * opts: theme ('light'|'dark'), settings (merged into kex:settings), seed (extra storage keys), viewport, states ({courseId: rawState}),
- * wait (ms after load, default 2500), courses (raw course list).
+ * wait (ms after load, default 2500), courses (raw course list), html (rewrites each served page), extension (the context runs
+ * the installed add-on itself: nothing is injected), imageSvg (what every image request gets instead of the flat stand-in).
  */
 export async function open(browser, name, opts = {}) {
   const [route] = PAGES[name] ?? [];
   if (!route) throw new Error(`Unknown page ${name}; one of ${Object.keys(PAGES).join(', ')}`);
-  if (!existsSync(path.join(DIST, 'content.js'))) throw new Error('Run npm run build:dev first');
+  if (!opts.extension && !existsSync(path.join(DIST, 'content.js'))) throw new Error('Run npm run build:dev first');
   const viewport = opts.viewport ?? { width: 1600, height: 1000 };
   const ctx = opts.context ?? await browser.newContext({ viewport, reducedMotion: opts.reducedMotion ?? 'no-preference', colorScheme: opts.theme === 'dark' ? 'dark' : 'light' });
   const page = await ctx.newPage();
@@ -216,19 +223,25 @@ export async function open(browser, name, opts = {}) {
       return r.fulfill({ status: 200, contentType: 'text/css', body: existsSync(f) ? readFileSync(f) : '' });
     }
     const hit = Object.values(PAGES).find(([p]) => { const t = new URL(WWW + p); return t.pathname === u.pathname && (!t.search || t.searchParams.get('id') === u.searchParams.get('id')); });
-    if (hit && r.request().resourceType() !== 'image') return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: stripScripts(readFileSync(path.join(CAP, 'pages', `${hit[1]}.html`), 'utf8')) });
-    if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="#9a8fb8"/></svg>' });
+    if (hit && r.request().resourceType() !== 'image') {
+      const html = stripScripts(readFileSync(path.join(CAP, 'pages', `${hit[1]}.html`), 'utf8'));
+      return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: opts.html ? opts.html(html) : html });
+    }
+    if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/svg+xml', body: opts.imageSvg ?? '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="#9a8fb8"/></svg>' });
     return r.fulfill({ status: 404, contentType: 'text/html', body: '<!doctype html><title>Not captured</title><p>Not captured</p>' });
   });
   const seed = {
     'kex:settings': { enabled: true, theme: opts.theme ?? 'light', ...(opts.settings ?? {}) },
     ...Object.fromEntries(Object.entries(opts.seed ?? {}).map(([k, v]) => [k.replace('{user}', `${HOST}:${USER_ID}`), v?.v === 1 ? v : envelope(v)])),
   };
-  await page.addInitScript(`window.__KEX_SEED__ = ${JSON.stringify(seed)};`);
-  await page.addInitScript({ path: SHIM });
-  const css = readFileSync(path.join(DIST, 'kex.css'), 'utf8').replace(/url\(["']?(fonts|assets)\//g, 'url(https://kex.ext/$1/');
-  await page.addInitScript(`(() => { if (window.top !== window) return; const s=document.createElement('style'); s.id='kex-test-css'; s.textContent=${JSON.stringify(css)}; const a=()=>{const h=document.documentElement; if(!h) return false; h.insertBefore(s,h.firstChild); return true;}; if(!a()){const mo=new MutationObserver(()=>a()&&mo.disconnect()); mo.observe(document,{childList:true});} })();`);
-  await page.addInitScript({ path: path.join(DIST, 'content.js') });
+  // `extension: true`: the context already runs the real, installed add-on (Chrome tests); only the site is served.
+  if (!opts.extension) {
+    await page.addInitScript(`window.__KEX_SEED__ = ${JSON.stringify(seed)};`);
+    await page.addInitScript({ path: SHIM });
+    const css = readFileSync(path.join(DIST, 'kex.css'), 'utf8').replace(/url\(["']?(fonts|assets)\//g, 'url(https://kex.ext/$1/');
+    await page.addInitScript(`(() => { if (window.top !== window) return; const s=document.createElement('style'); s.id='kex-test-css'; s.textContent=${JSON.stringify(css)}; const a=()=>{const h=document.documentElement; if(!h) return false; h.insertBefore(s,h.firstChild); return true;}; if(!a()){const mo=new MutationObserver(()=>a()&&mo.disconnect()); mo.observe(document,{childList:true});} })();`);
+    await page.addInitScript({ path: path.join(DIST, 'content.js') });
+  }
   if (opts.goto !== false) {
     await page.goto(WWW + route, { waitUntil: 'load' });
     await page.waitForTimeout(opts.wait ?? 2500);

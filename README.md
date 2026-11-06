@@ -1,11 +1,12 @@
 # TalTech Moodle KEX
 
-A fast, keyboard-first redesign of [moodle.taltech.ee](https://moodle.taltech.ee) for Firefox. It restyles Moodle in your browser:
+A fast, keyboard-first redesign of [moodle.taltech.ee](https://moodle.taltech.ee) for Firefox and Chrome. It restyles Moodle in your browser:
 a sidebar of your courses, a Dossier with your deadlines, course pages as topic lists with a preview sheet, focused quiz
 pages, and a command palette (`Ctrl+K`). Moodle itself is not changed: every action still goes to Moodle's own pages and
 web services with your own session.
 
-Firefox 140 or newer (desktop). It was developed against Moodle 4.5 (TalTech) and checked on a Moodle 5.3 lab.
+Firefox 140 or newer, or Chrome 120 or newer (and other Chromium browsers such as Edge), on desktop. It was developed against
+Moodle 4.5 (TalTech) and checked on a Moodle 5.3 lab.
 
 ## Install
 
@@ -38,8 +39,23 @@ published on the store and nobody else sees it.
    The signed file appears in `web-ext-artifacts/`. Keep the keys private; they are used only on your machine.
 3. In Firefox: `about:addons` > the gear menu > **Install Add-on From File...** > choose the signed `.xpi`.
 
-The add-on id is `taltech-moodle-kex@kex.local`. For a new version raise `version` in `manifest/base.json` before signing
-(Mozilla refuses to sign the same version twice).
+The add-on id is `taltech-moodle-kex@kex.local`. For a new version raise `version` in `package.json` before signing (the build
+takes the version from there, and Mozilla refuses to sign the same version twice).
+
+### Chrome (and Edge, Brave, Opera)
+
+1. Build it once: `npm ci && npm run build:chrome`. The Chrome version is in `dist/chrome/`.
+2. Open `chrome://extensions`, turn on **Developer mode** (top right), click **Load unpacked** and choose the `dist/chrome` folder.
+3. Open <https://moodle.taltech.ee>. After a rebuild, press the reload arrow on the add-on's card.
+
+It is the same code as the Firefox add-on, built as a Manifest V3 extension (`scripts/build.mjs --chrome`). `npm run test:chrome`
+loads it into a real Chromium and checks it on the saved test pages.
+
+### Publishing on the stores
+
+`npm run pack:stores` makes the upload files for addons.mozilla.org and the Chrome Web Store, plus the source zip Mozilla asks
+for, and checks that the source zip rebuilds both byte for byte. The listing texts, privacy policy, permission answers, screenshots
+and step-by-step instructions are in [`store/`](store/README.md).
 
 ## Privacy
 
@@ -47,7 +63,7 @@ The add-on id is `taltech-moodle-kex@kex.local`. For a new version raise `versio
 - It sends nothing anywhere else: no analytics, no remote code, no third-party requests. It declares `data_collection_permissions: none`.
 - It talks to Moodle with the page's own session (the same requests the Moodle web app makes). The session key is kept
   in memory only and is never written to storage.
-- What is stored, in this Firefox profile only (`browser.storage.local`): your settings (theme, language, effects, motion),
+- What is stored, in this browser profile only (the extension's `storage.local`): your settings (theme, language, effects, motion),
   course aliases and order, your pins (you can export them as JSON), and a short-lived cache of course structure so pages open
   fast. The options page can clear the cache and export or import pins.
 

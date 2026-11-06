@@ -82,7 +82,7 @@ export function adjustForLocation(container: ParentNode, loc: { pathname: string
   for (const a of Array.from(container.querySelectorAll<HTMLAnchorElement>('.kex-sb__nav a[href]'))) {
     let p: URL;
     try {
-      p = new URL(a.getAttribute('href') ?? '', 'http://x/');
+      p = new URL(a.getAttribute('href') ?? '', 'https://x/');
     } catch {
       continue;
     }

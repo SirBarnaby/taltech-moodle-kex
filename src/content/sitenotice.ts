@@ -60,7 +60,7 @@ export function hashText(text: string): string {
 function toNotice(el: Element): SiteNotice | null {
   const text = cleanText(el);
   if (text.length < 20) return null;
-  const img = Array.from(el.querySelectorAll('img')).find((i) => i.getAttribute('src') && !/spacer|pix\/i\/|\.gif$/i.test(i.getAttribute('src') ?? ''));
+  const img = Array.from(el.querySelectorAll('img')).find((i) => i.getAttribute('src') && !/(?:spacer|pix\/i\/)|(?:\.gif$)/i.test(i.getAttribute('src') ?? ''));
   const clone = el.cloneNode(true) as Element;
   clone.querySelectorAll('img, svg, picture, video, audio, button.close, .close, [data-dismiss], [data-bs-dismiss]').forEach((n) => n.remove());
   const html = sanitizeHtml(clone.innerHTML).trim();
